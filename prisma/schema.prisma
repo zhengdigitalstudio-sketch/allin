@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  password      String?
+  role          String   @default("MEMBER")
+  avatar        String?
+  phone         String?
+  position      String?
+  company       String?
+  bio           String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  articles      Article[]
+  activityLogs  ActivityLog[]
+  member        Member?
+}
+
+model Article {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  content       String?
+  excerpt       String?
+  coverImage    String?
+  category      String   @default("Berita")
+  status        String   @default("DRAFT")
+  isMemberOnly  Boolean  @default(false)
+  viewCount     Int      @default(0)
+  metaTitle     String?
+  metaDescription String?
+  authorId      String
+  author        User     @relation(fields: [authorId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  publishedAt   DateTime?
+}
+
+model Member {
+  id            String   @id @default(cuid())
+  fullName      String
+  companyName   String?
+  institution   String?
+  position      String?
+  email         String   @unique
+  phone         String?
+  address       String?
+  city          String?
+  province      String?
+  memberType    String   @default("Perorangan")
+  logo          String?
+  photo         String?
+  document      String?
+  reason        String?
+  status        String   @default("MENUNGGU")
+  userId        String?   @unique
+  user          User?    @relation(fields: [userId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Contact {
+  id            String   @id @default(cuid())
+  name          String
+  email         String
+  phone         String?
+  subject       String?
+  message       String
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+model Agenda {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  date          DateTime
+  location      String?
+  coverImage    String?
+  isInternal    Boolean  @default(false)
+  status        String   @default("AKTIF")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Gallery {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  imageUrl      String
+  category      String?
+  createdAt     DateTime @default(now())
+}
+
+model Banner {
+  id            String   @id @default(cuid())
+  title         String
+  subtitle      String?
+  imageUrl      String
+  linkUrl       String?
+  order         Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model FileDownload {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  fileName      String
+  fileUrl       String
+  fileSize      Int?
+  downloadCount Int      @default(0)
+  isForMemberOnly Boolean @default(false)
+  createdAt     DateTime @default(now())
+}
+
+model ActivityLog {
+  id            String   @id @default(cuid())
+  action        String
+  description   String?
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  ipAddress     String?
+  createdAt     DateTime @default(now())
+}
+
+model SeoSettings {
+  id            String   @id @default(cuid())
+  page          String   @unique
+  metaTitle     String
+  metaDescription String
+  ogTitle       String?
+  ogDescription String?
+  ogImage       String?
+  schemaJson    String?
+  updatedAt     DateTime @updatedAt
+}
+
+model Announcement {
+  id            String   @id @default(cuid())
+  title         String
+  content       String?
+  isForMemberOnly Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Inbox {
+  id            String   @id @default(cuid())
+  senderId      String?
+  senderName    String
+  subject       String
+  content       String?
+  receiverId    String
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}

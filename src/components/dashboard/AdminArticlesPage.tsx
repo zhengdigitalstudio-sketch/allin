@@ -1,0 +1,421 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { Search, Plus, Pencil, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import { ARTICLE_CATEGORIES } from '@/lib/store'
+import { toast } from 'sonner'
+
+interface Article {
+  id: string
+  title: string
+  category: string
+  author: string
+  authorId: string
+  status: string
+  views: number
+  createdAt: string
+  updatedAt: string
+  excerpt?: string
+  content?: string
+  coverImage?: string
+  metaTitle?: string
+  metaDescription?: string
+  isMemberOnly?: boolean
+}
+
+const ITEMS_PER_PAGE = 10
+
+const emptyForm = {
+  title: '',
+  category: 'Berita',
+  excerpt: '',
+  content: '',
+  coverImage: '',
+  metaTitle: '',
+  metaDescription: '',
+  isMemberOnly: false,
+}
+
+type ArticleForm = typeof emptyForm
+
+function getStatusBadge(status: string) {
+  switch (status) {
+    case 'PUBLISHED':
+      return <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100">Dipublikasi</Badge>
+    case 'DRAFT':
+      return <Badge className="bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100">Draft</Badge>
+    default:
+      return <Badge variant="secondary">{status}</Badge>
+  }
+}
+
+export function AdminArticlesPage() {
+  const [articles, setArticles] = useState<Article[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState<string>('SEMUA')
+  const [statusFilter, setStatusFilter] = useState<string>('SEMUA')
+  const [page, setPage] = useState(1)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [form, setForm] = useState<ArticleForm>(emptyForm)
+  const [submitting, setSubmitting] = useState(false)
+
+  const fetchArticles = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (statusFilter !== 'SEMUA') params.set('status', statusFilter)
+      if (categoryFilter !== 'SEMUA') params.set('category', categoryFilter)
+      if (search) params.set('search', search)
+      params.set('page', String(page))
+      params.set('limit', String(ITEMS_PER_PAGE))
+      const res = await fetch(`/api/articles?${params}`)
+      if (res.ok) {
+        const data = await res.json()
+        setArticles(Array.isArray(data) ? data : data.data || data.articles || [])
+      }
+    } catch {
+      setArticles([])
+    } finally {
+      setLoading(false)
+    }
+  }, [search, categoryFilter, statusFilter, page])
+
+  useEffect(() => {
+    fetchArticles()
+  }, [fetchArticles])
+
+  const openCreateDialog = () => {
+    setEditingId(null)
+    setForm(emptyForm)
+    setDialogOpen(true)
+  }
+
+  const openEditDialog = (article: Article) => {
+    setEditingId(article.id)
+    setForm({
+      title: article.title,
+      category: article.category,
+      excerpt: article.excerpt || '',
+      content: article.content || '',
+      coverImage: article.coverImage || '',
+      metaTitle: article.metaTitle || '',
+      metaDescription: article.metaDescription || '',
+      isMemberOnly: article.isMemberOnly || false,
+    })
+    setDialogOpen(true)
+  }
+
+  const handleSubmit = async () => {
+    if (!form.title.trim()) {
+      toast.error('Judul artikel wajib diisi')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const url = editingId ? `/api/articles/${editingId}` : '/api/articles'
+      const method = editingId ? 'PUT' : 'POST'
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (res.ok) {
+        toast.success(editingId ? 'Artikel berhasil diperbarui' : 'Artikel berhasil dibuat')
+        setDialogOpen(false)
+        fetchArticles()
+      } else {
+        toast.error('Gagal menyimpan artikel')
+      }
+    } catch {
+      toast.error('Gagal menyimpan artikel')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/articles/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Artikel berhasil dihapus')
+        fetchArticles()
+      }
+    } catch {
+      toast.error('Gagal menghapus artikel')
+    }
+  }
+
+  const handleTogglePublish = async (article: Article) => {
+    const newStatus = article.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED'
+    try {
+      const res = await fetch(`/api/articles/${article.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (res.ok) {
+        toast.success(newStatus === 'PUBLISHED' ? 'Artikel dipublikasi' : 'Artikel dijadikan draft')
+        fetchArticles()
+      }
+    } catch {
+      toast.error('Gagal mengubah status artikel')
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold">Manajemen Artikel</h2>
+          <p className="text-sm text-muted-foreground">Kelola konten artikel organisasi.</p>
+        </div>
+        <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold w-fit" onClick={openCreateDialog}>
+          <Plus className="h-4 w-4 mr-2" />
+          Buat Artikel Baru
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cari judul atau penulis..."
+                className="pl-9"
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); setPage(1) }}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Kategori" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="SEMUA">Semua Kategori</SelectItem>
+                {ARTICLE_CATEGORIES.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1) }}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="SEMUA">Semua Status</SelectItem>
+                <SelectItem value="DRAFT">Draft</SelectItem>
+                <SelectItem value="PUBLISHED">Dipublikasi</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Table */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        <Card className="border-0 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="text-xs w-10">No</TableHead>
+                  <TableHead className="text-xs">Judul</TableHead>
+                  <TableHead className="text-xs hidden md:table-cell">Kategori</TableHead>
+                  <TableHead className="text-xs hidden lg:table-cell">Penulis</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs hidden sm:table-cell">Views</TableHead>
+                  <TableHead className="text-xs hidden xl:table-cell">Tanggal</TableHead>
+                  <TableHead className="text-xs text-right">Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      {Array.from({ length: 8 }).map((_, j) => (
+                        <TableCell key={j}><Skeleton className="h-5 w-full" /></TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : articles.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                      Tidak ada artikel ditemukan.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  articles.map((article, idx) => (
+                    <TableRow key={article.id} className="hover:bg-muted/30">
+                      <TableCell className="text-xs text-muted-foreground">{(page - 1) * ITEMS_PER_PAGE + idx + 1}</TableCell>
+                      <TableCell className="text-sm font-medium max-w-[200px] truncate">{article.title}</TableCell>
+                      <TableCell className="text-xs hidden md:table-cell">
+                        <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">{article.author}</TableCell>
+                      <TableCell>{getStatusBadge(article.status)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground hidden sm:table-cell">{article.views ?? 0}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground hidden xl:table-cell">
+                        {new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEditDialog(article)} title="Edit">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleTogglePublish(article)} title={article.status === 'PUBLISHED' ? 'Jadikan Draft' : 'Publikasi'}>
+                            {article.status === 'PUBLISHED' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(article.id)} title="Hapus">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          {!loading && articles.length > 0 && (
+            <div className="flex items-center justify-between p-4 border-t">
+              <p className="text-xs text-muted-foreground">
+                Menampilkan {(page - 1) * ITEMS_PER_PAGE + 1} - {Math.min(page * ITEMS_PER_PAGE, articles.length)} dari {articles.length}
+              </p>
+              <div className="flex items-center gap-1">
+                <Button size="icon" variant="outline" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="px-3 text-sm font-medium">{page}</span>
+                <Button size="icon" variant="outline" className="h-8 w-8" disabled={articles.length < ITEMS_PER_PAGE} onClick={() => setPage(page + 1)}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      </motion.div>
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingId ? 'Edit Artikel' : 'Buat Artikel Baru'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Judul</Label>
+              <Input
+                placeholder="Masukkan judul artikel"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Kategori</Label>
+              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ARTICLE_CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Ringkasan</Label>
+              <Textarea
+                placeholder="Tulis ringkasan singkat artikel..."
+                rows={3}
+                value={form.excerpt}
+                onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Konten</Label>
+              <Textarea
+                placeholder="Tulis konten lengkap artikel..."
+                rows={8}
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">URL Gambar Cover</Label>
+              <Input
+                placeholder="https://contoh.com/gambar.jpg"
+                value={form.coverImage}
+                onChange={(e) => setForm({ ...form, coverImage: e.target.value })}
+              />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Meta Title (SEO)</Label>
+                <Input
+                  placeholder="Meta title untuk SEO"
+                  value={form.metaTitle}
+                  onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Meta Description (SEO)</Label>
+                <Input
+                  placeholder="Meta description untuk SEO"
+                  value={form.metaDescription}
+                  onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="memberOnly"
+                checked={form.isMemberOnly}
+                onCheckedChange={(checked) => setForm({ ...form, isMemberOnly: !!checked })}
+              />
+              <Label htmlFor="memberOnly" className="text-sm font-medium cursor-pointer">
+                Khusus Anggota
+              </Label>
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
+              <Button
+                className="bg-green-700 hover:bg-green-800 text-white"
+                onClick={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting ? 'Menyimpan...' : editingId ? 'Perbarui' : 'Simpan'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

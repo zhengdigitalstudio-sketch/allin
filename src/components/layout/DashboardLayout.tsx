@@ -1,0 +1,157 @@
+'use client'
+
+import { useState, type ReactNode } from 'react'
+import { Menu } from 'lucide-react'
+import { useAppStore } from '@/lib/store'
+import { useSession } from 'next-auth/react'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import { DashboardSidebar } from './DashboardSidebar'
+
+const PAGE_NAMES: Record<string, string> = {
+  'admin-dashboard': 'Dashboard Admin',
+  'admin-users': 'Manajemen User',
+  'admin-articles': 'Manajemen Artikel',
+  'admin-members': 'Manajemen Member',
+  'admin-agenda': 'Manajemen Agenda',
+  'admin-gallery': 'Manajemen Galeri',
+  'admin-contacts': 'Kontak Masuk',
+  'admin-banners': 'Banner',
+  'admin-seo': 'SEO',
+  'admin-activity': 'Activity Log',
+  'admin-backup': 'Backup',
+  'pengurus-dashboard': 'Dashboard Pengurus',
+  'pengurus-articles': 'Artikel Saya',
+  'pengurus-profile': 'Profil',
+  'member-dashboard': 'Dashboard Member',
+  'member-profile': 'Profil',
+  'member-documents': 'Dokumen',
+  'member-articles': 'Artikel',
+  'member-agenda': 'Agenda Internal',
+  'member-inbox': 'Pesan',
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+}
+
+function getRoleBadgeClasses(role: string): string {
+  switch (role) {
+    case 'SUPER_ADMIN':
+      return 'bg-red-100 text-red-700 border-red-200'
+    case 'KETUA':
+      return 'bg-amber-100 text-amber-700 border-amber-200'
+    case 'WAKIL_KETUA':
+      return 'bg-blue-100 text-blue-700 border-blue-200'
+    case 'SEKRETARIS':
+      return 'bg-green-100 text-green-700 border-green-200'
+    case 'WAKIL_SEKRETARIS':
+      return 'bg-purple-100 text-purple-700 border-purple-200'
+    case 'BENDAHARA':
+      return 'bg-orange-100 text-orange-700 border-orange-200'
+    case 'MEMBER':
+      return 'bg-gray-100 text-gray-600 border-gray-200'
+    default:
+      return 'bg-gray-100 text-gray-600 border-gray-200'
+  }
+}
+
+function getRoleLabel(role: string): string {
+  const map: Record<string, string> = {
+    SUPER_ADMIN: 'Super Admin',
+    KETUA: 'Ketua',
+    WAKIL_KETUA: 'Wakil Ketua',
+    SEKRETARIS: 'Sekretaris',
+    WAKIL_SEKRETARIS: 'Wakil Sekretaris',
+    BENDAHARA: 'Bendahara',
+    MEMBER: 'Member',
+  }
+  return map[role] || role
+}
+
+interface DashboardLayoutProps {
+  children: ReactNode
+}
+
+export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { currentPage, navigate } = useAppStore()
+  const { data: session } = useSession()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const userName = session?.user?.name || ''
+  const userRole = (session?.user as any)?.role || 'MEMBER'
+
+  const pageName = PAGE_NAMES[currentPage] || 'Dashboard'
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-muted/30">
+      {/* Desktop Sidebar */}
+      <DashboardSidebar role={userRole} userName={userName} userRole={userRole} />
+
+      {/* Mobile Sidebar Sheet */}
+      <div className="lg:hidden">
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="w-72 p-0">
+            <SheetTitle className="sr-only">Menu Dashboard</SheetTitle>
+            <DashboardSidebar role={userRole} userName={userName} userRole={userRole} />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex flex-col flex-1 min-w-0">
+        {/* Top Bar */}
+        <header className="sticky top-0 z-30 flex items-center gap-4 h-16 px-4 sm:px-6 border-b bg-white/80 backdrop-blur-md">
+          {/* Mobile Menu Toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden h-9 w-9 rounded-full hover:bg-allin-green/10"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Buka menu</span>
+          </Button>
+
+          {/* Breadcrumb / Page Title */}
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-base sm:text-lg font-semibold truncate">{pageName}</h1>
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* User Info (mobile & desktop) */}
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              className={cn('hidden sm:inline-flex text-[10px] px-1.5 py-0 border font-medium', getRoleBadgeClasses(userRole))}
+            >
+              {getRoleLabel(userRole)}
+            </Badge>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-allin-green text-white text-xs font-bold">
+              {getInitials(userName || 'U')}
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <ScrollArea className="flex-1">
+          <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+        </ScrollArea>
+      </div>
+    </div>
+  )
+}
