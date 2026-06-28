@@ -65,7 +65,7 @@ Penggunaan website setelah perubahan kebijakan dipublikasikan dianggap sebagai p
     content: `Jika Anda memiliki pertanyaan, permintaan, atau keluhan terkait Kebijakan Privasi ini atau praktik pengelolaan data kami, silakan hubungi:
 
 Asosiasi Lingkungan Industri Ketenagalistrikan Nasional (ALLIN)
-Email: info@allin.or.id
+Email: info@allin.web.id
 Telepon: +62 21 1234 5678
 Alamat: Jakarta, Indonesia
 

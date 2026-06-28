@@ -41,11 +41,11 @@ export async function POST(request: NextRequest) {
 
     // Create SUPER_ADMIN
     const admin = await db.user.upsert({
-      where: { email: 'admin@allin.or.id' },
+      where: { email: 'admin@allin.web.id' },
       update: {},
       create: {
         name: 'Super Admin',
-        email: 'admin@allin.or.id',
+        email: 'admin@allin.web.id',
         password: 'admin123',
         role: 'SUPER_ADMIN',
         position: 'Administrator',
@@ -338,7 +338,7 @@ export async function POST(request: NextRequest) {
           '@type': 'Organization',
           name: 'ALLIN',
           alternateName: 'Asosiasi Lingkungan Industri Ketenagalistrikan Nasional',
-          url: 'https://allin.or.id',
+          url: 'https://allin.web.id',
           description: 'Organisasi profesi yang menaungi para praktisi dan pelaku industri ketenagalistrikan di Indonesia.',
         }),
       },

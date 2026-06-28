@@ -61,7 +61,7 @@ export default function KontakPage() {
   }
 
   const contactInfo = [
-    { icon: Mail, label: 'Email', value: 'info@allin.or.id', href: 'mailto:info@allin.or.id' },
+    { icon: Mail, label: 'Email', value: 'info@allin.web.id', href: 'mailto:info@allin.web.id' },
     { icon: Phone, label: 'Telepon', value: '+62 21 1234 5678', href: 'tel:+622112345678' },
     { icon: MapPin, label: 'Alamat', value: 'Jakarta, Indonesia', href: null },
   ]

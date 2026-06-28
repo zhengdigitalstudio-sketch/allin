@@ -126,7 +126,7 @@ export function Footer() {
                 <li className="flex items-start gap-3">
                   <Mail className="h-4 w-4 shrink-0 mt-0.5 text-allin-yellow-light" />
                   <div>
-                    <p className="text-sm text-white/70">info@allin.or.id</p>
+                    <p className="text-sm text-white/70">info@allin.web.id</p>
                     <p className="text-xs text-white/50 mt-0.5">Email resmi</p>
                   </div>
                 </li>
