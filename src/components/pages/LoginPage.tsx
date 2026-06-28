@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { Loader2, AlertCircle, ArrowLeft, ChevronDown, ChevronUp, Zap, Mail } from 'lucide-react'
+import Image from 'next/image'
+import { Loader2, AlertCircle, ArrowLeft, Mail } from 'lucide-react'
 import { signIn, useSession } from 'next-auth/react'
 
 export default function LoginPage() {
@@ -134,8 +135,8 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="gradient-green py-8 rounded-t-xl">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 mb-3">
-                <Zap className="w-8 h-8 text-allin-yellow-light" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 mb-3">
+                <Image src="/logo-icon.svg" alt="ALLIN" width={48} height={48} className="w-12 h-12" />
               </div>
               <h1 className="text-2xl font-bold text-white">ALLIN</h1>
               <p className="text-white/60 text-sm mt-1">Masuk ke akun Anda</p>

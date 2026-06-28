@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 import {
   Menu,
   X,
@@ -132,14 +133,16 @@ export function Navbar() {
             {/* Logo */}
             <button
               onClick={() => navigate('home')}
-              className="flex flex-col items-start gap-0.5 group"
+              className="flex items-center gap-2.5 group"
             >
-              <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-allin-green transition-colors group-hover:text-allin-green-dark">
-                ALLIN
-              </span>
-              <span className="hidden sm:block text-[9px] lg:text-[10px] text-muted-foreground leading-tight max-w-[180px] lg:max-w-[260px]">
-                Asosiasi Lingkungan Industri Ketenagalistrikan Nasional
-              </span>
+              <Image
+                src="/logo.svg"
+                alt="ALLIN Logo"
+                width={140}
+                height={32}
+                priority
+                className="h-8 sm:h-9 w-auto"
+              />
             </button>
 
             {/* Desktop Nav Links */}
@@ -244,12 +247,13 @@ export function Navbar() {
                     <div className="flex flex-col h-full">
                       {/* Mobile Header */}
                       <div className="flex items-center justify-between p-4 border-b border-allin-green/10">
-                        <div className="flex flex-col">
-                          <span className="text-xl font-extrabold text-allin-green">ALLIN</span>
-                          <span className="text-[9px] text-muted-foreground leading-tight max-w-[200px]">
-                            Asosiasi Lingkungan Industri Ketenagalistrikan Nasional
-                          </span>
-                        </div>
+                        <Image
+                        src="/logo.svg"
+                        alt="ALLIN Logo"
+                        width={120}
+                        height={28}
+                        className="h-7 w-auto"
+                      />
                         <SheetClose asChild>
                           <Button
                             variant="ghost"

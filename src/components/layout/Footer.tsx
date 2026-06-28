@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import {
   Facebook,
   Twitter,
@@ -83,9 +84,13 @@ export function Footer() {
                 onClick={() => navigate('home')}
                 className="inline-block group"
               >
-                <span className="text-2xl font-extrabold tracking-tight text-white group-hover:text-allin-yellow-light transition-colors">
-                  ALLIN
-                </span>
+                <Image
+                  src="/logo-white.svg"
+                  alt="ALLIN Logo"
+                  width={160}
+                  height={36}
+                  className="h-8 w-auto"
+                />
               </button>
               <p className="mt-4 text-sm text-white/70 leading-relaxed">
                 Asosiasi Lingkungan Industri Ketenagalistrikan Nasional (ALLIN) merupakan wadah

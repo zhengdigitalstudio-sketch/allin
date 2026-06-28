@@ -37,8 +37,14 @@ export const metadata: Metadata = {
   creator: 'ALLIN',
   publisher: 'ALLIN',
   icons: {
-    icon: 'data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'><text y=\'28\' font-size=\'28\'>⚡</text></svg>',
+    icon: [
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
+  manifest: '/manifest.json',
   openGraph: {
     title: 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional',
     description:
@@ -47,6 +53,14 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'id_ID',
     url: 'https://allin.web.id',
+    images: [
+      {
+        url: '/icon-512.png',
+        width: 512,
+        height: 512,
+        alt: 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
@@ -54,6 +68,14 @@ export const metadata: Metadata = {
     description:
       'Organisasi profesi ketenagalistrikan nasional yang berkomitmen untuk pengembangan industri dan kompetensi SDM di sektor kelistrikan Indonesia.',
     site: '@allin_id',
+    images: [
+      {
+        url: '/icon-512.png',
+        width: 512,
+        height: 512,
+        alt: 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional',
+      },
+    ],
   },
   robots: {
     index: true,
