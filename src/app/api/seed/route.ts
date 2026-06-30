@@ -357,7 +357,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: 'Database berhasil di-seed dengan data awal!',
       data: {
-        users: 6, // 1 admin + 5 pengurus
+        users: 7, // 2 super admin + 5 pengurus
         articles: 5,
         agenda: 3,
         gallery: 3,
