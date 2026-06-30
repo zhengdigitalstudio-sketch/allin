@@ -33,27 +33,6 @@ function SessionSync() {
   return null
 }
 
-function SeedCaller() {
-  const seeded = useRef(false)
-
-  useEffect(() => {
-    if (seeded.current) return
-    seeded.current = true
-
-    fetch('/api/seed')
-      .then((res) => {
-        if (!res.ok) {
-          console.warn('Seed API returned non-OK status:', res.status)
-        }
-      })
-      .catch((err) => {
-        console.warn('Seed API call failed:', err)
-      })
-  }, [])
-
-  return null
-}
-
 interface AuthProviderProps {
   children: ReactNode
 }
@@ -62,7 +41,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   return (
     <SessionProvider>
       <SessionSync />
-      <SeedCaller />
       {children}
     </SessionProvider>
   )
