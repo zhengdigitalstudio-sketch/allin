@@ -53,11 +53,11 @@ export async function POST(request: NextRequest) {
     // Create SUPER_ADMIN
     const adminPw = 'admin123'
     const admin = await db.user.upsert({
-      where: { email: 'admin@allin.web.id' },
+      where: { email: 'sadmin@allin.web.id' },
       update: { password: await hashPassword(adminPw) },
       create: {
         name: 'Super Admin',
-        email: 'admin@allin.web.id',
+        email: 'sadmin@allin.web.id',
         password: await hashPassword(adminPw),
         role: 'SUPER_ADMIN',
         position: 'Administrator',

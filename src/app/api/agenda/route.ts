@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
 
     const where: any = {}
 
-    // Non-authenticated users and non-pengurus can't see internal agenda
-    if (!session || !PENGURUS_ROLES.includes(session?.role || '')) {
+    // Non-authenticated users can't see internal (member-only) agenda
+    if (!session) {
       where.isInternal = false
     }
 

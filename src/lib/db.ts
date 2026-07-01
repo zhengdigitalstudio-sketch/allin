@@ -20,6 +20,10 @@ function createPrismaClient(): PrismaClient {
     (process.env.TURSO_DB_URL ?? '') ||
     ''
 
+  // Always pass an explicit datasource URL to prevent Prisma from
+  // looking up the env("DATABASE_URL") that may not exist in Vercel.
+  const fallbackUrl = databaseUrl || 'file:./dev.db'
+
   // Guard: only use LibSQL adapter if we have a valid libsql:// URL
   if (
     !databaseUrl ||
@@ -27,7 +31,9 @@ function createPrismaClient(): PrismaClient {
     !databaseUrl.startsWith('libsql://')
   ) {
     console.warn('[db] No valid libsql:// URL — using default PrismaClient (local SQLite)')
-    return new PrismaClient()
+    return new PrismaClient({
+      datasources: { db: { url: fallbackUrl } },
+    })
   }
 
   const authToken =
@@ -48,10 +54,15 @@ function createPrismaClient(): PrismaClient {
       authToken: authToken || undefined,
     })
     const adapter = new PrismaLibSql(libsql)
-    return new PrismaClient({ adapter })
+    return new PrismaClient({
+      adapter,
+      datasources: { db: { url: databaseUrl } },
+    })
   } catch (error) {
     console.error('[db] LibSQL init failed, falling back to default PrismaClient:', error)
-    return new PrismaClient()
+    return new PrismaClient({
+      datasources: { db: { url: fallbackUrl } },
+    })
   }
 }
 
