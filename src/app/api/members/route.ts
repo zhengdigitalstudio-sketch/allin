@@ -1,9 +1,7 @@
+import { getSession, PENGURUS_ROLES, APPROVER_ROLES, ARTICLE_CREATE_ROLES } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 
-const PENGURUS_ROLES = ['SUPER_ADMIN', 'KETUA', 'WAKIL_KETUA', 'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA']
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,14 +11,14 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1', 10)
     const limit = parseInt(searchParams.get('limit') || '10', 10)
 
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
 
     if (!session) {
       return NextResponse.json({ members: [], pagination: { page, limit, total: 0, totalPages: 0 } })
     }
 
-    const userRole = (session.user as any).role as string
-    const userId = (session.user as any).id as string
+    const userRole = session?.role || ''
+    const userId = session?.id || ''
 
     const where: any = {}
 
@@ -136,7 +134,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -153,8 +151,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
     }
 
-    const userRole = (session.user as any).role as string
-    const userId = (session.user as any).id as string
+    const userRole = session?.role || ''
+    const userId = session?.id || ''
 
     // SUPER_ADMIN can update any member including status
     // Other users can only update their own profile (non-status fields)
@@ -193,12 +191,12 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userRole = (session.user as any).role as string
+    const userRole = session?.role || ''
     if (userRole !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

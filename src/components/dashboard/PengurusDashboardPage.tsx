@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { useSession } from 'next-auth/react'
 import { useAppStore } from '@/lib/store'
 import { FileText, Eye, PenLine, TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -28,14 +27,13 @@ function StatCard({ icon: Icon, value, label, color }: { icon: React.ElementType
 }
 
 export function PengurusDashboardPage() {
-  const { data: session } = useSession()
-  const { navigate } = useAppStore()
+  const { navigate, user } = useAppStore()
   const [articles, setArticles] = useState<Article[]>([])
   const [loading, setLoading] = useState(true)
 
   const fetchArticles = useCallback(async () => {
     try {
-      const userId = (session?.user as any)?.id
+      const userId = user?.id
       const res = await fetch(`/api/articles?status=DRAFT,PUBLISHED&limit=100`)
       if (res.ok) {
         const data = await res.json()
@@ -43,14 +41,14 @@ export function PengurusDashboardPage() {
         setArticles(all.filter((a: Article) => a.author?.id === userId))
       }
     } catch {} finally { setLoading(false) }
-  }, [session])
+  }, [user])
 
   useEffect(() => { fetchArticles() }, [fetchArticles])
 
   const published = articles.filter(a => a.status === 'PUBLISHED')
   const drafts = articles.filter(a => a.status === 'DRAFT')
   const totalViews = published.reduce((s, a) => s + a.viewCount, 0)
-  const userName = session?.user?.name || 'Pengurus'
+  const userName = user?.name || 'Pengurus'
 
   return (
     <div className="space-y-6">

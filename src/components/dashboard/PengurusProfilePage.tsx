@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAppStore } from '@/lib/store'
 import { motion } from 'framer-motion'
 import { User, Mail, Building2, Briefcase, Phone, Lock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,8 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
 
 export function PengurusProfilePage() {
-  const { data: session } = useSession()
-  const user = session?.user as any
+  const user = useAppStore((s) => s.user)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ name: user?.name || '', phone: user?.phone || '', position: user?.position || '', company: user?.company || '', bio: user?.bio || '' })
   const [pw, setPw] = useState({ current: '', newPw: '', confirm: '' })

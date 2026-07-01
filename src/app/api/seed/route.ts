@@ -1,6 +1,5 @@
+import { getSession, PENGURUS_ROLES, APPROVER_ROLES, ARTICLE_CREATE_ROLES, hashPassword } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 
 function generateSlug(title: string): string {
@@ -15,11 +14,11 @@ function generateSlug(title: string): string {
 export async function POST(request: NextRequest) {
   try {
     // Auth check — only SUPER_ADMIN can seed
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    const userRole = (session.user as any).role as string
+    const userRole = session?.role || ''
     if (userRole !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Forbidden — hanya SUPER_ADMIN' }, { status: 403 })
     }
@@ -52,13 +51,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Create SUPER_ADMIN
+    const adminPw = 'admin123'
     const admin = await db.user.upsert({
       where: { email: 'admin@allin.web.id' },
-      update: {},
+      update: { password: await hashPassword(adminPw) },
       create: {
         name: 'Super Admin',
         email: 'admin@allin.web.id',
-        password: 'admin123',
+        password: await hashPassword(adminPw),
         role: 'SUPER_ADMIN',
         position: 'Administrator',
         company: 'ALLIN',
@@ -112,10 +112,11 @@ export async function POST(request: NextRequest) {
 
     const pengurus: any[] = []
     for (const p of pengurusData) {
+      const hashedPw = await hashPassword(p.password)
       const user = await db.user.upsert({
         where: { email: p.email },
-        update: {},
-        create: p,
+        update: { password: hashedPw },
+        create: { ...p, password: hashedPw },
       })
       pengurus.push(user)
     }

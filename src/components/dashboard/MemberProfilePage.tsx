@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAppStore } from '@/lib/store'
 import { motion } from 'framer-motion'
 import { Lock, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,8 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
 
 export function MemberProfilePage() {
-  const { data: session } = useSession()
-  const user = session?.user as any
+  const user = useAppStore((s) => s.user)
   const [form, setForm] = useState({ fullName: '', phone: '', address: '', city: '', province: '' })
   const [pw, setPw] = useState({ current: '', newPw: '', confirm: '' })
   const [saving, setSaving] = useState(false)

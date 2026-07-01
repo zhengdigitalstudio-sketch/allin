@@ -1,25 +1,23 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAppStore } from '@/lib/store'
 import { motion } from 'framer-motion'
 import { User, Mail, FileText, Calendar, Newspaper, Download } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useAppStore } from '@/lib/store'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 
 interface Announcement { id: string; title: string; content: string | null; createdAt: string }
 
 export function MemberDashboardPage() {
-  const { data: session } = useSession()
-  const { navigate } = useAppStore()
+  const { navigate, user } = useAppStore()
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
-  const userName = session?.user?.name || 'Member'
+  const userName = user?.name || 'Member'
 
   useEffect(() => {
     fetch('/api/announcements').then(r => r.json()).then(d => setAnnouncements(d.announcements?.slice(0, 3) || [])).catch(() => {}).finally(() => setLoading(false))

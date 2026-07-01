@@ -1,76 +1,67 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import Image from 'next/image'
-import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
-import { useSession } from 'next-auth/react'
-import { useSearchParams } from 'next/navigation'
+import { Loader2, AlertCircle, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const { navigate, setUser } = useAppStore()
-  const { data: session, status } = useSession()
-  const searchParams = useSearchParams()
-
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  // Detect error from NextAuth redirect (e.g. ?error=OAuthCallback)
-  useEffect(() => {
-    const errParam = searchParams.get('error')
-    if (errParam) {
-      if (errParam === 'OAuthCallback') {
-        setError('Login Google gagal. Pastikan URL callback sudah terdaftar di Google Cloud Console. Coba clear cache browser lalu login ulang.')
-      } else if (errParam === 'Configuration') {
-        setError('Konfigurasi server tidak lengkap. Hubungi admin.')
-      } else {
-        setError(`Login gagal: ${errParam}`)
-      }
-      // Clean URL
-      window.history.replaceState({}, '', '/login')
-    }
-  }, [searchParams])
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
-  // Redirect berdasarkan role setelah Google login berhasil
-  useEffect(() => {
-    if (status === 'authenticated' && session?.user) {
-      const userData = session.user as any
-      const role = userData.role || 'MEMBER'
-
-      setUser({
-        id: userData.id || '',
-        name: userData.name || '',
-        email: userData.email || '',
-        role,
-        avatar: userData.image || userData.avatar || undefined,
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
       })
 
-      if (role === 'SUPER_ADMIN') {
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Login gagal')
+        setLoading(false)
+        return
+      }
+
+      // Set user in store
+      const u = data.user
+      setUser({
+        id: u.id || '',
+        name: u.name || '',
+        email: u.email || '',
+        role: u.role || 'MEMBER',
+        avatar: u.avatar || undefined,
+      })
+
+      // Navigate based on role
+      if (u.role === 'SUPER_ADMIN') {
         navigate('admin-dashboard')
-      } else if (['KETUA', 'WAKIL_KETUA', 'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA'].includes(role)) {
+      } else if (['KETUA', 'WAKIL_KETUA', 'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA'].includes(u.role)) {
         navigate('pengurus-dashboard')
       } else {
         navigate('member-dashboard')
       }
+    } catch {
+      setError('Terjadi kesalahan. Coba lagi.')
+    } finally {
+      setLoading(false)
     }
-  }, [status, session, navigate, setUser])
-
-  const handleGoogleLogin = () => {
-    setError('')
-    // Direct navigation to NextAuth's Google sign-in endpoint.
-    // This bypasses next-auth/react's signIn() which may have issues
-    // with Next.js 16's client-side routing.
-    window.location.href = '/api/auth/signin/google'
-  }
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen gradient-hero flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-white" />
-      </div>
-    )
   }
 
   return (
@@ -109,32 +100,76 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <CardContent className="p-6 md:p-8 space-y-5">
-            {/* Error */}
-            {error && (
-              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm text-destructive flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
+          <CardContent className="p-6 md:p-8">
+            <form onSubmit={handleLogin} className="space-y-4">
+              {/* Error */}
+              {error && (
+                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm text-destructive flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
 
-            {/* Google Login */}
-            <Button
-              type="button"
-              onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-5 px-4 text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 transition-colors cursor-pointer h-auto shadow-sm"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-              </svg>
-              <span className="font-semibold">Masuk dengan Google</span>
-            </Button>
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@contoh.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Password */}
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPw ? 'text' : 'password'}
+                    placeholder="Masukkan password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                    disabled={loading}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw(!showPw)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Login Button */}
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-allin-green hover:bg-allin-green-dark text-white font-semibold py-5 rounded-lg h-auto"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  'Masuk'
+                )}
+              </Button>
+            </form>
 
             {/* Register link */}
-            <div className="text-center pt-2">
+            <div className="text-center pt-4">
               <p className="text-sm text-muted-foreground">
                 Belum punya akun?{' '}
                 <button

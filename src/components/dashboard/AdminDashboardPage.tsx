@@ -5,7 +5,6 @@ import { Users, Newspaper, Shield, Eye, UserPlus, Calendar, TrendingUp, Trending
 import { motion } from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Cell } from 'recharts'
 import { useAppStore } from '@/lib/store'
-import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -144,8 +143,7 @@ function formatTimeAgo(dateStr: string): string {
 }
 
 export function AdminDashboardPage() {
-  const { navigate } = useAppStore()
-  const { data: session } = useSession()
+  const { navigate, user } = useAppStore()
   const [stats, setStats] = useState<Stats | null>(null)
   const [activities, setActivities] = useState<ActivityLog[]>([])
   const [pendingMembers, setPendingMembers] = useState<PendingMember[]>([])
@@ -238,7 +236,7 @@ export function AdminDashboardPage() {
     }
   }
 
-  const userName = session?.user?.name || 'Admin'
+  const userName = user?.name || 'Admin'
 
   if (loading) {
     return (

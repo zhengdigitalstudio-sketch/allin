@@ -1,16 +1,13 @@
+import { getSession, PENGURUS_ROLES, APPROVER_ROLES, hashPassword } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
-
-const PENGURUS_ROLES = ['SUPER_ADMIN', 'KETUA', 'WAKIL_KETUA', 'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA']
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -39,19 +36,16 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userRole = (session.user as any).role as string
-    if (!PENGURUS_ROLES.includes(userRole)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const userRole = session?.role || ''
 
     const { id } = await params
     const body = await request.json()
-    const { status, ...otherFields } = body
+    const { status, password: memberPassword, ...otherFields } = body
 
     const existing = await db.member.findUnique({ where: { id } })
     if (!existing) {
@@ -59,6 +53,67 @@ export async function PUT(
     }
 
     const updateData: any = {}
+
+    // ── Member approval: create User account ──
+    if (status === 'DISETUJUI' && existing.status !== 'DISETUJUI') {
+      // Only Ketua, Wakil Ketua, or Super Admin can approve
+      if (!APPROVER_ROLES.includes(userRole)) {
+        return NextResponse.json({ error: 'Hanya Ketua atau Wakil Ketua yang dapat menyetujui pendaftaran' }, { status: 403 })
+      }
+
+      // Check if user account already exists for this member
+      if (existing.userId) {
+        // Just activate the existing user
+        await db.user.update({ where: { id: existing.userId }, data: { isActive: true } })
+        updateData.status = 'DISETUJUI'
+      } else {
+        // Create a new User account so they can login
+        const pw = memberPassword || `allin${Date.now().toString(36)}`
+        const hashedPw = await hashPassword(pw)
+
+        const newUser = await db.user.create({
+          data: {
+            name: existing.fullName,
+            email: existing.email,
+            password: hashedPw,
+            role: 'MEMBER',
+            phone: existing.phone,
+            position: existing.position,
+            company: existing.companyName,
+            isActive: true,
+          },
+        })
+
+        updateData.status = 'DISETUJUI'
+        updateData.userId = newUser.id
+
+        // Return the generated password so Ketua can share it with the member
+        const updated = await db.member.update({ where: { id }, data: updateData })
+        return NextResponse.json({
+          member: {
+            ...updated,
+            createdAt: updated.createdAt.toISOString(),
+            updatedAt: updated.updatedAt.toISOString(),
+          },
+          generatedPassword: memberPassword ? undefined : pw,
+          message: memberPassword
+            ? 'Anggota disetujui dan akun dibuat'
+            : 'Anggota disetujui. Akun dibuat dengan password sementara. Berikan password ini kepada anggota.',
+        })
+      }
+    }
+
+    if (status === 'DITOLAK') {
+      if (!APPROVER_ROLES.includes(userRole)) {
+        return NextResponse.json({ error: 'Hanya Ketua atau Wakil Ketua yang dapat menolak pendaftaran' }, { status: 403 })
+      }
+    }
+
+    // Other status updates need pengurus role
+    if (status && !APPROVER_ROLES.includes(userRole) && !PENGURUS_ROLES.includes(userRole)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     if (status) updateData.status = status
     if (otherFields) Object.assign(updateData, otherFields)
 
@@ -84,12 +139,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userRole = (session.user as any).role as string
+    const userRole = session?.role || ''
     if (userRole !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -98,6 +153,11 @@ export async function DELETE(
     const existing = await db.member.findUnique({ where: { id } })
     if (!existing) {
       return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
+    }
+
+    // If member has a linked user account, deactivate it
+    if (existing.userId) {
+      await db.user.update({ where: { id: existing.userId }, data: { isActive: false } })
     }
 
     await db.member.delete({ where: { id } })

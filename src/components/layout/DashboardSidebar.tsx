@@ -1,6 +1,6 @@
 'use client'
 
-import { signOut } from 'next-auth/react'
+import { logout } from './AuthProvider'
 import {
   LayoutDashboard,
   Users,
@@ -201,7 +201,7 @@ export function DashboardSidebar({ role, userName, userRole }: DashboardSidebarP
         </button>
         <Separator className="my-1" />
         <button
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={() => logout()}
           className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200 cursor-pointer"
         >
           <LogOut className="h-4.5 w-4.5 shrink-0" />

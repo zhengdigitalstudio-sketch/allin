@@ -3,7 +3,6 @@
 import { useState, type ReactNode } from 'react'
 import { Menu } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
-import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -86,12 +85,11 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { currentPage, navigate } = useAppStore()
-  const { data: session } = useSession()
+  const { currentPage, navigate, user } = useAppStore()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const userName = session?.user?.name || ''
-  const userRole = (session?.user as any)?.role || 'MEMBER'
+  const userName = user?.name || ''
+  const userRole = user?.role || 'MEMBER'
 
   const pageName = PAGE_NAMES[currentPage] || 'Dashboard'
 

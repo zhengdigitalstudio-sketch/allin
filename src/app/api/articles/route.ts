@@ -1,6 +1,5 @@
+import { getSession, PENGURUS_ROLES, APPROVER_ROLES, ARTICLE_CREATE_ROLES } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 
 function generateSlug(title: string): string {
@@ -12,7 +11,6 @@ function generateSlug(title: string): string {
     .replace(/^-|-$/g, '')
 }
 
-const PENGURUS_ROLES = ['SUPER_ADMIN', 'KETUA', 'WAKIL_KETUA', 'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA']
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,7 +31,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
 
     const where: any = {}
 
@@ -109,12 +107,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userRole = (session.user as any).role as string
+    const userRole = session?.role || ''
     if (!PENGURUS_ROLES.includes(userRole)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -146,7 +144,7 @@ export async function POST(request: NextRequest) {
         isMemberOnly: isMemberOnly || false,
         metaTitle: metaTitle || null,
         metaDescription: metaDescription || null,
-        authorId: (session.user as any).id,
+        authorId: session.id,
         publishedAt: status === 'PUBLISHED' ? new Date() : null,
       },
       include: {
@@ -171,7 +169,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -188,8 +186,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Artikel tidak ditemukan' }, { status: 404 })
     }
 
-    const userRole = (session.user as any).role as string
-    const userId = (session.user as any).id as string
+    const userRole = session?.role || ''
+    const userId = session?.id || ''
 
     if (userRole !== 'SUPER_ADMIN' && existing.authorId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -247,7 +245,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -264,8 +262,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Artikel tidak ditemukan' }, { status: 404 })
     }
 
-    const userRole = (session.user as any).role as string
-    const userId = (session.user as any).id as string
+    const userRole = session?.role || ''
+    const userId = session?.id || ''
 
     if (userRole !== 'SUPER_ADMIN' && existing.authorId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

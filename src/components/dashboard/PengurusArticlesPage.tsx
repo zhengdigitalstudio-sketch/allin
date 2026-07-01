@@ -1,9 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
-import { motion } from 'framer-motion'
-import { Plus, Pencil, Trash2, Eye, Loader2 } from 'lucide-react'
+import { useAppStore } from '@/lib/store'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,8 +22,8 @@ interface Article { id: string; title: string; content: string | null; excerpt: 
 const emptyForm = { title: '', content: '', excerpt: '', category: 'Berita', status: 'DRAFT', isMemberOnly: false, metaTitle: '', metaDescription: '' }
 
 export function PengurusArticlesPage() {
-  const { data: session } = useSession()
-  const userId = (session?.user as any)?.id
+  const { user } = useAppStore()
+  const userId = user?.id
   const [articles, setArticles] = useState<Article[]>([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
