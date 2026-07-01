@@ -1,11 +1,13 @@
-// Force NEXTAUTH_URL
 if (!process.env.NEXTAUTH_URL) {
   process.env.NEXTAUTH_URL = 'https://allin.web.id'
 }
 
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
-import { db } from './db'
+
+// NOTE: db is imported dynamically inside callbacks to avoid
+// triggering the Prisma/LibSQL lazy-proxy during module evaluation.
+// This prevents build-time connection attempts.
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -13,29 +15,21 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
       allowDangerousEmailAccountLinking: true,
-      // Disable PKCE — PKCE stores code_verifier in a cookie which can be lost
-      // during the OAuth redirect on certain Vercel/Next.js 16 configurations.
-      // Google OAuth still works without PKCE (uses client_secret_post instead).
-      checks: ['state'] as any,
+      checks: ['state'] as any, // PKCE disabled — avoid code_verifier cookie issues
     }),
   ],
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === 'google' && user?.email) {
         try {
-          const existing = await db.user.findUnique({
-            where: { email: user.email },
-          })
+          // Dynamic import — only loads db when a sign-in actually happens
+          const { db } = await import('./db')
+
+          const existing = await db.user.findUnique({ where: { email: user.email } })
           if (existing) {
-            if (!existing.isActive) {
-              console.error(`[auth] User ${user.email} is deactivated`)
-              return false
-            }
+            if (!existing.isActive) { return false }
             if (!existing.avatar && user.image) {
-              await db.user.update({
-                where: { email: user.email },
-                data: { avatar: user.image },
-              })
+              await db.user.update({ where: { email: user.email }, data: { avatar: user.image } })
             }
           } else {
             await db.user.create({
@@ -49,6 +43,7 @@ export const authOptions: NextAuthOptions = {
             })
           }
         } catch (error) {
+          // Allow login even if DB is down (graceful degradation)
           console.error('[auth] signIn DB error (allowing login):', error)
         }
       }
@@ -59,11 +54,13 @@ export const authOptions: NextAuthOptions = {
         if (token.role) (session.user as any).role = token.role
         if (token.id) (session.user as any).id = token.id
         try {
+          // Dynamic import — only loads db when a session is checked
+          const { db } = await import('./db')
+
           const dbUser = await db.user.findUnique({ where: { email: String(token.email) } })
           if (dbUser) {
             Object.assign(session.user, {
-              id: dbUser.id,
-              role: dbUser.role,
+              id: dbUser.id, role: dbUser.role,
               image: dbUser.avatar || session.user.image,
             })
             token.role = dbUser.role
@@ -77,22 +74,19 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user) {
-        token.email = user.email
-        token.name = user.name
-        token.picture = user.image
-        token.role = 'MEMBER'
-        token.id = user.id
+        token.email = user.email; token.name = user.name
+        token.picture = user.image; token.role = 'MEMBER'; token.id = user.id
       }
       return token
     },
   },
-  // Log errors to Vercel function logs for debugging
   events: {
     async signInError({ error }: any) {
       console.error('[nextauth] signInError event:', {
         name: error?.name,
         message: error?.message,
         code: error?.code,
+        stack: error?.stack?.substring(0, 500),
       })
     },
   },
