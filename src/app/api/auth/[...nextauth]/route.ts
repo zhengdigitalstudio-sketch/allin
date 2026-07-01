@@ -1,19 +1,13 @@
 import NextAuth from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
-const handler = async (req: any, ctx: any) => {
-  try {
-    return await NextAuth(authOptions)(req, ctx)
-  } catch (error: any) {
-    console.error('[nextauth] Handler error:', {
-      message: error?.message,
-      stack: error?.stack?.slice(0, 500),
-      url: req?.url,
-      method: req?.method,
-    })
-    // Re-throw so NextAuth handles it normally
-    throw error
-  }
-}
+// CRITICAL: NextAuth v4 requires Node.js runtime, NOT Edge runtime.
+// Next.js 16 may default to Edge for API routes, which breaks NextAuth
+// because it needs Node.js crypto and other built-in modules.
+export const runtime = 'nodejs'
+// Force dynamic rendering — never cache auth routes
+export const dynamic = 'force-dynamic'
+
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }
