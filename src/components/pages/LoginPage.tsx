@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import Image from 'next/image'
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
-import { signIn, useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
@@ -59,9 +59,10 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     setError('')
-    signIn('google', {
-      redirect: true,
-    })
+    // Direct navigation to NextAuth's Google sign-in endpoint.
+    // This bypasses next-auth/react's signIn() which may have issues
+    // with Next.js 16's client-side routing.
+    window.location.href = '/api/auth/signin/google'
   }
 
   if (status === 'loading') {
