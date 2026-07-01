@@ -7,13 +7,24 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient(): PrismaClient {
-  const databaseUrl = process.env.DATABASE_URL || ''
+  // Support both naming conventions:
+  // - DATABASE_URL / DATABASE_AUTH_TOKEN (standard)
+  // - TURSO_DATABASE_URL / TURSO_AUTH_TOKEN (Vercel)
+  const databaseUrl =
+    process.env.DATABASE_URL ||
+    process.env.TURSO_DATABASE_URL ||
+    ''
+
+  const authToken =
+    process.env.DATABASE_AUTH_TOKEN ||
+    process.env.TURSO_AUTH_TOKEN ||
+    undefined
 
   // For Turso/LibSQL URLs (production on Vercel) — use the driver adapter
   if (databaseUrl.startsWith('libsql://')) {
     const libsql = createClient({
       url: databaseUrl,
-      authToken: process.env.DATABASE_AUTH_TOKEN || undefined,
+      authToken,
     })
 
     const adapter = new PrismaLibSql(libsql)
