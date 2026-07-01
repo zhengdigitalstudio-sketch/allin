@@ -1,3 +1,10 @@
+// Force NEXTAUTH_URL — critical for correct OAuth callback URL generation.
+// Without this, NextAuth infers the URL from request headers, which can be wrong on Vercel
+// (especially with www→non-www redirects), causing redirect_uri_mismatch with Google.
+if (!process.env.NEXTAUTH_URL) {
+  process.env.NEXTAUTH_URL = 'https://allin.web.id'
+}
+
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import { db } from './db'
@@ -8,24 +15,21 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
       allowDangerousEmailAccountLinking: true,
-      authorization: {
-        params: {
-          prompt: "select_account",
-        },
-      },
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // Google OAuth: link ke akun yang sudah ada atau buat baru
-      if (account?.provider === 'google' && user.email) {
+    async signIn({ user, account }) {
+      if (account?.provider === 'google' && user?.email) {
         try {
-          const existing = await db.user.findUnique({ where: { email: user.email } })
+          const existing = await db.user.findUnique({
+            where: { email: user.email },
+          })
 
           if (existing) {
-            if (!existing.isActive) return false
-
-            // Update avatar dari Google jika belum ada
+            if (!existing.isActive) {
+              console.error(`[auth] User ${user.email} is deactivated`)
+              return false
+            }
             if (!existing.avatar && user.image) {
               await db.user.update({
                 where: { email: user.email },
@@ -33,7 +37,6 @@ export const authOptions: NextAuthOptions = {
               })
             }
           } else {
-            // Buat akun baru — default MEMBER
             await db.user.create({
               data: {
                 name: user.name || 'Pengguna Google',
@@ -45,8 +48,7 @@ export const authOptions: NextAuthOptions = {
             })
           }
         } catch (error) {
-          // Jika DB gagal, tetap izinkan login — role akan di-set di JWT
-          // User tetap bisa masuk, tapi tanpa role spesifik
+          // DB gagal → tetap izinkan login, role dari JWT fallback
           console.error('[auth] signIn DB error (allowing login):', error)
         }
       }
@@ -54,30 +56,21 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user && token.email) {
-        // Gunakan role dari JWT token (sudah di-set saat signIn atau default)
-        if (token.role) {
-          (session.user as any).role = token.role
-        }
-        if (token.id) {
-          (session.user as any).id = token.id
-        }
-
-        // Coba ambil data terbaru dari DB
+        if (token.role) (session.user as any).role = token.role
+        if (token.id) (session.user as any).id = token.id
         try {
-          const email = String(token.email)
-          const dbUser = await db.user.findUnique({ where: { email } })
+          const dbUser = await db.user.findUnique({ where: { email: String(token.email) } })
           if (dbUser) {
             Object.assign(session.user, {
               id: dbUser.id,
               role: dbUser.role,
               image: dbUser.avatar || session.user.image,
             })
-            // Update JWT token dengan data terbaru
             token.role = dbUser.role
             token.id = dbUser.id
           }
         } catch (error) {
-          console.error('[auth] session DB error (using JWT data):', error)
+          console.error('[auth] session DB error:', error)
         }
       }
       return session
@@ -87,15 +80,15 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email
         token.name = user.name
         token.picture = user.image
-        token.role = 'MEMBER' // default, akan di-overwrite oleh session callback
+        token.role = 'MEMBER'
         token.id = user.id
       }
       return token
     },
   },
   pages: {
-    error: '/', // Redirect ke home jika ada error, bukan halaman error NextAuth
+    error: '/auth/error',
   },
   session: { strategy: 'jwt' },
-  secret: process.env.NEXTAUTH_SECRET!,
+  secret: process.env.NEXTAUTH_SECRET,
 }

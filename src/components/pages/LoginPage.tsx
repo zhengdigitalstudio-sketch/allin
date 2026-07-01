@@ -44,7 +44,8 @@ export default function LoginPage() {
   const handleGoogleLogin = () => {
     setError('')
     signIn('google', {
-      callbackUrl: '/',
+      // No callbackUrl — let NextAuth use the default flow
+      // which is more reliable than forcing a redirect
       redirect: true,
     })
   }
