@@ -1,31 +1,77 @@
-"""Generate ALL logo/icon files from the official ALLIN logo (1254x1254)."""
+"""Generate proper ALLIN logos from the official 1254x1254 source.
+Key fixes:
+- Remove white background (make transparent)
+- Crop circular emblem for small icon uses
+- Generate proper sizes for all contexts
+"""
 from PIL import Image
-import io, os
+import numpy as np
+import os
 
-SRC = "/home/z/my-project/upload/file_0000000018f072088dbb2d339d88310f.png"  # 1254x1254
+SRC = "/home/z/my-project/upload/logo untuk website dan faviconya.png"
 DST = "/home/z/my-project/public"
 
 img = Image.open(SRC).convert("RGBA")
-print(f"Source: {img.size} ({img.mode})")
+w, h = img.size
+print(f"Source: {img.size}")
 
-# 1. logo.png — full size for general use
-logo = img.resize((400, 400), Image.LANCZOS)
-logo.save(os.path.join(DST, "logo.png"), "PNG")
-print("✓ logo.png (400x400)")
+# --- Step 1: Remove white background, make transparent ---
+arr = np.array(img)
+# Detect near-white pixels (R>240, G>240, B>240)
+white_mask = (arr[:, :, 0] > 230) & (arr[:, :, 1] > 230) & (arr[:, :, 2] > 230)
+arr[white_mask, 3] = 0  # Set alpha to 0 for white pixels
+img_transparent = Image.fromarray(arr)
 
-# 2. logo-white.png — same logo, white bg for dark sections
-white_bg = Image.new("RGBA", img.size, (255, 255, 255, 255))
-white_bg.paste(img, mask=img.split()[3])
-logo_w = white_bg.resize((400, 400), Image.LANCZOS)
-logo_w.save(os.path.join(DST, "logo-white.png"), "PNG")
-print("✓ logo-white.png (400x400, white bg)")
+# --- Step 2: Find the emblem bounding box (circular gear area in upper portion) ---
+# The emblem is roughly in the top 65% of the image
+emblem_h = int(h * 0.62)
+emblem_img = img_transparent.crop((0, 0, w, emblem_h))
 
-# 3. favicon.ico (32x32, multi-size ICO)
+# Find bounding box of non-transparent pixels in the emblem
+arr_e = np.array(emblem_img)
+non_transparent = np.where(arr_e[:, :, 3] > 10)
+if len(non_transparent[0]) > 0:
+    y_min, y_max = int(non_transparent[0].min()), int(non_transparent[0].max())
+    x_min, x_max = int(non_transparent[1].min()), int(non_transparent[1].max())
+    # Add small padding
+    pad = 10
+    x_min = max(0, x_min - pad)
+    y_min = max(0, y_min - pad)
+    x_max = min(w, x_max + pad + 1)
+    y_max = min(emblem_h, y_max + pad + 1)
+    emblem_cropped = emblem_img.crop((x_min, y_min, x_max, y_max))
+    print(f"Emblem bounding box: ({x_min},{y_min}) to ({x_max},{y_max}), size: {x_max-x_min}x{y_max-y_min}")
+else:
+    emblem_cropped = emblem_img
+    print("WARNING: Could not find emblem, using full top portion")
+
+# --- Step 3: Generate all files ---
+
+# 1. logo.png — full logo (emblem + text), transparent bg, 500px tall
+logo_h = 500
+logo_w = int(w * logo_h / h)
+logo_full = img_transparent.resize((logo_w, logo_h), Image.LANCZOS)
+logo_full.save(os.path.join(DST, "logo.png"), "PNG")
+print(f"✓ logo.png ({logo_w}x{logo_h})")
+
+# 2. logo-white.png — same but on white bg (for footer/dark sections)
+white_bg = Image.new("RGBA", (logo_w, logo_h), (255, 255, 255, 255))
+white_bg.paste(logo_full, mask=logo_full.split()[3])
+white_bg.save(os.path.join(DST, "logo-white.png"), "PNG")
+print(f"✓ logo-white.png ({logo_w}x{logo_h}, white bg)")
+
+# 3. logo-icon.png — emblem only (circle), transparent bg, for small sizes
+icon_size = 512
+emblem_square = emblem_cropped.resize((icon_size, icon_size), Image.LANCZOS)
+emblem_square.save(os.path.join(DST, "logo-icon.png"), "PNG")
+print(f"✓ logo-icon.png ({icon_size}x{icon_size}, emblem only)")
+
+# 4. favicon.ico (multi-size from emblem)
 ico_sizes = [(16, 16), (32, 32), (48, 48)]
 ico_images = []
 for s in ico_sizes:
-    resized = img.resize(s, Image.LANCZOS)
-    # Add white bg for ICO (ICO doesn't support transparency well everywhere)
+    resized = emblem_cropped.resize(s, Image.LANCZOS)
+    # For ICO, put on white bg since ICO transparency is unreliable
     bg = Image.new("RGBA", s, (255, 255, 255, 255))
     bg.paste(resized, mask=resized.split()[3])
     ico_images.append(bg.convert("RGB"))
@@ -37,43 +83,34 @@ ico_images[0].save(
 )
 print("✓ favicon.ico (16/32/48)")
 
-# 4. favicon-32x32.png
-f32 = img.resize((32, 32), Image.LANCZOS)
-bg32 = Image.new("RGBA", (32, 32), (255, 255, 255, 255))
-bg32.paste(f32, mask=f32.split()[3])
-bg32.save(os.path.join(DST, "favicon-32x32.png"), "PNG")
+# 5. favicon-32x32.png (transparent, from emblem)
+f32 = emblem_cropped.resize((32, 32), Image.LANCZOS)
+f32.save(os.path.join(DST, "favicon-32x32.png"), "PNG")
 print("✓ favicon-32x32.png")
 
-# 5. apple-touch-icon.png (180x180)
-at = img.resize((180, 180), Image.LANCZOS)
+# 6. apple-touch-icon.png (180x180, from emblem)
+at = emblem_cropped.resize((180, 180), Image.LANCZOS)
 at.save(os.path.join(DST, "apple-touch-icon.png"), "PNG")
 print("✓ apple-touch-icon.png (180x180)")
 
-# 6. icon-192.png
-i192 = img.resize((192, 192), Image.LANCZOS)
+# 7. icon-192.png
+i192 = emblem_cropped.resize((192, 192), Image.LANCZOS)
 i192.save(os.path.join(DST, "icon-192.png"), "PNG")
 print("✓ icon-192.png")
 
-# 7. icon-512.png
-i512 = img.resize((512, 512), Image.LANCZOS)
+# 8. icon-512.png
+i512 = emblem_cropped.resize((512, 512), Image.LANCZOS)
 i512.save(os.path.join(DST, "icon-512.png"), "PNG")
 print("✓ icon-512.png")
 
-# 8. og-image.png (1200x630 for social sharing)
+# 9. og-image.png (1200x630 for social sharing)
 og = Image.new("RGB", (1200, 630), (255, 255, 255))
-logo_og = img.resize((400, 400), Image.LANCZOS)
-# Center the logo
-x = (1200 - 400) // 2
-y = (630 - 400) // 2
+# Use full logo centered
+logo_og = img_transparent.resize((500, 500), Image.LANCZOS)
+x = (1200 - 500) // 2
+y = (630 - 500) // 2
 og.paste(logo_og, (x, y), mask=logo_og.split()[3])
 og.save(os.path.join(DST, "og-image.png"), "PNG")
 print("✓ og-image.png (1200x630)")
 
-# Clean up old SVG placeholders
-for f in ["logo.svg", "logo-white.svg", "logo-icon.svg"]:
-    p = os.path.join(DST, f)
-    if os.path.exists(p):
-        os.remove(p)
-        print(f"✗ Removed old {f}")
-
-print("\nDone! All logos generated from official ALLIN logo.")
+print("\nDone! All logos generated with transparent backgrounds from official ALLIN logo.")

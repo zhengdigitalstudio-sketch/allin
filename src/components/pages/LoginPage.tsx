@@ -136,7 +136,7 @@ export default function LoginPage() {
           <div className="gradient-green py-8 rounded-t-xl">
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 mb-3">
-                <Image src="/logo.png" alt="ALLIN" width={48} height={48} className="w-12 h-12" />
+                <Image src="/logo-icon.png" alt="ALLIN" width={80} height={80} className="w-16 h-16 rounded-full" />
               </div>
               <h1 className="text-2xl font-bold text-white">ALLIN</h1>
               <p className="text-white/60 text-sm mt-1">Masuk ke akun Anda</p>
