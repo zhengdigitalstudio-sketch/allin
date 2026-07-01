@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import Image from 'next/image'
-import { Loader2, AlertCircle, ArrowLeft, Mail } from 'lucide-react'
+import { Loader2, AlertCircle, ArrowLeft, Mail, ChevronUp, ChevronDown } from 'lucide-react'
 import { signIn, useSession } from 'next-auth/react'
 
 export default function LoginPage() {
