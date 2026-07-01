@@ -1,4 +1,4 @@
-// Force NEXTAUTH_URL — critical for correct OAuth callback URL generation.
+// Force NEXTAUTH_URL
 if (!process.env.NEXTAUTH_URL) {
   process.env.NEXTAUTH_URL = 'https://allin.web.id'
 }
@@ -13,6 +13,10 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
       allowDangerousEmailAccountLinking: true,
+      // Disable PKCE — PKCE stores code_verifier in a cookie which can be lost
+      // during the OAuth redirect on certain Vercel/Next.js 16 configurations.
+      // Google OAuth still works without PKCE (uses client_secret_post instead).
+      checks: ['state'] as any,
     }),
   ],
   callbacks: {
@@ -80,6 +84,16 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
       }
       return token
+    },
+  },
+  // Log errors to Vercel function logs for debugging
+  events: {
+    async signInError({ error }: any) {
+      console.error('[nextauth] signInError event:', {
+        name: error?.name,
+        message: error?.message,
+        code: error?.code,
+      })
     },
   },
   session: { strategy: 'jwt' },
