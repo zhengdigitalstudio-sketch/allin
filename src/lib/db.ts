@@ -7,21 +7,25 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient(): PrismaClient {
-  // Support both naming conventions:
-  // - DATABASE_URL / DATABASE_AUTH_TOKEN (standard)
-  // - TURSO_DATABASE_URL / TURSO_AUTH_TOKEN (Vercel)
+  // Support multiple env var naming conventions
   const databaseUrl =
     process.env.DATABASE_URL ||
     process.env.TURSO_DATABASE_URL ||
+    process.env.TURSO_DB_URL ||
     ''
+
+  // Guard: skip LibSQL if URL is empty or invalid
+  if (!databaseUrl || databaseUrl === 'undefined' || !databaseUrl.startsWith('libsql://')) {
+    console.warn('[db] No valid libsql:// DATABASE_URL found, using default PrismaClient')
+    return new PrismaClient()
+  }
 
   const authToken =
     process.env.DATABASE_AUTH_TOKEN ||
     process.env.TURSO_AUTH_TOKEN ||
     undefined
 
-  // For Turso/LibSQL URLs (production on Vercel) — use the driver adapter
-  if (databaseUrl.startsWith('libsql://')) {
+  try {
     const libsql = createClient({
       url: databaseUrl,
       authToken,
@@ -32,14 +36,28 @@ function createPrismaClient(): PrismaClient {
     return new PrismaClient({
       adapter,
     })
+  } catch (error) {
+    console.error('[db] Failed to create LibSQL client, falling back to default:', error)
+    return new PrismaClient()
   }
-
-  // Default: standard PrismaClient (works with local file-based SQLite)
-  return new PrismaClient()
 }
 
-export const db = globalForPrisma.prisma ?? createPrismaClient()
+// Lazy initialization — don't create client at import time during build
+let _db: PrismaClient | null = null
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = db
-}
+export const db = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    if (!_db) {
+      _db = createPrismaClient()
+      if (process.env.NODE_ENV !== 'production') {
+        globalForPrisma.prisma = _db
+      }
+    }
+    const instance = globalForPrisma.prisma || _db
+    const value = (instance as any)[prop]
+    if (typeof value === 'function') {
+      return value.bind(instance)
+    }
+    return value
+  },
+})
