@@ -1,25 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import Image from 'next/image'
-import { Loader2, AlertCircle, ArrowLeft, Mail, ChevronUp, ChevronDown } from 'lucide-react'
+import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
 import { signIn, useSession } from 'next-auth/react'
 
 export default function LoginPage() {
   const { navigate, setUser } = useAppStore()
   const { data: session, status } = useSession()
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [showCredentials, setShowCredentials] = useState(false)
 
   // Redirect berdasarkan role setelah Google login berhasil
   useEffect(() => {
@@ -48,54 +42,11 @@ export default function LoginPage() {
   }, [status, session, navigate, setUser])
 
   const handleGoogleLogin = () => {
+    setError('')
     signIn('google', {
       callbackUrl: '/',
       redirect: true,
     })
-  }
-
-  const handleCredentialSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-
-    try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        setError('Email atau password salah.')
-      } else {
-        const sessionRes = await fetch('/api/auth/session')
-        const sess = await sessionRes.json()
-
-        if (sess?.user) {
-          const userData = sess.user as any
-          setUser({
-            id: userData.id || '',
-            name: userData.name || '',
-            email: userData.email || '',
-            role: userData.role || 'MEMBER',
-            avatar: userData.avatar || undefined,
-          })
-
-          if (userData.role === 'SUPER_ADMIN') {
-            navigate('admin-dashboard')
-          } else if (['KETUA', 'WAKIL_KETUA', 'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA'].includes(userData.role)) {
-            navigate('pengurus-dashboard')
-          } else {
-            navigate('member-dashboard')
-          }
-        }
-      }
-    } catch {
-      setError('Terjadi kesalahan. Silakan coba lagi.')
-    } finally {
-      setLoading(false)
-    }
   }
 
   // Loading state sementara menunggu session
@@ -152,7 +103,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Google Login — Primary */}
+            {/* Google Login — Only Method */}
             <Button
               type="button"
               onClick={handleGoogleLogin}
@@ -166,84 +117,6 @@ export default function LoginPage() {
               </svg>
               <span className="font-semibold">Masuk dengan Google</span>
             </Button>
-
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-3 text-muted-foreground">atau login manual</span>
-              </div>
-            </div>
-
-            {/* Toggle Credential Login */}
-            <button
-              type="button"
-              onClick={() => setShowCredentials(!showCredentials)}
-              className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
-            >
-              <Mail className="h-4 w-4" />
-              Login dengan email & password
-              {showCredentials ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
-
-            {/* Credential Form — Collapsible */}
-            <AnimatePresence>
-              {showCredentials && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
-                  <form onSubmit={handleCredentialSubmit} className="space-y-4 pt-1">
-                    <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="email@domain.com"
-                        className="mt-1.5"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Masukkan password"
-                        className="mt-1.5"
-                        required
-                      />
-                    </div>
-
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      variant="outline"
-                      className="w-full py-4"
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Memproses...
-                        </>
-                      ) : (
-                        'Masuk'
-                      )}
-                    </Button>
-                  </form>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             {/* Register link */}
             <div className="text-center pt-2">

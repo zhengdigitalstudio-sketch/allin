@@ -22,7 +22,7 @@ export function MemberDashboardPage() {
   const userName = session?.user?.name || 'Member'
 
   useEffect(() => {
-    fetch('/api/announcements').then(r => r.json()).then(d => setAnnouncements(Array.isArray(d) ? d.slice(0, 3) : [])).catch(() => {}).finally(() => setLoading(false))
+    fetch('/api/announcements').then(r => r.json()).then(d => setAnnouncements(d.announcements?.slice(0, 3) || [])).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
   return (

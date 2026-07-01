@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useAppStore, type PageKey } from '@/lib/store'
-import { ChevronRight, ChevronDown } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 
 function generateSlug(title: string): string {
@@ -12,6 +14,16 @@ function generateSlug(title: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth check — only SUPER_ADMIN can seed
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const userRole = (session.user as any).role as string
+    if (userRole !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Forbidden — hanya SUPER_ADMIN' }, { status: 403 })
+    }
+
     const { searchParams } = new URL(request.url)
     const force = searchParams.get('force') === 'true'
 

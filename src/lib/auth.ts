@@ -79,5 +79,5 @@ export const authOptions: NextAuthOptions = {
     },
   },
   session: { strategy: 'jwt' },
-  secret: process.env.NEXTAUTH_SECRET || 'allin-secret-key-2024-change-in-production',
+  secret: process.env.NEXTAUTH_SECRET!,
 }

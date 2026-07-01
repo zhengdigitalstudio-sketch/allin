@@ -23,10 +23,10 @@ import { toast } from 'sonner'
 
 interface Member {
   id: string
-  name: string
+  fullName: string
   email: string
-  company: string
-  type: string
+  companyName: string
+  memberType: string
   status: string
   phone?: string
   address?: string
@@ -216,10 +216,10 @@ export function AdminMembersPage() {
                   filteredMembers.map((member, idx) => (
                     <TableRow key={member.id} className="hover:bg-muted/30">
                       <TableCell className="text-xs text-muted-foreground">{(page - 1) * ITEMS_PER_PAGE + idx + 1}</TableCell>
-                      <TableCell className="text-sm font-medium">{member.name}</TableCell>
+                      <TableCell className="text-sm font-medium">{member.fullName}</TableCell>
                       <TableCell className="text-xs text-muted-foreground hidden md:table-cell">{member.email}</TableCell>
-                      <TableCell className="text-xs hidden lg:table-cell">{member.company || '-'}</TableCell>
-                      <TableCell className="text-xs hidden sm:table-cell">{member.type || '-'}</TableCell>
+                      <TableCell className="text-xs hidden lg:table-cell">{member.companyName || '-'}</TableCell>
+                      <TableCell className="text-xs hidden sm:table-cell">{member.memberType || '-'}</TableCell>
                       <TableCell>{getStatusBadge(member.status)}</TableCell>
                       <TableCell className="text-xs text-muted-foreground hidden xl:table-cell">
                         {new Date(member.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -294,7 +294,7 @@ export function AdminMembersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-muted-foreground">Nama Lengkap</p>
-                  <p className="text-sm font-medium">{selectedMember.name}</p>
+                  <p className="text-sm font-medium">{selectedMember.fullName}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Email</p>
@@ -306,11 +306,11 @@ export function AdminMembersPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Perusahaan</p>
-                  <p className="text-sm font-medium">{selectedMember.company || '-'}</p>
+                  <p className="text-sm font-medium">{selectedMember.companyName || '-'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Jenis Anggota</p>
-                  <p className="text-sm font-medium">{selectedMember.type || '-'}</p>
+                  <p className="text-sm font-medium">{selectedMember.memberType || '-'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Status</p>

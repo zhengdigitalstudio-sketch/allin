@@ -51,10 +51,7 @@ export default function ArtikelDetailPage() {
         // Increment view count
         await fetch(`/api/articles?view=${selectedArticleId}`)
 
-        const [articleRes, allRes] = await Promise.all([
-          fetch(`/api/articles?status=PUBLISHED&limit=100`),
-          fetch(`/api/articles?status=PUBLISHED&limit=100`),
-        ])
+        const articleRes = await fetch(`/api/articles?status=PUBLISHED&limit=100`)
         const articleData = await articleRes.json()
 
         if (!articleData.error && articleData.articles) {

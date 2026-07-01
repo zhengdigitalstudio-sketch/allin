@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/admin', '/login', '/pendaftaran'],
+        disallow: ['/api/'],
       },
     ],
     sitemap: 'https://allin.web.id/sitemap.xml',

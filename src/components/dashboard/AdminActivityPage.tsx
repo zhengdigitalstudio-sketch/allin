@@ -19,7 +19,7 @@ export function AdminActivityPage() {
   const fetchLogs = useCallback(async () => {
     try {
       const res = await fetch('/api/activity-log')
-      if (res.ok) { const data = await res.json(); setLogs(Array.isArray(data) ? data : []) }
+      if (res.ok) { const data = await res.json(); setLogs(data.logs || []) }
     } catch { setLogs([]) } finally { setLoading(false) }
   }, [])
 
