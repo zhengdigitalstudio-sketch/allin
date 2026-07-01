@@ -8,12 +8,30 @@ import { Card, CardContent } from '@/components/ui/card'
 import Image from 'next/image'
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
 import { signIn, useSession } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
   const { navigate, setUser } = useAppStore()
   const { data: session, status } = useSession()
+  const searchParams = useSearchParams()
 
   const [error, setError] = useState('')
+
+  // Detect error from NextAuth redirect (e.g. ?error=OAuthCallback)
+  useEffect(() => {
+    const errParam = searchParams.get('error')
+    if (errParam) {
+      if (errParam === 'OAuthCallback') {
+        setError('Login Google gagal. Pastikan URL callback sudah terdaftar di Google Cloud Console. Coba clear cache browser lalu login ulang.')
+      } else if (errParam === 'Configuration') {
+        setError('Konfigurasi server tidak lengkap. Hubungi admin.')
+      } else {
+        setError(`Login gagal: ${errParam}`)
+      }
+      // Clean URL
+      window.history.replaceState({}, '', '/login')
+    }
+  }, [searchParams])
 
   // Redirect berdasarkan role setelah Google login berhasil
   useEffect(() => {
@@ -21,7 +39,6 @@ export default function LoginPage() {
       const userData = session.user as any
       const role = userData.role || 'MEMBER'
 
-      // Sync ke Zustand store
       setUser({
         id: userData.id || '',
         name: userData.name || '',
@@ -30,7 +47,6 @@ export default function LoginPage() {
         avatar: userData.image || userData.avatar || undefined,
       })
 
-      // Navigate ke dashboard sesuai role
       if (role === 'SUPER_ADMIN') {
         navigate('admin-dashboard')
       } else if (['KETUA', 'WAKIL_KETUA', 'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA'].includes(role)) {
@@ -44,13 +60,10 @@ export default function LoginPage() {
   const handleGoogleLogin = () => {
     setError('')
     signIn('google', {
-      // No callbackUrl — let NextAuth use the default flow
-      // which is more reliable than forcing a redirect
       redirect: true,
     })
   }
 
-  // Loading state sementara menunggu session
   if (status === 'loading') {
     return (
       <div className="min-h-screen gradient-hero flex items-center justify-center">
@@ -98,13 +111,13 @@ export default function LoginPage() {
           <CardContent className="p-6 md:p-8 space-y-5">
             {/* Error */}
             {error && (
-              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm text-destructive flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                {error}
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 text-sm text-destructive flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>{error}</span>
               </div>
             )}
 
-            {/* Google Login — Only Method */}
+            {/* Google Login */}
             <Button
               type="button"
               onClick={handleGoogleLogin}
