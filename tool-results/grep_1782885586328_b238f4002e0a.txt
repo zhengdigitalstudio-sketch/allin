@@ -1,0 +1,252 @@
+/home/z/my-project/src/app/layout.tsx:39:  icons: {
+/home/z/my-project/src/app/layout.tsx:40:    icon: [
+/home/z/my-project/src/app/layout.tsx:41:      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+/home/z/my-project/src/app/layout.tsx:44:      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+/home/z/my-project/src/app/layout.tsx:58:        url: '/icon-512.png',
+/home/z/my-project/src/app/layout.tsx:73:        url: '/icon-512.png',
+/home/z/my-project/src/components/layout/DashboardLayout.tsx:120:            size="icon"
+/home/z/my-project/src/components/layout/Footer.tsx:31:  { icon: Facebook, label: 'Facebook', href: '#' },
+/home/z/my-project/src/components/layout/Footer.tsx:32:  { icon: Twitter, label: 'Twitter', href: '#' },
+/home/z/my-project/src/components/layout/Footer.tsx:33:  { icon: Instagram, label: 'Instagram', href: '#' },
+/home/z/my-project/src/components/layout/Footer.tsx:34:  { icon: Linkedin, label: 'LinkedIn', href: '#' },
+/home/z/my-project/src/components/layout/Footer.tsx:35:  { icon: Youtube, label: 'YouTube', href: '#' },
+/home/z/my-project/src/components/layout/Footer.tsx:81:            {/* Column 1: Logo & Description */}
+/home/z/my-project/src/components/layout/Footer.tsx:88:                  src="/logo-white.svg"
+/home/z/my-project/src/components/layout/Footer.tsx:89:                  alt="ALLIN Logo"
+/home/z/my-project/src/components/layout/Footer.tsx:172:                    <social.icon className="h-5 w-5 text-white/70 group-hover:text-allin-yellow-light transition-colors duration-200" />
+/home/z/my-project/src/components/layout/Navbar.tsx:11:  LogOut,
+/home/z/my-project/src/components/layout/Navbar.tsx:133:            {/* Logo */}
+/home/z/my-project/src/components/layout/Navbar.tsx:139:                src="/logo.svg"
+/home/z/my-project/src/components/layout/Navbar.tsx:140:                alt="ALLIN Logo"
+/home/z/my-project/src/components/layout/Navbar.tsx:216:                      <LogOut className="mr-2 h-4 w-4" />
+/home/z/my-project/src/components/layout/Navbar.tsx:238:                      size="icon"
+/home/z/my-project/src/components/layout/Navbar.tsx:251:                        src="/logo.svg"
+/home/z/my-project/src/components/layout/Navbar.tsx:252:                        alt="ALLIN Logo"
+/home/z/my-project/src/components/layout/Navbar.tsx:260:                            size="icon"
+/home/z/my-project/src/components/layout/Navbar.tsx:314:                              size="icon"
+/home/z/my-project/src/components/layout/Navbar.tsx:318:                              <LogOut className="h-4 w-4" />
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:17:  LogOut,
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:22:  type LucideIcon,
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:34:  icon: LucideIcon
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:38:  { label: 'Dashboard', page: 'admin-dashboard', icon: LayoutDashboard },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:39:  { label: 'Manajemen User', page: 'admin-users', icon: Users },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:40:  { label: 'Manajemen Artikel', page: 'admin-articles', icon: FileText },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:41:  { label: 'Manajemen Member', page: 'admin-members', icon: UserCheck },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:42:  { label: 'Manajemen Agenda', page: 'admin-agenda', icon: CalendarDays },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:43:  { label: 'Manajemen Galeri', page: 'admin-gallery', icon: Image },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:44:  { label: 'Kontak Masuk', page: 'admin-contacts', icon: MessageSquare },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:45:  { label: 'Banner', page: 'admin-banners', icon: LayoutGrid },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:46:  { label: 'SEO', page: 'admin-seo', icon: Search },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:47:  { label: 'Activity Log', page: 'admin-activity', icon: Activity },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:48:  { label: 'Backup', page: 'admin-backup', icon: Database },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:52:  { label: 'Dashboard', page: 'pengurus-dashboard', icon: LayoutDashboard },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:53:  { label: 'Artikel Saya', page: 'pengurus-articles', icon: PenLine },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:54:  { label: 'Profil', page: 'pengurus-profile', icon: UserCircle },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:58:  { label: 'Dashboard', page: 'member-dashboard', icon: LayoutDashboard },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:59:  { label: 'Profil', page: 'member-profile', icon: UserCircle },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:60:  { label: 'Dokumen', page: 'member-documents', icon: FileStack },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:61:  { label: 'Artikel', page: 'member-articles', icon: FileText },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:62:  { label: 'Agenda Internal', page: 'member-agenda', icon: CalendarDays },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:63:  { label: 'Pesan', page: 'member-inbox', icon: Inbox },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:180:                <item.icon
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:207:          <LogOut className="h-4.5 w-4.5 shrink-0" />
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:80:  const [logoFile, setLogoFile] = useState<FilePreview>({ file: null, preview: null, uploading: false, uploaded: null })
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:84:  const logoRef = useRef<HTMLInputElement>(null)
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:148:          logo: logoFile.uploaded || null,
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:410:                {/* Logo */}
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:412:                  label="Logo Perusahaan"
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:413:                  file={logoFile}
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:414:                  inputRef={logoRef}
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:415:                  onRemove={() => removeFile(setLogoFile)}
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:416:                  onChange={(e) => handleFileChange(e, setLogoFile)}
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:542:          <Button type="button" variant="ghost" size="icon" onClick={onRemove} className="flex-shrink-0">
+/home/z/my-project/src/components/pages/ArtikelPage.tsx:161:                <Button variant="ghost" size="icon" onClick={() => { setSearchInput(''); setSearch('') }}>
+/home/z/my-project/src/components/pages/LoginPage.tsx:135:          {/* Logo */}
+/home/z/my-project/src/components/pages/LoginPage.tsx:139:                <Image src="/logo-icon.svg" alt="ALLIN" width={48} height={48} className="w-12 h-12" />
+/home/z/my-project/src/components/pages/HomePage.tsx:140:    { icon: Users, title: 'Jaringan Profesional', description: 'Terhubung dengan para profesional dan pelaku industri ketenagalistrikan dari seluruh Indonesia untuk memperluas jejaring dan peluang kolaborasi.' },
+/home/z/my-project/src/components/pages/HomePage.tsx:141:    { icon: Shield, title: 'Regulasi Terkini', description: 'Akses informasi terbaru mengenai regulasi dan kebijakan di sektor ketenagalistrikan nasional yang relevan untuk bisnis Anda.' },
+/home/z/my-project/src/components/pages/HomePage.tsx:142:    { icon: GraduationCap, title: 'Pelatihan & Seminar', description: 'Ikuti berbagai program pelatihan, seminar, dan workshop yang dirancang khusus untuk meningkatkan kompetensi di industri ini.' },
+/home/z/my-project/src/components/pages/HomePage.tsx:143:    { icon: FileText, title: 'Akses Dokumen', description: 'Dapatkan akses ke dokumen standar, panduan teknis, dan publikasi penting di bidang ketenagalistrikan dan lingkungan industri.' },
+/home/z/my-project/src/components/pages/HomePage.tsx:144:    { icon: Scale, title: 'Advokasi Kebijakan', description: 'ALLIN berperan aktif dalam mengadvokasi kebijakan yang mendukung perkembangan industri ketenagalistrikan yang berkelanjutan.' },
+/home/z/my-project/src/components/pages/HomePage.tsx:145:    { icon: Handshake, title: 'Kolaborasi Industri', description: 'Fasilitasi kolaborasi antar perusahaan, institusi pendidikan, dan pemerintah untuk kemajuan industri ketenagalistrikan nasional.' },
+/home/z/my-project/src/components/pages/HomePage.tsx:149:    { label: 'Anggota Aktif', value: stats?.totalMembers ?? 0, icon: Users },
+/home/z/my-project/src/components/pages/HomePage.tsx:150:    { label: 'Artikel', value: stats?.totalArticles ?? 0, icon: Newspaper },
+/home/z/my-project/src/components/pages/HomePage.tsx:151:    { label: 'Pengurus', value: stats?.totalPengurus ?? 0, icon: Shield },
+/home/z/my-project/src/components/pages/HomePage.tsx:152:    { label: 'Kegiatan', value: stats?.totalAgenda ?? 0, icon: Calendar },
+/home/z/my-project/src/components/pages/HomePage.tsx:244:                      <item.icon className="w-6 h-6 text-allin-green mx-auto mb-2" />
+/home/z/my-project/src/components/pages/HomePage.tsx:319:                      <feature.icon className="w-7 h-7 text-allin-green" />
+/home/z/my-project/src/components/pages/TentangPage.tsx:44:  { label: 'Perusahaan Energi Primer', icon: Zap },
+/home/z/my-project/src/components/pages/TentangPage.tsx:45:  { label: 'Pembangkit Listrik', icon: Building2 },
+/home/z/my-project/src/components/pages/TentangPage.tsx:46:  { label: 'Transmisi', icon: Globe },
+/home/z/my-project/src/components/pages/TentangPage.tsx:47:  { label: 'Gardu Induk', icon: Zap },
+/home/z/my-project/src/components/pages/TentangPage.tsx:48:  { label: 'Distribusi', icon: Lightbulb },
+/home/z/my-project/src/components/pages/TentangPage.tsx:49:  { label: 'Profesi', icon: Briefcase },
+/home/z/my-project/src/components/pages/TentangPage.tsx:50:  { label: 'Asosiasi Nirlaba', icon: Handshake },
+/home/z/my-project/src/components/pages/TentangPage.tsx:51:  { label: 'BUMN', icon: Landmark },
+/home/z/my-project/src/components/pages/TentangPage.tsx:52:  { label: 'Swasta', icon: Banknote },
+/home/z/my-project/src/components/pages/TentangPage.tsx:53:  { label: 'Patungan & Asing', icon: Globe },
+/home/z/my-project/src/components/pages/TentangPage.tsx:54:  { label: 'Perguruan Tinggi', icon: GraduationCap },
+/home/z/my-project/src/components/pages/TentangPage.tsx:55:  { label: 'Koperasi', icon: Users },
+/home/z/my-project/src/components/pages/TentangPage.tsx:56:  { label: 'Perorangan', icon: UserCircle },
+/home/z/my-project/src/components/pages/TentangPage.tsx:61:    icon: Target,
+/home/z/my-project/src/components/pages/TentangPage.tsx:66:    icon: Heart,
+/home/z/my-project/src/components/pages/TentangPage.tsx:71:    icon: Lightbulb,
+/home/z/my-project/src/components/pages/TentangPage.tsx:76:    icon: Globe,
+/home/z/my-project/src/components/pages/TentangPage.tsx:167:                      <type.icon className="w-5 h-5 text-allin-green" />
+/home/z/my-project/src/components/pages/TentangPage.tsx:243:                        <item.icon className="w-6 h-6 text-allin-green" />
+/home/z/my-project/src/components/pages/KontakPage.tsx:64:    { icon: Mail, label: 'Email', value: 'info@allin.web.id', href: 'mailto:info@allin.web.id' },
+/home/z/my-project/src/components/pages/KontakPage.tsx:65:    { icon: Phone, label: 'Telepon', value: '+62 21 1234 5678', href: 'tel:+622112345678' },
+/home/z/my-project/src/components/pages/KontakPage.tsx:66:    { icon: MapPin, label: 'Alamat', value: 'Jakarta, Indonesia', href: null },
+/home/z/my-project/src/components/pages/KontakPage.tsx:210:                            <info.icon className="w-5 h-5 text-allin-green" />
+/home/z/my-project/src/components/pages/KontakPage.tsx:223:                          <info.icon className="w-5 h-5 text-allin-green" />
+/home/z/my-project/src/components/pages/GaleriPage.tsx:192:                  size="icon"
+/home/z/my-project/src/components/ui/checkbox.tsx:5:import { CheckIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/checkbox.tsx:26:        <CheckIcon className="size-3.5" />
+/home/z/my-project/src/components/ui/command.tsx:5:import { SearchIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/command.tsx:72:      <SearchIcon className="size-4 shrink-0 opacity-50" />
+/home/z/my-project/src/components/ui/sheet.tsx:5:import { XIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/sheet.tsx:76:          <XIcon className="size-4" />
+/home/z/my-project/src/components/ui/menubar.tsx:5:import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/menubar.tsx:132:          <CheckIcon className="size-4" />
+/home/z/my-project/src/components/ui/menubar.tsx:156:          <CircleIcon className="size-2 fill-current" />
+/home/z/my-project/src/components/ui/menubar.tsx:238:      <ChevronRightIcon className="ml-auto h-4 w-4" />
+/home/z/my-project/src/components/ui/sidebar.tsx:6:import { PanelLeftIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/sidebar.tsx:32:const SIDEBAR_WIDTH_ICON = "3rem"
+/home/z/my-project/src/components/ui/sidebar.tsx:137:              "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+/home/z/my-project/src/components/ui/sidebar.tsx:164:  collapsible?: "offcanvas" | "icon" | "none"
+/home/z/my-project/src/components/ui/sidebar.tsx:225:            ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
+/home/z/my-project/src/components/ui/sidebar.tsx:226:            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)"
+/home/z/my-project/src/components/ui/sidebar.tsx:238:            ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
+/home/z/my-project/src/components/ui/sidebar.tsx:239:            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+/home/z/my-project/src/components/ui/sidebar.tsx:268:      size="icon"
+/home/z/my-project/src/components/ui/sidebar.tsx:276:      <PanelLeftIcon />
+/home/z/my-project/src/components/ui/sidebar.tsx:377:        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+/home/z/my-project/src/components/ui/sidebar.tsx:409:        "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
+/home/z/my-project/src/components/ui/sidebar.tsx:432:        "group-data-[collapsible=icon]:hidden",
+/home/z/my-project/src/components/ui/sidebar.tsx:477:  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+/home/z/my-project/src/components/ui/sidebar.tsx:488:        lg: "h-12 text-sm group-data-[collapsible=icon]:p-0!",
+/home/z/my-project/src/components/ui/sidebar.tsx:570:        "group-data-[collapsible=icon]:hidden",
+/home/z/my-project/src/components/ui/sidebar.tsx:594:        "group-data-[collapsible=icon]:hidden",
+/home/z/my-project/src/components/ui/sidebar.tsx:604:  showIcon = false,
+/home/z/my-project/src/components/ui/sidebar.tsx:607:  showIcon?: boolean
+/home/z/my-project/src/components/ui/sidebar.tsx:621:      {showIcon && (
+/home/z/my-project/src/components/ui/sidebar.tsx:624:          data-sidebar="menu-skeleton-icon"
+/home/z/my-project/src/components/ui/sidebar.tsx:647:        "group-data-[collapsible=icon]:hidden",
+/home/z/my-project/src/components/ui/sidebar.tsx:693:        "group-data-[collapsible=icon]:hidden",
+/home/z/my-project/src/components/ui/dropdown-menu.tsx:5:import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/dropdown-menu.tsx:103:          <CheckIcon className="size-4" />
+/home/z/my-project/src/components/ui/dropdown-menu.tsx:138:          <CircleIcon className="size-2 fill-current" />
+/home/z/my-project/src/components/ui/dropdown-menu.tsx:220:      <ChevronRightIcon className="ml-auto size-4" />
+/home/z/my-project/src/components/ui/navigation-menu.tsx:4:import { ChevronDownIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/navigation-menu.tsx:77:      <ChevronDownIcon
+/home/z/my-project/src/components/ui/accordion.tsx:5:import { ChevronDownIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/accordion.tsx:44:        <ChevronDownIcon className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200" />
+/home/z/my-project/src/components/ui/alert-dialog.tsx:31:function AlertDialogOverlay({
+/home/z/my-project/src/components/ui/alert-dialog.tsx:53:      <AlertDialogOverlay />
+/home/z/my-project/src/components/ui/alert-dialog.tsx:148:  AlertDialogOverlay,
+/home/z/my-project/src/components/ui/input-otp.tsx:5:import { MinusIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/input-otp.tsx:72:      <MinusIcon />
+/home/z/my-project/src/components/ui/button.tsx:28:        icon: "size-9",
+/home/z/my-project/src/components/ui/resizable.tsx:4:import { GripVerticalIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/resizable.tsx:49:          <GripVerticalIcon className="size-2.5" />
+/home/z/my-project/src/components/ui/calendar.tsx:5:  ChevronDownIcon,
+/home/z/my-project/src/components/ui/calendar.tsx:6:  ChevronLeftIcon,
+/home/z/my-project/src/components/ui/calendar.tsx:7:  ChevronRightIcon,
+/home/z/my-project/src/components/ui/calendar.tsx:141:              <ChevronLeftIcon className={cn("size-4", className)} {...props} />
+/home/z/my-project/src/components/ui/calendar.tsx:147:              <ChevronRightIcon
+/home/z/my-project/src/components/ui/calendar.tsx:155:            <ChevronDownIcon className={cn("size-4", className)} {...props} />
+/home/z/my-project/src/components/ui/calendar.tsx:192:      size="icon"
+/home/z/my-project/src/components/dashboard/PengurusDashboardPage.tsx:17:function StatCard({ icon: Icon, value, label, color }: { icon: React.ElementType; value: number; label: string; color: string }) {
+/home/z/my-project/src/components/dashboard/PengurusDashboardPage.tsx:23:          <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center`}><Icon className="w-5 h-5 text-white" /></div>
+/home/z/my-project/src/components/dashboard/PengurusDashboardPage.tsx:59:        <StatCard icon={FileText} value={articles.length} label="Total Artikel" color="bg-green-700" />
+/home/z/my-project/src/components/dashboard/PengurusDashboardPage.tsx:60:        <StatCard icon={Eye} value={totalViews} label="Total Views" color="bg-yellow-500" />
+/home/z/my-project/src/components/dashboard/PengurusDashboardPage.tsx:61:        <StatCard icon={PenLine} value={drafts.length} label="Draft" color="bg-orange-500" />
+/home/z/my-project/src/components/dashboard/PengurusDashboardPage.tsx:62:        <StatCard icon={TrendingUp} value={published.length} label="Dipublikasi" color="bg-green-800" />
+/home/z/my-project/src/components/ui/dialog.tsx:5:import { XIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/dialog.tsx:33:function DialogOverlay({
+/home/z/my-project/src/components/ui/dialog.tsx:59:      <DialogOverlay />
+/home/z/my-project/src/components/ui/dialog.tsx:74:            <XIcon />
+/home/z/my-project/src/components/ui/dialog.tsx:139:  DialogOverlay,
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:197:                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openDetail(contact)} title="Lihat Pesan">
+/home/z/my-project/src/components/ui/carousel.tsx:177:  size = "icon",
+/home/z/my-project/src/components/ui/carousel.tsx:207:  size = "icon",
+/home/z/my-project/src/components/ui/radio-group.tsx:5:import { CircleIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/radio-group.tsx:39:        <CircleIcon className="fill-primary absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2" />
+/home/z/my-project/src/components/dashboard/AdminUsersPage.tsx:70:  const [dialogOpen, setDialogOpen] = useState(false)
+/home/z/my-project/src/components/dashboard/AdminUsersPage.tsx:101:    setDialogOpen(true)
+/home/z/my-project/src/components/dashboard/AdminUsersPage.tsx:113:    setDialogOpen(true)
+/home/z/my-project/src/components/dashboard/AdminUsersPage.tsx:143:        setDialogOpen(false)
+/home/z/my-project/src/components/dashboard/AdminUsersPage.tsx:248:                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEditDialog(user)} title="Edit">
+/home/z/my-project/src/components/dashboard/AdminUsersPage.tsx:251:                          <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(user.id)} title="Hapus">
+/home/z/my-project/src/components/dashboard/AdminUsersPage.tsx:270:                <Button size="icon" variant="outline" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+/home/z/my-project/src/components/dashboard/AdminUsersPage.tsx:274:                <Button size="icon" variant="outline" className="h-8 w-8" disabled={users.length < ITEMS_PER_PAGE} onClick={() => setPage(page + 1)}>
+/home/z/my-project/src/components/dashboard/AdminUsersPage.tsx:284:      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+/home/z/my-project/src/components/dashboard/AdminUsersPage.tsx:337:              <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
+/home/z/my-project/src/components/ui/chart.tsx:14:    icon?: React.ComponentType
+/home/z/my-project/src/components/ui/chart.tsx:199:                  {itemConfig?.icon ? (
+/home/z/my-project/src/components/ui/chart.tsx:200:                    <itemConfig.icon />
+/home/z/my-project/src/components/ui/chart.tsx:255:  hideIcon = false,
+/home/z/my-project/src/components/ui/chart.tsx:261:    hideIcon?: boolean
+/home/z/my-project/src/components/ui/chart.tsx:289:            {itemConfig?.icon && !hideIcon ? (
+/home/z/my-project/src/components/ui/chart.tsx:290:              <itemConfig.icon />
+/home/z/my-project/src/components/dashboard/AdminAgendaPage.tsx:70:  const [dialogOpen, setDialogOpen] = useState(false)
+/home/z/my-project/src/components/dashboard/AdminAgendaPage.tsx:101:    setDialogOpen(true)
+/home/z/my-project/src/components/dashboard/AdminAgendaPage.tsx:114:    setDialogOpen(true)
+/home/z/my-project/src/components/dashboard/AdminAgendaPage.tsx:133:        setDialogOpen(false)
+/home/z/my-project/src/components/dashboard/AdminAgendaPage.tsx:241:                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEditDialog(agenda)} title="Edit">
+/home/z/my-project/src/components/dashboard/AdminAgendaPage.tsx:244:                          <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(agenda.id)} title="Hapus">
+/home/z/my-project/src/components/dashboard/AdminAgendaPage.tsx:263:                <Button size="icon" variant="outline" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+/home/z/my-project/src/components/dashboard/AdminAgendaPage.tsx:267:                <Button size="icon" variant="outline" className="h-8 w-8" disabled={agendas.length < ITEMS_PER_PAGE} onClick={() => setPage(page + 1)}>
+/home/z/my-project/src/components/dashboard/AdminAgendaPage.tsx:277:      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+/home/z/my-project/src/components/dashboard/AdminAgendaPage.tsx:342:              <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
+/home/z/my-project/src/components/ui/select.tsx:5:import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/select.tsx:46:      <SelectPrimitive.Icon asChild>
+/home/z/my-project/src/components/ui/select.tsx:47:        <ChevronDownIcon className="size-4 opacity-50" />
+/home/z/my-project/src/components/ui/select.tsx:48:      </SelectPrimitive.Icon>
+/home/z/my-project/src/components/ui/select.tsx:117:          <CheckIcon className="size-4" />
+/home/z/my-project/src/components/ui/select.tsx:151:      <ChevronUpIcon className="size-4" />
+/home/z/my-project/src/components/ui/select.tsx:169:      <ChevronDownIcon className="size-4" />
+/home/z/my-project/src/components/ui/context-menu.tsx:5:import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
+/home/z/my-project/src/components/ui/context-menu.tsx:75:      <ChevronRightIcon className="ml-auto" />
+/home/z/my-project/src/components/ui/context-menu.tsx:155:          <CheckIcon className="size-4" />
+/home/z/my-project/src/components/ui/context-menu.tsx:179:          <CircleIcon className="size-2 fill-current" />
+/home/z/my-project/src/components/dashboard/PengurusArticlesPage.tsx:105:                <div className="flex gap-1 shrink-0"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(a)}><Pencil className="w-3.5 h-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(a.id)}><Trash2 className="w-3.5 h-3.5" /></Button></div>
+/home/z/my-project/src/components/ui/pagination.tsx:3:  ChevronLeftIcon,
+/home/z/my-project/src/components/ui/pagination.tsx:4:  ChevronRightIcon,
+/home/z/my-project/src/components/ui/pagination.tsx:5:  MoreHorizontalIcon,
+/home/z/my-project/src/components/ui/pagination.tsx:48:  size = "icon",
+/home/z/my-project/src/components/ui/pagination.tsx:79:      <ChevronLeftIcon />
+/home/z/my-project/src/components/ui/pagination.tsx:97:      <ChevronRightIcon />
+/home/z/my-project/src/components/ui/pagination.tsx:113:      <MoreHorizontalIcon className="size-4" />
+/home/z/my-project/src/components/dashboard/AdminGalleryPage.tsx:5:import { Plus, Pencil, Trash2, ImageIcon, Loader2 } from 'lucide-react'
+/home/z/my-project/src/components/dashboard/AdminGalleryPage.tsx:79:      items.length === 0 ? <Card className="p-12 text-center"><ImageIcon className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" /><p className="text-muted-foreground">Belum ada item galeri.</p></Card> :
+/home/z/my-project/src/components/dashboard/AdminGalleryPage.tsx:83:            <Card className="overflow-hidden border-0 shadow-sm"><div className="h-32 bg-gradient-to-br from-allin-green to-allin-green-dark flex items-center justify-center"><ImageIcon className="w-8 h-8 text-white/30" /></div>
+/home/z/my-project/src/components/dashboard/AdminGalleryPage.tsx:88:                  <div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(item)}><Pencil className="w-3.5 h-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(item.id)}><Trash2 className="w-3.5 h-3.5" /></Button></div></div>
+/home/z/my-project/src/components/dashboard/AdminBannersPage.tsx:5:import { Plus, Pencil, Trash2, GripVertical, ImageIcon } from 'lucide-react'
+/home/z/my-project/src/components/dashboard/AdminBannersPage.tsx:58:      {banners.length === 0 ? <Card className="p-12 text-center"><ImageIcon className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" /><p className="text-muted-foreground">Belum ada banner.</p></Card> :
+/home/z/my-project/src/components/dashboard/AdminBannersPage.tsx:64:                <div className="sm:w-48 h-32 sm:h-auto bg-gradient-to-br from-allin-green to-allin-green-dark flex items-center justify-center shrink-0"><ImageIcon className="w-8 h-8 text-white/30" /></div>
+/home/z/my-project/src/components/dashboard/AdminBannersPage.tsx:74:                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(b)}><Pencil className="w-3.5 h-3.5" /></Button>
+/home/z/my-project/src/components/dashboard/AdminBannersPage.tsx:75:                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(b.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:229:                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openDetail(member)} title="Lihat Detail">
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:234:                              <Button size="icon" variant="ghost" className="h-8 w-8 text-green-700 hover:text-green-800 hover:bg-green-50" onClick={() => handleUpdateStatus(member.id, 'DISETUJUI')} title="Setujui">
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:237:                              <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleUpdateStatus(member.id, 'DITOLAK')} title="Tolak">
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:242:                          <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(member.id)} title="Hapus">
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:262:                  size="icon"
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:272:                  size="icon"
+/home/z/my-project/src/components/dashboard/MemberDashboardPage.tsx:33:          { icon: User, label: 'Status', value: 'Aktif', color: 'bg-green-700' },
+/home/z/my-project/src/components/dashboard/MemberDashboardPage.tsx:34:          { icon: Newspaper, label: 'Artikel', value: 'Tersedia', color: 'bg-yellow-500' },
+/home/z/my-project/src/components/dashboard/MemberDashboardPage.tsx:35:          { icon: Calendar, label: 'Agenda', value: 'Mendatang', color: 'bg-green-800' },
+/home/z/my-project/src/components/dashboard/MemberDashboardPage.tsx:41:                <div className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center`}><s.icon className="w-5 h-5 text-white" /></div>
+/home/z/my-project/src/components/dashboard/MemberDocumentsPage.tsx:11:  { id: '1', title: 'SK Keanggotaan', desc: 'Surat Keputusan Keanggotaan ALLIN', size: '245 KB', downloads: 128, icon: FileCheck },
+/home/z/my-project/src/components/dashboard/MemberDocumentsPage.tsx:12:  { id: '2', title: 'AD/ART ALLIN', desc: 'Anggaran Dasar dan Anggaran Rumah Tangga', size: '1.2 MB', downloads: 256, icon: BookOpen },
+/home/z/my-project/src/components/dashboard/MemberDocumentsPage.tsx:13:  { id: '3', title: 'Laporan Tahunan 2024', desc: 'Laporan pertanggungjawaban tahunan', size: '3.4 MB', downloads: 89, icon: FileSpreadsheet },
+/home/z/my-project/src/components/dashboard/MemberDocumentsPage.tsx:14:  { id: '4', title: 'Pedoman Teknis', desc: 'Standar teknis ketenagalistrikan', size: '5.8 MB', downloads: 167, icon: FileText },
+/home/z/my-project/src/components/dashboard/MemberDocumentsPage.tsx:15:  { id: '5', title: 'Formulir Sertifikasi', desc: 'Formulir pendaftaran sertifikasi kompetensi', size: '180 KB', downloads: 94, icon: FileText },
+/home/z/my-project/src/components/dashboard/MemberDocumentsPage.tsx:27:                <div className="w-12 h-12 rounded-xl bg-allin-green/10 flex items-center justify-center mb-4"><doc.icon className="w-6 h-6 text-allin-green" /></div>
+/home/z/my-project/src/components/dashboard/AdminDashboardPage.tsx:69:function StatCard({ icon: Icon, value, label, color, trend, trendLabel }: {
+/home/z/my-project/src/components/dashboard/AdminDashboardPage.tsx:70:  icon: React.ElementType
+/home/z/my-project/src/components/dashboard/AdminDashboardPage.tsx:104:              <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+/home/z/my-project/src/components/dashboard/AdminDashboardPage.tsx:273:          icon={Users}
+/home/z/my-project/src/components/dashboard/AdminDashboardPage.tsx:281:          icon={Newspaper}
+
+[Showing results with pagination = limit: 250]

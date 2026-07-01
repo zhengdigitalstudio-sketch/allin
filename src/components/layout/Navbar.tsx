@@ -136,12 +136,12 @@ export function Navbar() {
               className="flex items-center gap-2.5 group"
             >
               <Image
-                src="/logo.svg"
+                src="/logo.png"
                 alt="ALLIN Logo"
-                width={140}
-                height={32}
+                width={400}
+                height={400}
                 priority
-                className="h-8 sm:h-9 w-auto"
+                className="h-8 sm:h-9 w-auto
               />
             </button>
 
@@ -248,10 +248,10 @@ export function Navbar() {
                       {/* Mobile Header */}
                       <div className="flex items-center justify-between p-4 border-b border-allin-green/10">
                         <Image
-                        src="/logo.svg"
+                        src="/logo.png"
                         alt="ALLIN Logo"
-                        width={120}
-                        height={28}
+                        width={400}
+                        height={400}
                         className="h-7 w-auto"
                       />
                         <SheetClose asChild>

@@ -85,7 +85,7 @@ export function Footer() {
                 className="inline-block group"
               >
                 <Image
-                  src="/logo-white.svg"
+                  src="/logo-white.png"
                   alt="ALLIN Logo"
                   width={160}
                   height={36}
