@@ -45,14 +45,24 @@ export const authOptions: NextAuthOptions = {
             })
           }
         } catch (error) {
-          console.error('[auth] signIn error:', error)
-          return false
+          // Jika DB gagal, tetap izinkan login — role akan di-set di JWT
+          // User tetap bisa masuk, tapi tanpa role spesifik
+          console.error('[auth] signIn DB error (allowing login):', error)
         }
       }
       return true
     },
     async session({ session, token }) {
       if (session.user && token.email) {
+        // Gunakan role dari JWT token (sudah di-set saat signIn atau default)
+        if (token.role) {
+          (session.user as any).role = token.role
+        }
+        if (token.id) {
+          (session.user as any).id = token.id
+        }
+
+        // Coba ambil data terbaru dari DB
         try {
           const email = String(token.email)
           const dbUser = await db.user.findUnique({ where: { email } })
@@ -62,9 +72,12 @@ export const authOptions: NextAuthOptions = {
               role: dbUser.role,
               image: dbUser.avatar || session.user.image,
             })
+            // Update JWT token dengan data terbaru
+            token.role = dbUser.role
+            token.id = dbUser.id
           }
         } catch (error) {
-          console.error('[auth] session error:', error)
+          console.error('[auth] session DB error (using JWT data):', error)
         }
       }
       return session
@@ -74,9 +87,14 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email
         token.name = user.name
         token.picture = user.image
+        token.role = 'MEMBER' // default, akan di-overwrite oleh session callback
+        token.id = user.id
       }
       return token
     },
+  },
+  pages: {
+    error: '/', // Redirect ke home jika ada error, bukan halaman error NextAuth
   },
   session: { strategy: 'jwt' },
   secret: process.env.NEXTAUTH_SECRET!,
