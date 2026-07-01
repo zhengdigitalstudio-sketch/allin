@@ -1,6 +1,4 @@
 // Force NEXTAUTH_URL — critical for correct OAuth callback URL generation.
-// Without this, NextAuth infers the URL from request headers, which can be wrong on Vercel
-// (especially with www→non-www redirects), causing redirect_uri_mismatch with Google.
 if (!process.env.NEXTAUTH_URL) {
   process.env.NEXTAUTH_URL = 'https://allin.web.id'
 }
@@ -9,12 +7,35 @@ import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import { db } from './db'
 
+const CALLBACK_URL = 'https://allin.web.id/api/auth/callback/google'
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
       allowDangerousEmailAccountLinking: true,
+      // Explicitly force the redirect_uri so there's zero ambiguity.
+      // This overrides NextAuth's URL inference which can be wrong on Vercel.
+      authorization: {
+        url: 'https://accounts.google.com/o/oauth2/v2/auth',
+        params: {
+          prompt: 'consent',
+          access_type: 'offline',
+          redirect_uri: CALLBACK_URL,
+        },
+      },
+      token: {
+        // Ensure token exchange also uses the exact same redirect_uri
+        url: 'https://oauth2.googleapis.com/token',
+        async request({ client, params, provider }) {
+          const response = await client.post(provider.token!.url!, {
+            ...params,
+            redirect_uri: CALLBACK_URL,
+          })
+          return { tokens: response.data }
+        },
+      },
     }),
   ],
   callbacks: {
@@ -24,7 +45,6 @@ export const authOptions: NextAuthOptions = {
           const existing = await db.user.findUnique({
             where: { email: user.email },
           })
-
           if (existing) {
             if (!existing.isActive) {
               console.error(`[auth] User ${user.email} is deactivated`)
@@ -48,7 +68,6 @@ export const authOptions: NextAuthOptions = {
             })
           }
         } catch (error) {
-          // DB gagal → tetap izinkan login, role dari JWT fallback
           console.error('[auth] signIn DB error (allowing login):', error)
         }
       }
