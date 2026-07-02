@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Search, Plus, Pencil, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Search, Plus, Pencil, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Maximize2, Minimize2, Upload, X, ImageIcon } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -28,7 +28,7 @@ interface Article {
   id: string
   title: string
   category: string
-  author: string
+  author: string | { name: string }
   authorId: string
   status: string
   views: number
@@ -79,6 +79,9 @@ export function AdminArticlesPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<ArticleForm>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const fetchArticles = useCallback(async () => {
     setLoading(true)
@@ -126,6 +129,44 @@ export function AdminArticlesPage() {
     setDialogOpen(true)
   }
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Hanya file gambar yang diperbolehkan')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ukuran file maksimal 5MB')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+      if (res.ok) {
+        const data = await res.json()
+        setForm((prev) => ({ ...prev, coverImage: data.url }))
+        toast.success('Gambar berhasil diupload')
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Gagal mengupload gambar')
+      }
+    } catch {
+      toast.error('Gagal mengupload gambar')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const removeImage = () => {
+    setForm((prev) => ({ ...prev, coverImage: '' }))
+  }
+
   const handleSubmit = async () => {
     if (!form.title.trim()) {
       toast.error('Judul artikel wajib diisi')
@@ -143,6 +184,7 @@ export function AdminArticlesPage() {
       if (res.ok) {
         toast.success(editingId ? 'Artikel berhasil diperbarui' : 'Artikel berhasil dibuat')
         setDialogOpen(false)
+        setIsFullscreen(false)
         fetchArticles()
       } else {
         toast.error('Gagal menyimpan artikel')
@@ -381,7 +423,7 @@ export function AdminArticlesPage() {
       </motion.div>
 
       {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setIsFullscreen(false) }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Artikel' : 'Buat Artikel Baru'}</DialogTitle>
@@ -418,7 +460,19 @@ export function AdminArticlesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Konten</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Konten</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs gap-1.5 text-muted-foreground"
+                  onClick={() => setIsFullscreen(true)}
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                  Fullscreen
+                </Button>
+              </div>
               <Textarea
                 placeholder="Tulis konten lengkap artikel..."
                 rows={8}
@@ -427,12 +481,58 @@ export function AdminArticlesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-medium">URL Gambar Cover</Label>
-              <Input
-                placeholder="https://contoh.com/gambar.jpg"
-                value={form.coverImage}
-                onChange={(e) => setForm({ ...form, coverImage: e.target.value })}
-              />
+              <Label className="text-sm font-medium">Gambar Cover</Label>
+              <div className="space-y-3">
+                {form.coverImage ? (
+                  <div className="relative rounded-lg overflow-hidden border bg-muted">
+                    <img
+                      src={form.coverImage}
+                      alt="Cover preview"
+                      className="w-full h-40 object-cover"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-7 w-7 rounded-full shadow-md"
+                      onClick={removeImage}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 cursor-pointer hover:border-muted-foreground/50 hover:bg-muted/50 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                      <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Ketuk untuk upload gambar</p>
+                    <p className="text-xs text-muted-foreground/70">JPG, PNG, GIF, WebP (maks. 5MB)</p>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+                {form.coverImage && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs gap-1.5"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    {uploading ? 'Mengupload...' : 'Ganti Gambar'}
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -463,7 +563,7 @@ export function AdminArticlesPage() {
               </Label>
             </div>
             <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
+              <Button variant="outline" onClick={() => { setDialogOpen(false); setIsFullscreen(false) }}>Batal</Button>
               <Button
                 className="bg-green-700 hover:bg-green-800 text-white"
                 onClick={handleSubmit}
@@ -475,6 +575,61 @@ export function AdminArticlesPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Fullscreen Content Editor Overlay */}
+      <AnimatePresence>
+        {isFullscreen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] bg-background flex flex-col"
+          >
+            {/* Fullscreen Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+              <div className="flex items-center gap-3">
+                <h3 className="text-base font-semibold">Edit Konten — Fullscreen</h3>
+                <Badge variant="outline" className="text-xs">{form.title || 'Tanpa judul'}</Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs"
+                  onClick={() => { setIsFullscreen(false) }}
+                >
+                  <Minimize2 className="h-3.5 w-3.5" />
+                  Kembali
+                </Button>
+              </div>
+            </div>
+            {/* Fullscreen Textarea */}
+            <div className="flex-1 p-4 overflow-hidden">
+              <Textarea
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                placeholder="Tulis konten lengkap artikel di sini..."
+                className="h-full w-full resize-none text-base leading-relaxed rounded-lg"
+                autoFocus
+              />
+            </div>
+            {/* Fullscreen Footer */}
+            <div className="flex items-center justify-between px-4 py-3 border-t shrink-0 bg-muted/30">
+              <p className="text-xs text-muted-foreground">
+                {form.content.length} karakter
+              </p>
+              <Button
+                className="bg-green-700 hover:bg-green-800 text-white h-9"
+                onClick={() => setIsFullscreen(false)}
+              >
+                Selesai
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

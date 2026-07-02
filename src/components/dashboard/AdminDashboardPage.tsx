@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Users, Newspaper, Shield, Eye, UserPlus, Calendar, TrendingUp, TrendingDown, FileText, MessageSquare } from 'lucide-react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Users, Newspaper, Shield, UserPlus, Calendar, FileText, MessageSquare } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Cell } from 'recharts'
 import { useAppStore } from '@/lib/store'
@@ -17,14 +17,17 @@ import { toast } from 'sonner'
 
 const CHART_COLORS = ['#15803d', '#eab308', '#22c55e', '#ca8a04', '#166534', '#a16207', '#86efac']
 
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+
 interface Stats {
   totalMembers: number
   totalArticles: number
   totalPengurus: number
   totalContacts: number
   totalAgenda: number
-  totalGallery: number
-  totalPendingMembers: number
+  pendingRegistrations: number
+  monthlyRegistrations: { month: string; count: number }[]
+  articleCategories: { category: string; count: number }[]
 }
 
 interface ActivityLog {
@@ -66,13 +69,13 @@ function useAnimatedCounter(target: number, duration = 1200) {
   return count
 }
 
-function StatCard({ icon: Icon, value, label, color, trend, trendLabel }: {
+function StatCard({ icon: Icon, value, label, color, badge, badgeColor }: {
   icon: React.ElementType
   value: number
   label: string
   color: string
-  trend?: 'up' | 'down'
-  trendLabel?: string
+  badge?: string
+  badgeColor?: string
 }) {
   const animatedValue = useAnimatedCounter(value)
   return (
@@ -87,17 +90,10 @@ function StatCard({ icon: Icon, value, label, color, trend, trendLabel }: {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground font-medium">{label}</p>
               <p className="text-2xl sm:text-3xl font-bold">{animatedValue.toLocaleString('id-ID')}</p>
-              {trend && trendLabel && (
-                <div className="flex items-center gap-1">
-                  {trend === 'up' ? (
-                    <TrendingUp className="h-3.5 w-3.5 text-green-600" />
-                  ) : (
-                    <TrendingDown className="h-3.5 w-3.5 text-red-500" />
-                  )}
-                  <span className={cn('text-xs font-medium', trend === 'up' ? 'text-green-600' : 'text-red-500')}>
-                    {trendLabel}
-                  </span>
-                </div>
+              {badge && (
+                <Badge className={cn('text-[10px] px-1.5 py-0', badgeColor || 'bg-orange-100 text-orange-700 border-orange-200')}>
+                  {badge}
+                </Badge>
               )}
             </div>
             <div className={cn('flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl', color)}>
@@ -109,25 +105,6 @@ function StatCard({ icon: Icon, value, label, color, trend, trendLabel }: {
     </motion.div>
   )
 }
-
-const articleCategoryData = [
-  { name: 'Berita', value: 24 },
-  { name: 'Regulasi', value: 12 },
-  { name: 'Teknologi', value: 18 },
-  { name: 'Kegiatan', value: 30 },
-  { name: 'Seminar', value: 8 },
-  { name: 'Workshop', value: 15 },
-  { name: 'Opini', value: 10 },
-]
-
-const monthlyRegistrationData = [
-  { bulan: 'Jul', pendaftar: 12 },
-  { bulan: 'Agu', pendaftar: 19 },
-  { bulan: 'Sep', pendaftar: 15 },
-  { bulan: 'Okt', pendaftar: 25 },
-  { bulan: 'Nov', pendaftar: 22 },
-  { bulan: 'Des', pendaftar: 31 },
-]
 
 function formatTimeAgo(dateStr: string): string {
   const now = new Date()
@@ -157,15 +134,7 @@ export function AdminDashboardPage() {
         setStats(data)
       }
     } catch {
-      setStats({
-        totalMembers: 156,
-        totalArticles: 117,
-        totalPengurus: 5,
-        totalContacts: 43,
-        totalAgenda: 12,
-        totalGallery: 28,
-        totalPendingMembers: 8,
-      })
+      // Don't show fake fallback data — only real data
     }
   }, [])
 
@@ -201,6 +170,25 @@ export function AdminDashboardPage() {
     }
     loadAll()
   }, [fetchStats, fetchActivities, fetchPendingMembers])
+
+  // Transform API chart data for Recharts
+  const categoryChartData = useMemo(() => {
+    if (!stats?.articleCategories?.length) return []
+    return stats.articleCategories.map((item) => ({
+      name: item.category,
+      value: item.count,
+    }))
+  }, [stats?.articleCategories])
+
+  const registrationChartData = useMemo(() => {
+    if (!stats?.monthlyRegistrations?.length) return []
+    return stats.monthlyRegistrations.map((item) => ({
+      bulan: MONTH_NAMES[parseInt(item.month.split('-')[1], 10) - 1] || item.month,
+      pendaftar: item.count,
+    }))
+  }, [stats?.monthlyRegistrations])
+
+  const hasChartData = categoryChartData.length > 0 || registrationChartData.length > 0
 
   const handleApprove = async (id: string) => {
     try {
@@ -245,8 +233,8 @@ export function AdminDashboardPage() {
           <Skeleton className="h-8 w-64 mb-2" />
           <Skeleton className="h-4 w-48" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-32 rounded-xl" />
           ))}
         </div>
@@ -266,23 +254,19 @@ export function AdminDashboardPage() {
         <p className="text-muted-foreground mt-1">Berikut ringkasan data organisasi Anda hari ini.</p>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+      {/* Stat Cards — all real data from database */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatCard
           icon={Users}
           value={stats?.totalMembers ?? 0}
           label="Total Member"
           color="bg-green-700"
-          trend="up"
-          trendLabel="+12% bulan ini"
         />
         <StatCard
           icon={Newspaper}
           value={stats?.totalArticles ?? 0}
           label="Total Artikel"
           color="bg-yellow-500"
-          trend="up"
-          trendLabel="+5 bulan ini"
         />
         <StatCard
           icon={Shield}
@@ -291,101 +275,97 @@ export function AdminDashboardPage() {
           color="bg-green-800"
         />
         <StatCard
-          icon={Eye}
-          value={1234}
-          label="Pengunjung"
-          color="bg-sky-600"
-          trend="up"
-          trendLabel="+8% minggu ini"
-        />
-        <StatCard
           icon={UserPlus}
-          value={stats?.totalPendingMembers ?? 0}
+          value={stats?.pendingRegistrations ?? 0}
           label="Pendaftaran Baru"
           color="bg-orange-500"
-          trend="up"
-          trendLabel="Perlu ditinjau"
+          badge={(stats?.pendingRegistrations ?? 0) > 0 ? 'Perlu ditinjau' : undefined}
+          badgeColor="bg-orange-100 text-orange-700 border-orange-200"
         />
         <StatCard
           icon={Calendar}
           value={stats?.totalAgenda ?? 0}
           label="Total Kegiatan"
           color="bg-green-700"
-          trend="up"
-          trendLabel="+3 bulan ini"
         />
       </div>
 
-      {/* Charts */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">Statistik Artikel per Kategori</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={articleCategoryData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }}
-                    formatter={(value: number) => [`${value} artikel`, 'Jumlah']}
-                  />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                    {articleCategoryData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </motion.div>
+      {/* Charts — real data from database */}
+      {hasChartData && (
+        <div className="grid md:grid-cols-2 gap-6">
+          {categoryChartData.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base font-semibold">Statistik Artikel per Kategori</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={categoryChartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }}
+                        formatter={(value: number) => [`${value} artikel`, 'Jumlah']}
+                      />
+                      <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                        {categoryChartData.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">Pendaftaran Anggota</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <AreaChart data={monthlyRegistrationData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                  <defs>
-                    <linearGradient id="colorPendaftar" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#15803d" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#15803d" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="bulan" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }}
-                    formatter={(value: number) => [`${value} orang`, 'Pendaftar']}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="pendaftar"
-                    stroke="#15803d"
-                    strokeWidth={2}
-                    fill="url(#colorPendaftar)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+          {registrationChartData.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base font-semibold">Pendaftaran Anggota</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <AreaChart data={registrationChartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id="colorPendaftar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#15803d" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#15803d" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="bulan" tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }}
+                        formatter={(value: number) => [`${value} orang`, 'Pendaftar']}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="pendaftar"
+                        stroke="#15803d"
+                        strokeWidth={2}
+                        fill="url(#colorPendaftar)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </div>
+      )}
 
       {/* Recent Activity & Pending Members */}
       <div className="grid lg:grid-cols-2 gap-6">
