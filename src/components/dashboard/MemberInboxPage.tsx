@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Mail, MailOpen, Send } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -83,4 +84,3 @@ export function MemberInboxPage() {
   )
 }
 
-function cn(...classes: (string | false | undefined)[]) { return classes.filter(Boolean).join(' ') }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
-import { Menu } from 'lucide-react'
+import { Menu, Home, LogOut } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -130,6 +130,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Spacer */}
           <div className="flex-1" />
+
+          {/* Action Buttons */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-allin-green gap-1.5 text-xs"
+            onClick={() => navigate('home')}
+          >
+            <Home className="h-4 w-4" />
+            <span className="hidden sm:inline">Website</span>
+          </Button>
 
           {/* User Info (mobile & desktop) */}
           <div className="flex items-center gap-2">

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Calendar, MapPin, Clock } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -62,4 +63,3 @@ export function MemberAgendaPage() {
   )
 }
 
-function cn(...classes: (string | false | undefined)[]) { return classes.filter(Boolean).join(' ') }

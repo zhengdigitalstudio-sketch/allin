@@ -36,7 +36,7 @@ interface AgendaItem {
 
 const ITEMS_PER_PAGE = 10
 
-const AGENDA_STATUSES = ['MENDATANG', 'BERlangsung', 'SELESAI', 'DIBATALKAN']
+const AGENDA_STATUSES = ['MENDATANG', 'BERLANGSUNG', 'SELESAI', 'DIBATALKAN']
 
 const emptyForm = {
   title: '',

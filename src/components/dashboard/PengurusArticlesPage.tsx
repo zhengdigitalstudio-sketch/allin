@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
+import { Plus, Loader2, Pencil, Trash2, Eye } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { ARTICLE_CATEGORIES } from '@/lib/store'
 
 interface Article { id: string; title: string; content: string | null; excerpt: string | null; category: string; status: string; isMemberOnly: boolean; viewCount: number; createdAt: string; publishedAt: string | null; author: { id: string; name: string } | null }
@@ -44,8 +46,8 @@ export function PengurusArticlesPage() {
     if (!form.title.trim()) { toast.error('Judul wajib diisi'); return }
     setSaving(true)
     try {
-      const url = editingId ? '/api/articles' : '/api/articles'
-      const body = editingId ? { ...form, id: editingId } : form
+      const url = editingId ? `/api/articles/${editingId}` : '/api/articles'
+      const body = form
       const res = await fetch(url, { method: editingId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       if (res.ok) { toast.success(editingId ? 'Artikel diperbarui' : 'Artikel dibuat'); setOpen(false); setForm(emptyForm); setEditingId(null); fetchArticles() }
       else { const d = await res.json(); toast.error(d.error || 'Gagal') }
@@ -54,7 +56,7 @@ export function PengurusArticlesPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Hapus artikel ini?')) return
-    try { await fetch(`/api/articles?id=${id}`, { method: 'DELETE' }); toast.success('Dihapus'); fetchArticles() } catch { toast.error('Gagal menghapus') }
+    try { await fetch(`/api/articles/${id}`, { method: 'DELETE' }); toast.success('Dihapus'); fetchArticles() } catch { toast.error('Gagal menghapus') }
   }
 
   const handleEdit = (a: Article) => {
