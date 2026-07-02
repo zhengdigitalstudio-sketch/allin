@@ -131,7 +131,7 @@ export function AdminArticlesPage() {
     setDialogOpen(true)
   }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -145,24 +145,17 @@ export function AdminArticlesPage() {
     }
 
     setUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const res = await fetch('/api/upload', { method: 'POST', body: formData })
-      if (res.ok) {
-        const data = await res.json()
-        setForm((prev) => ({ ...prev, coverImage: data.url }))
-        toast.success('Gambar berhasil diupload')
-      } else {
-        const err = await res.json()
-        toast.error(err.error || 'Gagal mengupload gambar')
-      }
-    } catch {
-      toast.error('Gagal mengupload gambar')
-    } finally {
+    const reader = new FileReader()
+    reader.onload = () => {
+      setForm((prev) => ({ ...prev, coverImage: reader.result as string }))
+      toast.success('Gambar berhasil dipilih')
       setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
+    reader.onerror = () => {
+      toast.error('Gagal memproses gambar')
+      setUploading(false)
+    }
+    reader.readAsDataURL(file)
   }
 
   const removeImage = () => {
@@ -548,7 +541,7 @@ export function AdminArticlesPage() {
                   ref={fileInputRef}
                   type="file"
                   accept="image/jpeg,image/png,image/gif,image/webp"
-                  className="hidden"
+                  className="absolute w-px h-px p-0 -m-px overflow-hidden clip-[rect(0,0,0,0)] whitespace-nowrap border-0"
                   onChange={handleImageUpload}
                 />
                 {form.coverImage && (
