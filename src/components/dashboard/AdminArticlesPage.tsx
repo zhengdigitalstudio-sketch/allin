@@ -423,8 +423,12 @@ export function AdminArticlesPage() {
       </motion.div>
 
       {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setIsFullscreen(false) }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <Dialog open={dialogOpen && !isFullscreen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setIsFullscreen(false) }}>
+        <DialogContent
+          className="max-w-2xl max-h-[85vh] overflow-y-auto"
+          onInteractOutside={(e) => { if (isFullscreen) e.preventDefault() }}
+          onEscapeKeyDown={(e) => { if (isFullscreen) e.preventDefault() }}
+        >
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Artikel' : 'Buat Artikel Baru'}</DialogTitle>
           </DialogHeader>
@@ -467,7 +471,7 @@ export function AdminArticlesPage() {
                   variant="ghost"
                   size="sm"
                   className="h-7 text-xs gap-1.5 text-muted-foreground"
-                  onClick={() => setIsFullscreen(true)}
+                  onClick={(e) => { e.stopPropagation(); setIsFullscreen(true) }}
                 >
                   <Maximize2 className="h-3.5 w-3.5" />
                   Fullscreen
@@ -589,31 +593,28 @@ export function AdminArticlesPage() {
           >
             {/* Fullscreen Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-              <div className="flex items-center gap-3">
-                <h3 className="text-base font-semibold">Edit Konten — Fullscreen</h3>
-                <Badge variant="outline" className="text-xs">{form.title || 'Tanpa judul'}</Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
+              <div className="flex items-center gap-2 min-w-0">
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-8 gap-1.5 text-xs"
-                  onClick={() => { setIsFullscreen(false) }}
+                  className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted transition-colors shrink-0"
+                  onClick={(e) => { e.stopPropagation(); setIsFullscreen(false) }}
                 >
-                  <Minimize2 className="h-3.5 w-3.5" />
-                  Kembali
-                </Button>
+                  <Minimize2 className="h-4 w-4" />
+                </button>
+                <h3 className="text-sm font-semibold truncate">Edit Konten</h3>
+                <Badge variant="outline" className="text-[10px] shrink-0 hidden sm:inline-flex">{form.title || 'Tanpa judul'}</Badge>
               </div>
             </div>
             {/* Fullscreen Textarea */}
-            <div className="flex-1 p-4 overflow-hidden">
-              <Textarea
+            <div className="flex-1 p-3 sm:p-4 overflow-hidden">
+              <textarea
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
                 placeholder="Tulis konten lengkap artikel di sini..."
-                className="h-full w-full resize-none text-base leading-relaxed rounded-lg"
+                className="h-full w-full resize-none text-base sm:text-lg leading-relaxed rounded-lg border-0 outline-none bg-transparent p-0"
                 autoFocus
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
               />
             </div>
             {/* Fullscreen Footer */}
@@ -622,9 +623,10 @@ export function AdminArticlesPage() {
                 {form.content.length} karakter
               </p>
               <Button
-                className="bg-green-700 hover:bg-green-800 text-white h-9"
-                onClick={() => setIsFullscreen(false)}
+                className="bg-green-700 hover:bg-green-800 text-white h-9 text-sm"
+                onClick={(e) => { e.stopPropagation(); setIsFullscreen(false) }}
               >
+                <Minimize2 className="h-3.5 w-3.5 mr-1.5" />
                 Selesai
               </Button>
             </div>
