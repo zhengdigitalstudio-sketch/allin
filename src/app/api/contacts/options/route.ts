@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getRecipientLabels } from '@/lib/email'
+import { getRecipientOptions } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const labels = getRecipientLabels()
-    if (labels.length === 0) {
-      return NextResponse.json({ recipients: [] })
-    }
-    return NextResponse.json({ recipients: labels })
+    const options = getRecipientOptions()
+    return NextResponse.json({ recipients: options })
   } catch {
     return NextResponse.json({ recipients: [] })
   }

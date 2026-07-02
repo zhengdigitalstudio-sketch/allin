@@ -16,25 +16,22 @@ import {
   Phone,
   MapPin,
   Send,
-  Loader2,
   CheckCircle2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
 
 interface RecipientOption {
   key: string
   label: string
+  email: string
 }
 
 export default function KontakPage() {
   const { navigate } = useAppStore()
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '', recipientKey: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [recipients, setRecipients] = useState<RecipientOption[]>([])
-  const [loadingRecipients, setLoadingRecipients] = useState(true)
 
   useEffect(() => {
     fetch('/api/contacts/options')
@@ -45,7 +42,6 @@ export default function KontakPage() {
         }
       })
       .catch(() => {})
-      .finally(() => setLoadingRecipients(false))
   }, [])
 
   const validate = () => {
@@ -54,52 +50,40 @@ export default function KontakPage() {
     if (!form.email.trim()) e.email = 'Email wajib diisi'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Format email tidak valid'
     if (!form.message.trim()) e.message = 'Pesan wajib diisi'
+    if (recipients.length > 0 && !form.recipientKey) e.recipientKey = 'Pilih tujuan pesan'
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!validate()) return
 
-    const recipientIndex = recipients.findIndex((r) => r.key === form.recipientKey)
-    if (recipients.length > 0 && recipientIndex === -1) {
-      setErrors({ recipientKey: 'Pilih tujuan pesan' })
-      return
-    }
+    const recipient = recipients.find((r) => r.key === form.recipientKey)
+    const toEmail = recipient?.email || ''
 
-    setSubmitting(true)
-    try {
-      const body: Record<string, unknown> = {
-        name: form.name,
-        email: form.email,
-        subject: form.subject || null,
-        message: form.message,
-      }
-      if (recipientIndex >= 0) {
-        body.recipientIndex = recipientIndex
-      }
+    // Build email body
+    const bodyLines = [
+      `Dari: ${form.name} (${form.email})`,
+      '',
+      form.message,
+    ]
+    const bodyText = bodyLines.join('\n')
 
-      const res = await fetch('/api/contacts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        if (data.emailSent) {
-          toast.success('Pesan berhasil dikirim ke Gmail tujuan')
-        } else if (data.emailError) {
-          toast.warning('Pesan tersimpan, tapi email gagal dikirim')
-        }
-        setSuccess(true)
-      } else {
-        toast.error('Gagal mengirim pesan')
-      }
-    } catch {
-      toast.error('Gagal mengirim pesan')
-    } finally {
-      setSubmitting(false)
-    }
+    // Build subject
+    const subjectText = form.subject
+      ? `[ALLIN] ${form.subject}`
+      : '[ALLIN] Pesan dari Website'
+
+    // Build mailto: URL
+    const params = new URLSearchParams()
+    params.set('subject', subjectText)
+    params.set('body', bodyText)
+    const mailtoUrl = `mailto:${toEmail}?${params.toString()}`
+
+    // Open email client
+    window.location.href = mailtoUrl
+
+    setSuccess(true)
   }
 
   const contactInfo = [
@@ -131,7 +115,7 @@ export default function KontakPage() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="text-white/70 text-lg max-w-2xl"
           >
-            Silakan pilih pengurus yang ingin dihubungi, lalu kirim pesan Anda.
+            Pilih pengurus yang ingin dihubungi, lalu kirim pesan langsung melalui email Anda.
           </motion.p>
         </div>
       </section>
@@ -149,9 +133,9 @@ export default function KontakPage() {
                   className="bg-allin-green/5 border border-allin-green/20 rounded-2xl p-8 text-center"
                 >
                   <CheckCircle2 className="w-12 h-12 text-allin-green mx-auto mb-4" />
-                  <h3 className="text-xl font-bold mb-2">Pesan Terkirim!</h3>
+                  <h3 className="text-xl font-bold mb-2">Email App Terbuka!</h3>
                   <p className="text-muted-foreground mb-6">
-                    Terima kasih telah menghubungi kami. Pesan Anda akan diteruskan ke pengurus yang dipilih.
+                    Pesan sudah otomatis terisi di email Anda. Tinggal klik <strong>Kirim</strong> di aplikasi email untuk mengirim.
                   </p>
                   <Button
                     onClick={() => {
@@ -191,7 +175,7 @@ export default function KontakPage() {
                       </div>
                     )}
                     <div>
-                      <Label htmlFor="name">Nama *</Label>
+                      <Label htmlFor="name">Nama Anda *</Label>
                       <Input
                         id="name"
                         value={form.name}
@@ -202,7 +186,7 @@ export default function KontakPage() {
                       {errors.name && <p className="text-xs text-destructive mt-1">{errors.name}</p>}
                     </div>
                     <div>
-                      <Label htmlFor="email">Email *</Label>
+                      <Label htmlFor="email">Email Anda *</Label>
                       <Input
                         id="email"
                         type="email"
@@ -236,21 +220,14 @@ export default function KontakPage() {
                     </div>
                     <Button
                       onClick={handleSubmit}
-                      disabled={submitting}
                       className="w-full bg-allin-green hover:bg-allin-green-dark text-white font-bold"
                     >
-                      {submitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Mengirim...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4 mr-2" />
-                          Kirim Pesan
-                        </>
-                      )}
+                      <Send className="w-4 h-4 mr-2" />
+                      Kirim Pesan
                     </Button>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Klik &quot;Kirim Pesan&quot; akan membuka aplikasi email Anda dengan pesan yang sudah terisi.
+                    </p>
                   </div>
                 </div>
               )}
