@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Search, Plus, Pencil, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Maximize2, Minimize2, Upload, X, ImageIcon } from 'lucide-react'
+import { Search, Plus, Pencil, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Maximize2, Minimize2, Upload, X, ImageIcon, CheckCircle2, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
@@ -47,6 +47,7 @@ const ITEMS_PER_PAGE = 10
 const emptyForm = {
   title: '',
   category: 'Berita',
+  status: 'PUBLISHED',
   excerpt: '',
   content: '',
   coverImage: '',
@@ -119,6 +120,7 @@ export function AdminArticlesPage() {
     setForm({
       title: article.title,
       category: article.category,
+      status: article.status || 'DRAFT',
       excerpt: article.excerpt || '',
       content: article.content || '',
       coverImage: article.coverImage || '',
@@ -455,6 +457,25 @@ export function AdminArticlesPage() {
               </Select>
             </div>
             <div className="space-y-2">
+              <Label className="text-sm font-medium">Status</Label>
+              <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DRAFT">
+                    <span className="flex items-center gap-2"><EyeOff className="h-3.5 w-3.5 text-muted-foreground" /> Draft</span>
+                  </SelectItem>
+                  <SelectItem value="PUBLISHED">
+                    <span className="flex items-center gap-2"><Eye className="h-3.5 w-3.5 text-green-600" /> Publikasi</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {form.status === 'PUBLISHED' ? 'Artikel akan langsung tampil di website publik.' : 'Artikel disimpan tapi belum tampil di website.'}
+              </p>
+            </div>
+            <div className="space-y-2">
               <Label className="text-sm font-medium">Ringkasan</Label>
               <Textarea
                 placeholder="Tulis ringkasan singkat artikel..."
@@ -489,12 +510,16 @@ export function AdminArticlesPage() {
               <Label className="text-sm font-medium">Gambar Cover</Label>
               <div className="space-y-3">
                 {form.coverImage ? (
-                  <div className="relative rounded-lg overflow-hidden border bg-muted">
+                  <div className="relative rounded-lg overflow-hidden border-2 border-green-500/50 bg-green-50 dark:bg-green-950/20">
                     <img
                       src={form.coverImage}
                       alt="Cover preview"
                       className="w-full h-40 object-cover"
                     />
+                    <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-green-600 text-white text-xs font-medium px-2.5 py-1 rounded-full shadow-md">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Gambar terupload
+                    </div>
                     <Button
                       type="button"
                       variant="destructive"
@@ -507,14 +532,25 @@ export function AdminArticlesPage() {
                   </div>
                 ) : (
                   <div
-                    className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 cursor-pointer hover:border-muted-foreground/50 hover:bg-muted/50 transition-colors"
-                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      'flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 cursor-pointer transition-colors',
+                      uploading
+                        ? 'border-allin-green/50 bg-allin-green/5 pointer-events-none'
+                        : 'border-muted-foreground/25 hover:border-allin-green/50 hover:bg-muted/50'
+                    )}
+                    onClick={() => !uploading && fileInputRef.current?.click()}
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                      <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <p className="text-sm text-muted-foreground">Ketuk untuk upload gambar</p>
-                    <p className="text-xs text-muted-foreground/70">JPG, PNG, GIF, WebP (maks. 5MB)</p>
+                    {uploading ? (
+                      <Loader2 className="h-8 w-8 text-allin-green animate-spin" />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    )}
+                    <p className="text-sm text-muted-foreground">
+                      {uploading ? 'Mengupload...' : 'Ketuk untuk upload gambar'}
+                    </p>
+                    <p className="text-xs font-medium text-muted-foreground">Maks. 5MB — JPG, PNG, GIF, WebP</p>
                   </div>
                 )}
                 <input
@@ -534,7 +570,7 @@ export function AdminArticlesPage() {
                     disabled={uploading}
                   >
                     <Upload className="h-3.5 w-3.5" />
-                    {uploading ? 'Mengupload...' : 'Ganti Gambar'}
+                    Ganti Gambar
                   </Button>
                 )}
               </div>
@@ -572,9 +608,9 @@ export function AdminArticlesPage() {
               <Button
                 className="bg-green-700 hover:bg-green-800 text-white"
                 onClick={handleSubmit}
-                disabled={submitting}
+                disabled={submitting || !form.title.trim()}
               >
-                {submitting ? 'Menyimpan...' : editingId ? 'Perbarui' : 'Simpan'}
+                {submitting ? 'Menyimpan...' : form.status === 'PUBLISHED' ? 'Publikasikan' : 'Simpan sebagai Draft'}
               </Button>
             </div>
           </div>
