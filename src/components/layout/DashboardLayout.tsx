@@ -96,14 +96,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="flex h-screen overflow-hidden bg-muted/30">
       {/* Desktop Sidebar */}
-      <DashboardSidebar role={userRole} userName={userName} userRole={userRole} />
+      <aside className="hidden lg:flex lg:w-64 lg:shrink-0 lg:flex-col h-screen sticky top-0">
+        <DashboardSidebar role={userRole} userName={userName} userRole={userRole} />
+      </aside>
 
       {/* Mobile Sidebar Sheet */}
       <div className="lg:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetContent side="left" className="w-72 p-0">
             <SheetTitle className="sr-only">Menu Dashboard</SheetTitle>
-            <DashboardSidebar role={userRole} userName={userName} userRole={userRole} />
+            <div className="h-full">
+              <DashboardSidebar role={userRole} userName={userName} userRole={userRole} />
+            </div>
           </SheetContent>
         </Sheet>
       </div>

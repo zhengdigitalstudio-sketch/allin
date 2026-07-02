@@ -211,12 +211,5 @@ export function DashboardSidebar({ role, userName, userRole }: DashboardSidebarP
     </div>
   )
 
-  return (
-    <>
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:w-64 lg:shrink-0 lg:flex-col h-screen sticky top-0">
-        {sidebarContent}
-      </aside>
-    </>
-  )
+  return sidebarContent
 }
