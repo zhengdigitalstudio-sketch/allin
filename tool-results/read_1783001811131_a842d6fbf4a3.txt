@@ -1,0 +1,555 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useRef } from 'react'
+     4→import { motion, useInView } from 'framer-motion'
+     5→import { useAppStore } from '@/lib/store'
+     6→import { Button } from '@/components/ui/button'
+     7→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+     8→import { Badge } from '@/components/ui/badge'
+     9→import { Skeleton } from '@/components/ui/skeleton'
+    10→import {
+    11→  Users,
+    12→  Shield,
+    13→  GraduationCap,
+    14→  FileText,
+    15→  Scale,
+    16→  Handshake,
+    17→  ArrowRight,
+    18→  MapPin,
+    19→  Calendar,
+    20→  Eye,
+    21→  Newspaper,
+    22→  Megaphone,
+    23→  Zap,
+    24→} from 'lucide-react'
+    25→import { cn } from '@/lib/utils'
+    26→import { format } from 'date-fns'
+    27→import { id as localeId } from 'date-fns/locale'
+    28→
+    29→interface Article {
+    30→  id: string
+    31→  title: string
+    32→  excerpt: string | null
+    33→  category: string
+    34→  coverImage: string | null
+    35→  viewCount: number
+    36→  author: { name: string } | null
+    37→  createdAt: string
+    38→}
+    39→
+    40→interface AgendaItem {
+    41→  id: string
+    42→  title: string
+    43→  description: string | null
+    44→  date: string
+    45→  location: string | null
+    46→  status: string
+    47→}
+    48→
+    49→interface Announcement {
+    50→  id: string
+    51→  title: string
+    52→  content: string | null
+    53→  createdAt: string
+    54→}
+    55→
+    56→interface Stats {
+    57→  totalMembers: number
+    58→  totalArticles: number
+    59→  totalPengurus: number
+    60→  totalAgenda: number
+    61→}
+    62→
+    63→function AnimatedCounter({ target, duration = 2000 }: { target: number; duration?: number }) {
+    64→  const [count, setCount] = useState(0)
+    65→
+    66→  useEffect(() => {
+    67→    if (target === 0) return
+    68→    let startTime: number | null = null
+    69→    const animate = (timestamp: number) => {
+    70→      if (!startTime) startTime = timestamp
+    71→      const progress = Math.min((timestamp - startTime) / duration, 1)
+    72→      const eased = 1 - Math.pow(1 - progress, 3)
+    73→      setCount(Math.floor(eased * target))
+    74→      if (progress < 1) requestAnimationFrame(animate)
+    75→    }
+    76→    requestAnimationFrame(animate)
+    77→  }, [target, duration])
+    78→
+    79→  return <span>{count.toLocaleString('id-ID')}</span>
+    80→}
+    81→
+    82→function SectionWrapper({ children, className }: { children: React.ReactNode; className?: string }) {
+    83→  const ref = useRef(null)
+    84→  const isInView = useInView(ref, { once: true, margin: '-80px' })
+    85→  return (
+    86→    <motion.div
+    87→      ref={ref}
+    88→      initial={{ opacity: 0, y: 40 }}
+    89→      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+    90→      transition={{ duration: 0.6, ease: 'easeOut' }}
+    91→      className={className}
+    92→    >
+    93→      {children}
+    94→    </motion.div>
+    95→  )
+    96→}
+    97→
+    98→export default function HomePage() {
+    99→  const { navigate, setSelectedArticle } = useAppStore()
+   100→  const [stats, setStats] = useState<Stats | null>(null)
+   101→  const [articles, setArticles] = useState<Article[]>([])
+   102→  const [agendas, setAgendas] = useState<AgendaItem[]>([])
+   103→  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+   104→  const [loading, setLoading] = useState(true)
+   105→
+   106→  useEffect(() => {
+   107→    const fetchData = async () => {
+   108→      try {
+   109→        const [statsRes, articlesRes, agendaRes, announcementsRes] = await Promise.all([
+   110→          fetch('/api/stats'),
+   111→          fetch('/api/articles?limit=3&status=PUBLISHED'),
+   112→          fetch('/api/agenda?limit=3&status=AKTIF'),
+   113→          fetch('/api/announcements?limit=3'),
+   114→        ])
+   115→        const [statsData, articlesData, agendaData, announcementsData] = await Promise.all([
+   116→          statsRes.json(),
+   117→          articlesRes.json(),
+   118→          agendaRes.json(),
+   119→          announcementsRes.json(),
+   120→        ])
+   121→        if (!statsData.error) setStats(statsData)
+   122→        if (!articlesData.error) setArticles(articlesData.articles || [])
+   123→        if (!agendaData.error) {
+   124→          const upcoming = (agendaData.agenda || []).filter(
+   125→            (a: AgendaItem) => new Date(a.date) >= new Date(new Date().toDateString())
+   126→          )
+   127→          setAgendas(upcoming.slice(0, 3))
+   128→        }
+   129→        if (!announcementsData.error) setAnnouncements(announcementsData.announcements || [])
+   130→      } catch {
+   131→        // silently fail
+   132→      } finally {
+   133→        setLoading(false)
+   134→      }
+   135→    }
+   136→    fetchData()
+   137→  }, [])
+   138→
+   139→  const features = [
+   140→    { icon: Users, title: 'Jaringan Profesional', description: 'Terhubung dengan para profesional dan pelaku industri ketenagalistrikan dari seluruh Indonesia untuk memperluas jejaring dan peluang kolaborasi.' },
+   141→    { icon: Shield, title: 'Regulasi Terkini', description: 'Akses informasi terbaru mengenai regulasi dan kebijakan di sektor ketenagalistrikan nasional yang relevan untuk bisnis Anda.' },
+   142→    { icon: GraduationCap, title: 'Pelatihan & Seminar', description: 'Ikuti berbagai program pelatihan, seminar, dan workshop yang dirancang khusus untuk meningkatkan kompetensi di industri ini.' },
+   143→    { icon: FileText, title: 'Akses Dokumen', description: 'Dapatkan akses ke dokumen standar, panduan teknis, dan publikasi penting di bidang ketenagalistrikan dan lingkungan industri.' },
+   144→    { icon: Scale, title: 'Advokasi Kebijakan', description: 'ALLIN berperan aktif dalam mengadvokasi kebijakan yang mendukung perkembangan industri ketenagalistrikan yang berkelanjutan.' },
+   145→    { icon: Handshake, title: 'Kolaborasi Industri', description: 'Fasilitasi kolaborasi antar perusahaan, institusi pendidikan, dan pemerintah untuk kemajuan industri ketenagalistrikan nasional.' },
+   146→  ]
+   147→
+   148→  const statItems = [
+   149→    { label: 'Anggota Aktif', value: stats?.totalMembers ?? 0, icon: Users },
+   150→    { label: 'Artikel', value: stats?.totalArticles ?? 0, icon: Newspaper },
+   151→    { label: 'Pengurus', value: stats?.totalPengurus ?? 0, icon: Shield },
+   152→    { label: 'Kegiatan', value: stats?.totalAgenda ?? 0, icon: Calendar },
+   153→  ]
+   154→
+   155→  return (
+   156→    <div className="min-h-screen">
+   157→      {/* Hero Section */}
+   158→      <section className="relative gradient-hero min-h-[600px] md:min-h-[700px] flex items-center overflow-hidden">
+   159→        {/* Animated floating decorations */}
+   160→        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+   161→          <div className="absolute top-20 left-[10%] w-4 h-4 rounded-full bg-allin-yellow-light/30 animate-float" />
+   162→          <div className="absolute top-40 right-[15%] w-6 h-6 rounded-full bg-white/10 animate-float" style={{ animationDelay: '1s' }} />
+   163→          <div className="absolute bottom-32 left-[20%] w-3 h-3 rounded-full bg-allin-yellow-light/20 animate-float" style={{ animationDelay: '2s' }} />
+   164→          <div className="absolute top-60 left-[60%] w-5 h-5 rounded-full bg-white/5 animate-float" style={{ animationDelay: '0.5s' }} />
+   165→          <div className="absolute bottom-48 right-[25%] w-8 h-8 rounded-full bg-allin-yellow-light/15 animate-float" style={{ animationDelay: '3s' }} />
+   166→          <div className="absolute top-32 left-[40%] w-2 h-2 rounded-full bg-white/15 animate-float" style={{ animationDelay: '1.5s' }} />
+   167→          <div className="absolute bottom-24 left-[70%] w-4 h-4 rounded-full bg-allin-yellow-light/25 animate-float" style={{ animationDelay: '2.5s' }} />
+   168→          <div className="absolute top-16 right-[40%] w-3 h-3 rounded-full bg-white/10 animate-float" style={{ animationDelay: '4s' }} />
+   169→          <div className="absolute top-[70%] left-[5%] w-6 h-6 rounded-full bg-allin-green-light/10 animate-float" style={{ animationDelay: '3.5s' }} />
+   170→          <div className="absolute top-[45%] right-[8%] w-5 h-5 rounded-full bg-allin-yellow-light/10 animate-float" style={{ animationDelay: '1.2s' }} />
+   171→          {/* Overlay pattern */}
+   172→          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.03)_0%,transparent_60%)]" />
+   173→          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(234,179,8,0.04)_0%,transparent_50%)]" />
+   174→        </div>
+   175→
+   176→        <div className="relative z-10 container mx-auto px-4 py-20 md:py-28">
+   177→          <motion.div
+   178→            initial={{ opacity: 0, y: 30 }}
+   179→            animate={{ opacity: 1, y: 0 }}
+   180→            transition={{ duration: 0.8, ease: 'easeOut' }}
+   181→            className="max-w-4xl mx-auto text-center"
+   182→          >
+   183→            <motion.div
+   184→              initial={{ opacity: 0, scale: 0.9 }}
+   185→              animate={{ opacity: 1, scale: 1 }}
+   186→              transition={{ duration: 0.5, delay: 0.2 }}
+   187→              className="inline-flex items-center gap-2 glass-card rounded-full px-5 py-2 mb-8"
+   188→            >
+   189→              <Zap className="w-4 h-4 text-allin-yellow-light" />
+   190→              <span className="text-white/80 text-sm font-medium">Asosiasi Terkemuka di Industri Ketenagalistrikan</span>
+   191→            </motion.div>
+   192→
+   193→            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+   194→              Asosiasi Lingkungan Industri{' '}
+   195→              <span className="text-gradient-gold">Ketenagalistrikan Nasional</span>
+   196→            </h1>
+   197→
+   198→            <p className="text-lg md:text-xl text-white/75 max-w-2xl mx-auto mb-10 leading-relaxed">
+   199→              ALLIN adalah asosiasi terbuka yang menghimpun seluruh pemangku kepentingan di industri ketenagalistrikan Indonesia. Bersama kita membangun ekosistem industri yang lebih kuat, berkelanjutan, dan berdaya saing.
+   200→            </p>
+   201→
+   202→            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+   203→              <Button
+   204→                size="lg"
+   205→                onClick={() => navigate('pendaftaran')}
+   206→                className="gradient-gold text-allin-green-dark font-bold px-8 py-6 text-base hover:opacity-90 transition-opacity shadow-lg"
+   207→              >
+   208→                Bergabung Sekarang
+   209→                <ArrowRight className="ml-2 w-5 h-5" />
+   210→              </Button>
+   211→              <Button
+   212→                size="lg"
+   213→                variant="outline"
+   214→                onClick={() => navigate('tentang')}
+   215→                className="border-white/30 text-white hover:bg-white/10 px-8 py-6 text-base transition-colors"
+   216→              >
+   217→                Pelajari Lebih Lanjut
+   218→              </Button>
+   219→            </div>
+   220→          </motion.div>
+   221→        </div>
+   222→      </section>
+   223→
+   224→      {/* Stats Bar */}
+   225→      <section className="gradient-green py-8 md:py-10">
+   226→        <div className="container mx-auto px-4">
+   227→          {loading ? (
+   228→            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+   229→              {[...Array(4)].map((_, i) => (
+   230→                <Skeleton key={i} className="h-20 bg-white/10" />
+   231→              ))}
+   232→            </div>
+   233→          ) : (
+   234→            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+   235→              {statItems.map((item, i) => (
+   236→                <motion.div
+   237→                  key={item.label}
+   238→                  initial={{ opacity: 0, y: 20 }}
+   239→                  animate={{ opacity: 1, y: 0 }}
+   240→                  transition={{ duration: 0.5, delay: i * 0.1 }}
+   241→                >
+   242→                  <Card className="bg-white/95 shadow-md border-0 p-4 md:p-6 text-center">
+   243→                    <CardContent className="p-0">
+   244→                      <item.icon className="w-6 h-6 text-allin-green mx-auto mb-2" />
+   245→                      <div className="text-2xl md:text-3xl font-bold text-allin-green">
+   246→                        <AnimatedCounter target={item.value} />
+   247→                      </div>
+   248→                      <p className="text-sm text-muted-foreground mt-1">{item.label}</p>
+   249→                    </CardContent>
+   250→                  </Card>
+   251→                </motion.div>
+   252→              ))}
+   253→            </div>
+   254→          )}
+   255→        </div>
+   256→      </section>
+   257→
+   258→      {/* About Preview */}
+   259→      <SectionWrapper className="py-16 md:py-24">
+   260→        <div className="container mx-auto px-4">
+   261→          <div className="max-w-4xl mx-auto">
+   262→            <div className="flex items-center gap-3 mb-2">
+   263→              <div className="w-12 h-1 gradient-green rounded-full" />
+   264→              <span className="text-allin-green font-semibold text-sm uppercase tracking-wider">Tentang Kami</span>
+   265→            </div>
+   266→            <h2 className="text-2xl md:text-4xl font-bold mb-8">Tentang ALLIN</h2>
+   267→
+   268→            <div className="space-y-5 text-muted-foreground leading-relaxed text-base md:text-lg">
+   269→              <p>
+   270→                Asosiasi Lingkungan Industri Ketenagalistrikan Nasional (ALLIN) merupakan organisasi yang berdedikasi untuk memajukan dan mengembangkan industri ketenagalistrikan di Indonesia. Didirikan sebagai wadah bagi seluruh pelaku industri, ALLIN berkomitmen untuk menciptakan lingkungan bisnis yang kondusif bagi pertumbuhan sektor kelistrikan nasional.
+   271→              </p>
+   272→              <p>
+   273→                Sebagai asosiasi terbuka, ALLIN menerima keanggotaan dari berbagai lapisan industri mulai dari perusahaan energi primer, pembangkit listrik, transmisi, distribusi, hingga perguruan tinggi dan perorangan yang memiliki kepedulian terhadap kemajuan ketenagalistrikan Indonesia. Dengan keragaman anggota ini, ALLIN mampu menjadi forum yang representatif untuk menyuarakan aspirasi seluruh pemangku kepentingan.
+   274→              </p>
+   275→              <p>
+   276→                Melalui berbagai program dan kegiatan, ALLIN terus berupaya meningkatkan kompetensi sumber daya manusia, mendorong inovasi teknologi, serta memperkuat kerja sama antar pemangku kepentingan dalam rangka mewujudkan ketahanan energi nasional yang berkelanjutan.
+   277→              </p>
+   278→            </div>
+   279→
+   280→            <Button
+   281→              variant="outline"
+   282→              onClick={() => navigate('tentang')}
+   283→              className="mt-8 border-allin-green text-allin-green hover:bg-allin-green hover:text-white"
+   284→            >
+   285→              Selengkapnya
+   286→              <ArrowRight className="ml-2 w-4 h-4" />
+   287→            </Button>
+   288→          </div>
+   289→        </div>
+   290→      </SectionWrapper>
+   291→
+   292→      {/* Features / Why Join */}
+   293→      <SectionWrapper className="py-16 md:py-24 bg-muted/50">
+   294→        <div className="container mx-auto px-4">
+   295→          <div className="text-center mb-12">
+   296→            <div className="flex items-center justify-center gap-3 mb-2">
+   297→              <div className="w-12 h-1 gradient-gold rounded-full" />
+   298→              <span className="text-allin-yellow-dark font-semibold text-sm uppercase tracking-wider">Keunggulan</span>
+   299→              <div className="w-12 h-1 gradient-gold rounded-full" />
+   300→            </div>
+   301→            <h2 className="text-2xl md:text-4xl font-bold mb-4">Mengapa Bergabung dengan ALLIN?</h2>
+   302→            <p className="text-muted-foreground max-w-2xl mx-auto">
+   303→              Manfaat nyata yang akan Anda dapatkan sebagai anggota ALLIN untuk mendukung pertumbuhan bisnis dan profesionalisme Anda.
+   304→            </p>
+   305→          </div>
+   306→
+   307→          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+   308→            {features.map((feature, i) => (
+   309→              <motion.div
+   310→                key={feature.title}
+   311→                initial={{ opacity: 0, y: 30 }}
+   312→                whileInView={{ opacity: 1, y: 0 }}
+   313→                viewport={{ once: true }}
+   314→                transition={{ duration: 0.5, delay: i * 0.1 }}
+   315→              >
+   316→                <Card className="h-full border-0 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+   317→                  <CardContent className="p-6">
+   318→                    <div className="w-14 h-14 rounded-xl bg-allin-green/10 flex items-center justify-center mb-4 group-hover:bg-allin-green/20 transition-colors">
+   319→                      <feature.icon className="w-7 h-7 text-allin-green" />
+   320→                    </div>
+   321→                    <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
+   322→                    <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+   323→                  </CardContent>
+   324→                </Card>
+   325→              </motion.div>
+   326→            ))}
+   327→          </div>
+   328→        </div>
+   329→      </SectionWrapper>
+   330→
+   331→      {/* Latest Articles */}
+   332→      <SectionWrapper className="py-16 md:py-24">
+   333→        <div className="container mx-auto px-4">
+   334→          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
+   335→            <div>
+   336→              <div className="flex items-center gap-3 mb-2">
+   337→                <div className="w-12 h-1 gradient-green rounded-full" />
+   338→                <span className="text-allin-green font-semibold text-sm uppercase tracking-wider">Publikasi</span>
+   339→              </div>
+   340→              <h2 className="text-2xl md:text-4xl font-bold">Artikel Terbaru</h2>
+   341→            </div>
+   342→            <Button
+   343→              variant="outline"
+   344→              onClick={() => navigate('artikel')}
+   345→              className="border-allin-green text-allin-green hover:bg-allin-green hover:text-white"
+   346→            >
+   347→              Lihat Semua Artikel
+   348→              <ArrowRight className="ml-2 w-4 h-4" />
+   349→            </Button>
+   350→          </div>
+   351→
+   352→          {loading ? (
+   353→            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+   354→              {[...Array(3)].map((_, i) => (
+   355→                <Skeleton key={i} className="h-80 rounded-xl" />
+   356→              ))}
+   357→            </div>
+   358→          ) : articles.length === 0 ? (
+   359→            <Card className="p-12 text-center">
+   360→              <Newspaper className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+   361→              <p className="text-muted-foreground">Belum ada artikel yang dipublikasikan.</p>
+   362→            </Card>
+   363→          ) : (
+   364→            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+   365→              {articles.map((article, i) => (
+   366→                <motion.div
+   367→                  key={article.id}
+   368→                  initial={{ opacity: 0, y: 30 }}
+   369→                  whileInView={{ opacity: 1, y: 0 }}
+   370→                  viewport={{ once: true }}
+   371→                  transition={{ duration: 0.5, delay: i * 0.1 }}
+   372→                >
+   373→                  <Card
+   374→                    className="h-full cursor-pointer border-0 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group overflow-hidden"
+   375→                    onClick={() => {
+   376→                      setSelectedArticle(article.id)
+   377→                      navigate('artikel-detail')
+   378→                    }}
+   379→                  >
+   380→                    {/* Cover placeholder */}
+   381→                    <div className="h-44 gradient-green flex items-center justify-center relative overflow-hidden">
+   382→                      <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors" />
+   383→                      <Newspaper className="w-12 h-12 text-white/40" />
+   384→                      <Badge className="absolute top-3 left-3 bg-allin-yellow-light text-allin-green-dark text-xs font-semibold">
+   385→                        {article.category}
+   386→                      </Badge>
+   387→                    </div>
+   388→                    <CardContent className="p-5">
+   389→                      <h3 className="font-bold text-base mb-2 line-clamp-2 group-hover:text-allin-green transition-colors">
+   390→                        {article.title}
+   391→                      </h3>
+   392→                      <p className="text-muted-foreground text-sm line-clamp-3 mb-4">
+   393→                        {article.excerpt || 'Artikel terbaru dari ALLIN mengenai perkembangan industri ketenagalistrikan nasional.'}
+   394→                      </p>
+   395→                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+   396→                        <span>{article.author?.name || 'Redaksi ALLIN'}</span>
+   397→                        <span>{format(new Date(article.createdAt), 'dd MMM yyyy', { locale: localeId })}</span>
+   398→                      </div>
+   399→                    </CardContent>
+   400→                  </Card>
+   401→                </motion.div>
+   402→              ))}
+   403→            </div>
+   404→          )}
+   405→        </div>
+   406→      </SectionWrapper>
+   407→
+   408→      {/* Upcoming Agenda */}
+   409→      <SectionWrapper className="py-16 md:py-24 bg-muted/50">
+   410→        <div className="container mx-auto px-4">
+   411→          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
+   412→            <div>
+   413→              <div className="flex items-center gap-3 mb-2">
+   414→                <div className="w-12 h-1 gradient-gold rounded-full" />
+   415→                <span className="text-allin-yellow-dark font-semibold text-sm uppercase tracking-wider">Jadwal</span>
+   416→              </div>
+   417→              <h2 className="text-2xl md:text-4xl font-bold">Agenda Mendatang</h2>
+   418→            </div>
+   419→            <Button
+   420→              variant="outline"
+   421→              onClick={() => navigate('agenda')}
+   422→              className="border-allin-green text-allin-green hover:bg-allin-green hover:text-white"
+   423→            >
+   424→              Lihat Semua
+   425→              <ArrowRight className="ml-2 w-4 h-4" />
+   426→            </Button>
+   427→          </div>
+   428→
+   429→          {loading ? (
+   430→            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+   431→              {[...Array(3)].map((_, i) => (
+   432→                <Skeleton key={i} className="h-40 rounded-xl" />
+   433→              ))}
+   434→            </div>
+   435→          ) : agendas.length === 0 ? (
+   436→            <Card className="p-12 text-center">
+   437→              <Calendar className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
+   438→              <p className="text-muted-foreground">Belum ada agenda yang dijadwalkan.</p>
+   439→            </Card>
+   440→          ) : (
+   441→            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+   442→              {agendas.map((agenda, i) => {
+   443→                const agendaDate = new Date(agenda.date)
+   444→                return (
+   445→                  <motion.div
+   446→                    key={agenda.id}
+   447→                    initial={{ opacity: 0, y: 30 }}
+   448→                    whileInView={{ opacity: 1, y: 0 }}
+   449→                    viewport={{ once: true }}
+   450→                    transition={{ duration: 0.5, delay: i * 0.1 }}
+   451→                  >
+   452→                    <Card className="h-full border-0 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+   453→                      <CardContent className="p-6">
+   454→                        <div className="flex gap-4">
+   455→                          <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-allin-green/10 flex flex-col items-center justify-center">
+   456→                            <span className="text-2xl font-bold text-allin-green leading-none">
+   457→                              {format(agendaDate, 'dd')}
+   458→                            </span>
+   459→                            <span className="text-xs text-allin-green font-medium uppercase">
+   460→                              {format(agendaDate, 'MMM', { locale: localeId })}
+   461→                            </span>
+   462→                          </div>
+   463→                          <div className="min-w-0">
+   464→                            <h3 className="font-bold text-base mb-1 line-clamp-2">{agenda.title}</h3>
+   465→                            {agenda.location && (
+   466→                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+   467→                                <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+   468→                                <span className="truncate">{agenda.location}</span>
+   469→                              </div>
+   470→                            )}
+   471→                            {agenda.description && (
+   472→                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{agenda.description}</p>
+   473→                            )}
+   474→                          </div>
+   475→                        </div>
+   476→                      </CardContent>
+   477→                    </Card>
+   478→                  </motion.div>
+   479→                )
+   480→              })}
+   481→            </div>
+   482→          )}
+   483→        </div>
+   484→      </SectionWrapper>
+   485→
+   486→      {/* Announcements */}
+   487→      {announcements.length > 0 && (
+   488→        <SectionWrapper className="py-16 md:py-24">
+   489→          <div className="container mx-auto px-4">
+   490→            <div className="mb-10">
+   491→              <div className="flex items-center gap-3 mb-2">
+   492→                <div className="w-12 h-1 gradient-green rounded-full" />
+   493→                <span className="text-allin-green font-semibold text-sm uppercase tracking-wider">Informasi</span>
+   494→              </div>
+   495→              <h2 className="text-2xl md:text-4xl font-bold">Pengumuman</h2>
+   496→            </div>
+   497→
+   498→            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+   499→              {announcements.map((announcement, i) => (
+   500→                <motion.div
+   501→                  key={announcement.id}
+   502→                  initial={{ opacity: 0, y: 30 }}
+   503→                  whileInView={{ opacity: 1, y: 0 }}
+   504→                  viewport={{ once: true }}
+   505→                  transition={{ duration: 0.5, delay: i * 0.1 }}
+   506→                >
+   507→                  <Card className="h-full border-0 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+   508→                    <CardHeader className="pb-3">
+   509→                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+   510→                        <Megaphone className="w-3.5 h-3.5" />
+   511→                        <span>{format(new Date(announcement.createdAt), 'dd MMMM yyyy', { locale: localeId })}</span>
+   512→                      </div>
+   513→                      <CardTitle className="text-base leading-snug">{announcement.title}</CardTitle>
+   514→                    </CardHeader>
+   515→                    {announcement.content && (
+   516→                      <CardContent className="pt-0">
+   517→                        <p className="text-sm text-muted-foreground line-clamp-3">{announcement.content}</p>
+   518→                      </CardContent>
+   519→                    )}
+   520→                  </Card>
+   521→                </motion.div>
+   522→              ))}
+   523→            </div>
+   524→          </div>
+   525→        </SectionWrapper>
+   526→      )}
+   527→
+   528→      {/* CTA Section */}
+   529→      <section className="gradient-green py-16 md:py-24 relative overflow-hidden">
+   530→        <div className="absolute inset-0 pointer-events-none">
+   531→          <div className="absolute top-10 right-[10%] w-32 h-32 rounded-full bg-white/5 animate-float" />
+   532→          <div className="absolute bottom-10 left-[15%] w-24 h-24 rounded-full bg-allin-yellow-light/10 animate-float" style={{ animationDelay: '2s' }} />
+   533→        </div>
+   534→        <div className="container mx-auto px-4 text-center relative z-10">
+   535→          <SectionWrapper>
+   536→            <h2 className="text-2xl md:text-4xl font-bold text-white mb-4">
+   537→              Siap Bergabung?
+   538→            </h2>
+   539→            <p className="text-white/80 max-w-xl mx-auto mb-8 text-lg">
+   540→              Jadilah bagian dari komunitas profesional industri ketenagalistrikan terbesar di Indonesia. Bersama kita wujudkan ketahanan energi nasional.
+   541→            </p>
+   542→            <Button
+   543→              size="lg"
+   544→              onClick={() => navigate('pendaftaran')}
+   545→              className="gradient-gold text-allin-green-dark font-bold px-10 py-6 text-base hover:opacity-90 transition-opacity shadow-lg"
+   546→            >
+   547→              Daftar Sekarang
+   548→              <ArrowRight className="ml-2 w-5 h-5" />
+   549→            </Button>
+   550→          </SectionWrapper>
+   551→        </div>
+   552→      </section>
+   553→    </div>
+   554→  )
+   555→}
