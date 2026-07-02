@@ -77,6 +77,11 @@ export default function ArtikelDetailPage() {
     fetchArticle()
   }, [selectedArticleId])
 
+  // Scroll to top when article changes (must be before any early returns - Rules of Hooks)
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [selectedArticleId])
+
   const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
   const shareText = article?.title || ''
 
@@ -142,11 +147,6 @@ export default function ArtikelDetailPage() {
       </div>
     )
   }
-
-  // Scroll to top when article loads
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
-  }, [selectedArticleId])
 
   return (
     <div className="min-h-screen overflow-x-hidden">

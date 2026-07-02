@@ -159,10 +159,10 @@ export function AppRouter() {
       <AnimatePresence mode="wait">
         <motion.div
           key={currentPage}
-          initial={{ opacity: 0 }}
+          initial={false}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0 }}
         >
           <PageComponent />
         </motion.div>
