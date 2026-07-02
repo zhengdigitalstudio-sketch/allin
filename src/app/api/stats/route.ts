@@ -1,48 +1,125 @@
-import { getSession, PENGURUS_ROLES, APPROVER_ROLES, ARTICLE_CREATE_ROLES } from '@/lib/auth'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { getSession, PENGURUS_ROLES } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { Prisma } from '@prisma/client'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getSession(request)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userRole = session?.role || ''
+    const userRole = session.role
     if (!PENGURUS_ROLES.includes(userRole)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    const now = new Date()
+
     const [
       totalMembers,
-      totalArticles,
       totalPengurus,
-      totalContacts,
+      totalArticles,
+      publishedArticles,
+      pendingRegistrations,
       totalAgenda,
-      totalGallery,
-      totalPendingMembers,
+      upcomingAgenda,
+      totalContacts,
+      monthlyRegistrationsRaw,
+      articleCategoriesRaw,
     ] = await Promise.all([
-      db.member.count({ where: { status: 'DISETUJUI' } }),
-      db.article.count({ where: { status: 'PUBLISHED' } }),
-      db.user.count({ where: { role: { in: PENGURUS_ROLES } } }),
-      db.contact.count(),
+      db.user.count({
+        where: { role: 'MEMBER', isActive: true },
+      }),
+      db.user.count({
+        where: { role: { in: PENGURUS_ROLES }, isActive: true },
+      }),
+      db.article.count(),
+      db.article.count({
+        where: { status: 'PUBLISHED' },
+      }),
+      db.member.count({
+        where: { status: 'MENUNGGU' },
+      }),
       db.agenda.count(),
-      db.gallery.count(),
-      db.member.count({ where: { status: 'MENUNGGU' } }),
+      db.agenda.count({
+        where: { date: { gte: now } },
+      }),
+      db.contact.count({
+        where: { isRead: false },
+      }),
+      // Monthly registrations for last 6 months
+      db.$queryRaw<Array<{ month: string; count: bigint }>>`
+        SELECT
+          TO_CHAR("createdAt", 'YYYY-MM') AS month,
+          COUNT(*)::bigint AS count
+        FROM "Member"
+        WHERE "createdAt" >= NOW() - INTERVAL '6 months'
+        GROUP BY TO_CHAR("createdAt", 'YYYY-MM')
+        ORDER BY month ASC
+      `,
+      // Article categories
+      db.$queryRaw<Array<{ category: string; count: bigint }>>`
+        SELECT "category", COUNT(*)::bigint AS count
+        FROM "Article"
+        GROUP BY "category"
+        ORDER BY count DESC
+      `,
     ])
+
+    // Build monthly registrations array — fill in missing months with 0
+    const monthlyRegistrations = buildMonthlyRegistrations(monthlyRegistrationsRaw)
+
+    // Map article categories
+    const articleCategories = articleCategoriesRaw.map((row) => ({
+      category: row.category,
+      count: Number(row.count),
+    }))
 
     return NextResponse.json({
       totalMembers,
-      totalArticles,
       totalPengurus,
-      totalContacts,
+      totalArticles,
+      publishedArticles,
+      pendingRegistrations,
       totalAgenda,
-      totalGallery,
-      totalPendingMembers,
+      upcomingAgenda,
+      totalContacts,
+      monthlyRegistrations,
+      articleCategories,
     })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Gagal mengambil statistik' }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Gagal mengambil statistik'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
+}
+
+/**
+ * Given the raw query result, produce an array of { month, count } for the
+ * last 6 consecutive months, filling gaps with count: 0.
+ */
+function buildMonthlyRegistrations(
+  rows: Array<{ month: string; count: bigint }>,
+): Array<{ month: string; count: number }> {
+  const result: Array<{ month: string; count: number }> = []
+
+  // Build a map from raw data
+  const map = new Map<string, number>()
+  for (const row of rows) {
+    map.set(row.month, Number(row.count))
+  }
+
+  // Generate last 6 months
+  const now = new Date()
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    result.push({ month: key, count: map.get(key) ?? 0 })
+  }
+
+  return result
 }
