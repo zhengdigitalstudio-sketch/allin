@@ -13,13 +13,17 @@ const globalForPrisma = globalThis as unknown as {
 let _db: PrismaClient | null = null
 
 function createPrismaClient(): PrismaClient {
+<<<<<<< HEAD
   // Read env vars fresh each time (important during build vs runtime)
+=======
+>>>>>>> 1fcdbaf (fix: remove env(DATABASE_URL) from schema, fix db.ts lazy loading)
   const databaseUrl =
     (process.env.TURSO_DATABASE_URL ?? '') ||
     (process.env.DATABASE_URL ?? '') ||
     (process.env.TURSO_DB_URL ?? '') ||
     ''
 
+<<<<<<< HEAD
   // Always pass an explicit datasource URL to prevent Prisma from
   // looking up the env("DATABASE_URL") that may not exist in Vercel.
   const fallbackUrl = databaseUrl || 'file:./dev.db'
@@ -64,6 +68,38 @@ function createPrismaClient(): PrismaClient {
       datasources: { db: { url: fallbackUrl } },
     })
   }
+=======
+  const authToken =
+    (process.env.TURSO_AUTH_TOKEN ?? '') ||
+    (process.env.DATABASE_AUTH_TOKEN ?? '') ||
+    undefined
+
+  // Only use LibSQL adapter if we have a valid libsql:// URL
+  if (databaseUrl && databaseUrl !== 'undefined' && databaseUrl.startsWith('libsql://')) {
+    try {
+      // Dynamic require — LibSQL modules are ONLY loaded here at runtime,
+      // never at module-import or build-analysis time.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { createClient } = require('@libsql/client')
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { PrismaLibSql } = require('@prisma/adapter-libsql')
+
+      const libsql = createClient({
+        url: databaseUrl,
+        authToken: authToken || undefined,
+      })
+      const adapter = new PrismaLibSql(libsql)
+      console.log('[db] Using LibSQL adapter for Turso')
+      return new PrismaClient({ adapter })
+    } catch (error) {
+      console.error('[db] LibSQL adapter failed, falling back to local SQLite:', error)
+    }
+  }
+
+  // Fallback: local SQLite (schema URL is "file:./dev.db")
+  console.log('[db] Using local SQLite (no libsql:// URL found)')
+  return new PrismaClient()
+>>>>>>> 1fcdbaf (fix: remove env(DATABASE_URL) from schema, fix db.ts lazy loading)
 }
 
 export const db = new Proxy({} as PrismaClient, {
