@@ -1,4 +1,4 @@
-import { getSession, PENGURUS_ROLES, APPROVER_ROLES, ARTICLE_CREATE_ROLES } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
@@ -18,10 +18,18 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1', 10)
     const limit = parseInt(searchParams.get('limit') || '10', 10)
     const isRead = searchParams.get('isRead')
+    const search = searchParams.get('search')
 
     const where: any = {}
     if (isRead !== null && isRead !== undefined && isRead !== '') {
       where.isRead = isRead === 'true'
+    }
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { subject: { contains: search, mode: 'insensitive' } },
+      ]
     }
 
     const skip = (page - 1) * limit

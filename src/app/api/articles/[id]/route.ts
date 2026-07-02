@@ -49,12 +49,33 @@ export async function GET(
       }
     }
 
+    // Increment view count (check cookie to prevent duplicates)
+    let viewedIds: string[] = []
+    const cookieHeader = request.headers.get('cookie') || ''
+    const viewedCookie = cookieHeader.split(';').map(c => c.trim()).find(c => c.startsWith('viewed='))
+    if (viewedCookie) {
+      viewedIds = decodeURIComponent(viewedCookie.split('=')[1]).split(',')
+    }
+    const newViewedIds = viewedIds.includes(id) ? viewedIds : [...viewedIds, id]
+    const shouldIncrement = !viewedIds.includes(id)
+
+    if (shouldIncrement) {
+      await db.article.update({
+        where: { id },
+        data: { viewCount: { increment: 1 } },
+      })
+    }
+
     return NextResponse.json({
       article: {
         ...article,
         createdAt: article.createdAt.toISOString(),
         updatedAt: article.updatedAt.toISOString(),
         publishedAt: article.publishedAt?.toISOString() || null,
+      },
+    }, {
+      headers: {
+        'Set-Cookie': `viewed=${encodeURIComponent(newViewedIds.join(','))}; Path=/; Max-Age=${60 * 60 * 24}; SameSite=Lax`,
       },
     })
   } catch (error: any) {

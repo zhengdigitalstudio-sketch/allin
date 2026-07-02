@@ -115,7 +115,22 @@ export async function PUT(
     }
 
     if (status) updateData.status = status
-    if (otherFields) Object.assign(updateData, otherFields)
+
+    // Only SUPER_ADMIN or the member's own linked user can update other fields
+    if (Object.keys(otherFields).length > 0) {
+      const isOwner = existing.userId === session.id
+      const isAdmin = userRole === 'SUPER_ADMIN'
+      if (!isAdmin && !isOwner) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      // Whitelist allowed fields
+      const allowedFields = ['fullName', 'email', 'phone', 'companyName', 'memberType', 'position', 'address']
+      for (const key of Object.keys(otherFields)) {
+        if (allowedFields.includes(key)) {
+          (updateData as any)[key] = (otherFields as any)[key]
+        }
+      }
+    }
 
     const updated = await db.member.update({
       where: { id },

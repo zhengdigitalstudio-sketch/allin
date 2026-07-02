@@ -23,12 +23,20 @@ export async function GET(request: NextRequest) {
     const viewId = searchParams.get('view')
     const slug = searchParams.get('slug')
 
-    // Increment view count if requested
+    // Increment view count if requested (only once per session via cookie)
     if (viewId) {
-      await db.article.update({
-        where: { id: viewId },
-        data: { viewCount: { increment: 1 } },
-      })
+      const cookieHeader = request.headers.get('cookie') || ''
+      const viewed = cookieHeader
+        .split(';')
+        .map((c) => c.trim())
+        .filter((c) => c.startsWith('viewed='))
+      const viewedIds = viewed.length > 0 ? decodeURIComponent(viewed[0].split('=')[1]).split(',') : []
+      if (!viewedIds.includes(viewId)) {
+        await db.article.update({
+          where: { id: viewId },
+          data: { viewCount: { increment: 1 } },
+        })
+      }
     }
 
     const session = await getSession(request)

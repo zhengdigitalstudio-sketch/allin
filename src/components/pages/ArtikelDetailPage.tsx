@@ -48,22 +48,19 @@ export default function ArtikelDetailPage() {
     const fetchArticle = async () => {
       setLoading(true)
       try {
-        // Increment view count
-        await fetch(`/api/articles?view=${selectedArticleId}`)
-
-        const articleRes = await fetch(`/api/articles?status=PUBLISHED&limit=100`)
+        // Fetch single article directly
+        const articleRes = await fetch(`/api/articles/${selectedArticleId}`)
         const articleData = await articleRes.json()
 
-        if (!articleData.error && articleData.articles) {
-          const found = articleData.articles.find((a: Article) => a.id === selectedArticleId)
-          if (found) {
-            setArticle(found)
+        if (!articleData.error && articleData.article) {
+          const found = articleData.article
+          setArticle(found)
 
-            // Fetch related articles
-            const related = articleData.articles
-              .filter((a: Article) => a.category === found.category && a.id !== found.id)
-              .slice(0, 3)
-            setRelatedArticles(related)
+          // Fetch related articles (same category, published)
+          const relatedRes = await fetch(`/api/articles?status=PUBLISHED&category=${encodeURIComponent(found.category)}&limit=10`)
+          const relatedData = await relatedRes.json()
+          if (!relatedData.error && relatedData.articles) {
+            setRelatedArticles(relatedData.articles.filter((a: Article) => a.id !== found.id).slice(0, 3))
           }
         }
       } catch {

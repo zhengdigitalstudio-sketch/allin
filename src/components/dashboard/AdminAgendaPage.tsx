@@ -36,7 +36,7 @@ interface AgendaItem {
 
 const ITEMS_PER_PAGE = 10
 
-const AGENDA_STATUSES = ['MENDATANG', 'BERLANGSUNG', 'SELESAI', 'DIBATALKAN']
+const AGENDA_STATUSES = ['AKTIF', 'SELESAI', 'DIBATALKAN']
 
 const emptyForm = {
   title: '',
@@ -44,15 +44,13 @@ const emptyForm = {
   date: '',
   location: '',
   isInternal: false,
-  status: 'MENDATANG',
+  status: 'AKTIF',
 }
 
 function getStatusBadge(status: string) {
   switch (status) {
-    case 'MENDATANG':
-      return <Badge className="bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100">Mendatang</Badge>
-    case 'BERLANGSUNG':
-      return <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100">Berlangsung</Badge>
+    case 'AKTIF':
+      return <Badge className="bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100">Aktif</Badge>
     case 'SELESAI':
       return <Badge className="bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100">Selesai</Badge>
     case 'DIBATALKAN':

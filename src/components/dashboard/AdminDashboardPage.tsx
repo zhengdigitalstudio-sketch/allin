@@ -33,10 +33,10 @@ interface Stats {
 interface ActivityLog {
   id: string
   userId: string
-  userName: string
+  user: { name: string } | null
   action: string
   description: string
-  ip: string
+  ipAddress: string | null
   createdAt: string
 }
 
@@ -398,7 +398,7 @@ export function AdminDashboardPage() {
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                           {formatTimeAgo(act.createdAt)}
                         </TableCell>
-                        <TableCell className="text-xs font-medium">{act.userName || '-'}</TableCell>
+                        <TableCell className="text-xs font-medium">{act.user?.name || '-'}</TableCell>
                         <TableCell className="text-xs">
                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                             {act.action}

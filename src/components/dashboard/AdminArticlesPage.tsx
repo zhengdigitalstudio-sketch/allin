@@ -31,7 +31,7 @@ interface Article {
   author: string | { name: string }
   authorId: string
   status: string
-  views: number
+  viewCount: number
   createdAt: string
   updatedAt: string
   excerpt?: string
@@ -303,7 +303,7 @@ export function AdminArticlesPage() {
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
                     <span>{new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                    <span>{article.views ?? 0} views</span>
+                    <span>{article.viewCount ?? 0} views</span>
                   </div>
                   <div className="flex items-center gap-2 pt-1 border-t">
                     <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5" onClick={() => openEditDialog(article)}>
@@ -380,7 +380,7 @@ export function AdminArticlesPage() {
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">{typeof article.author === 'string' ? article.author : article.author?.name || '-'}</TableCell>
                     <TableCell>{getStatusBadge(article.status)}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{article.views ?? 0}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{article.viewCount ?? 0}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </TableCell>

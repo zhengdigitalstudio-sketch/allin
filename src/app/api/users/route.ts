@@ -1,4 +1,4 @@
-import { getSession, PENGURUS_ROLES, APPROVER_ROLES, ARTICLE_CREATE_ROLES } from '@/lib/auth'
+import { getSession, PENGURUS_ROLES, hashPassword } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         email,
-        password,
+        password: await hashPassword(password),
         role: role || 'MEMBER',
         avatar: avatar || null,
         phone: phone || null,
@@ -164,7 +164,7 @@ export async function PUT(request: NextRequest) {
     const updateData: any = {}
     if (name !== undefined) updateData.name = name
     if (email !== undefined) updateData.email = email
-    if (password !== undefined) updateData.password = password
+    if (password !== undefined) updateData.password = await hashPassword(password)
     if (role !== undefined) updateData.role = role
     if (avatar !== undefined) updateData.avatar = avatar
     if (phone !== undefined) updateData.phone = phone
