@@ -478,6 +478,7 @@ export function AdminArticlesPage() {
                 rows={8}
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
+                className="resize-y min-h-[200px]"
               />
             </div>
             <div className="space-y-2">

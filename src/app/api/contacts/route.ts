@@ -1,6 +1,7 @@
 import { getSession, PENGURUS_ROLES, APPROVER_ROLES, ARTICLE_CREATE_ROLES } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { sendContactEmail } from '@/lib/email'
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,12 +57,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, phone, subject, message } = body
+    const { name, email, phone, subject, message, recipientIndex } = body
 
     if (!name || !email || !message) {
       return NextResponse.json({ error: 'Nama, email, dan pesan wajib diisi' }, { status: 400 })
     }
 
+    // Save to database first
     const contact = await db.contact.create({
       data: {
         name,
@@ -72,11 +74,29 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Try sending email (non-blocking — DB save is the primary action)
+    let emailSent = false
+    let emailError: string | undefined
+
+    if (typeof recipientIndex === 'number' && recipientIndex >= 0) {
+      const result = await sendContactEmail({
+        recipientIndex,
+        senderName: name,
+        senderEmail: email,
+        subject: subject || null,
+        message,
+      })
+      emailSent = result.success
+      emailError = result.error
+    }
+
     return NextResponse.json({
       contact: {
         ...contact,
         createdAt: contact.createdAt.toISOString(),
       },
+      emailSent,
+      emailError,
     }, { status: 201 })
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Gagal mengirim pesan' }, { status: 500 })

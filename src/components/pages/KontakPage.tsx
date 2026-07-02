@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
@@ -9,8 +9,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import {
   ChevronRight,
-  Mail,
   Phone,
   MapPin,
   Send,
@@ -18,13 +20,33 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
+
+interface RecipientOption {
+  key: string
+  label: string
+}
 
 export default function KontakPage() {
   const { navigate } = useAppStore()
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '', recipientKey: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [recipients, setRecipients] = useState<RecipientOption[]>([])
+  const [loadingRecipients, setLoadingRecipients] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/contacts/options')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.recipients)) {
+          setRecipients(data.recipients)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingRecipients(false))
+  }, [])
 
   const validate = () => {
     const e: Record<string, string> = {}
@@ -38,30 +60,49 @@ export default function KontakPage() {
 
   const handleSubmit = async () => {
     if (!validate()) return
+
+    const recipientIndex = recipients.findIndex((r) => r.key === form.recipientKey)
+    if (recipients.length > 0 && recipientIndex === -1) {
+      setErrors({ recipientKey: 'Pilih tujuan pesan' })
+      return
+    }
+
     setSubmitting(true)
     try {
+      const body: Record<string, unknown> = {
+        name: form.name,
+        email: form.email,
+        subject: form.subject || null,
+        message: form.message,
+      }
+      if (recipientIndex >= 0) {
+        body.recipientIndex = recipientIndex
+      }
+
       const res = await fetch('/api/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          subject: form.subject || null,
-          message: form.message,
-        }),
+        body: JSON.stringify(body),
       })
       if (res.ok) {
+        const data = await res.json()
+        if (data.emailSent) {
+          toast.success('Pesan berhasil dikirim ke Gmail tujuan')
+        } else if (data.emailError) {
+          toast.warning('Pesan tersimpan, tapi email gagal dikirim')
+        }
         setSuccess(true)
+      } else {
+        toast.error('Gagal mengirim pesan')
       }
     } catch {
-      // silent fail
+      toast.error('Gagal mengirim pesan')
     } finally {
       setSubmitting(false)
     }
   }
 
   const contactInfo = [
-    { icon: Mail, label: 'Email', value: 'info@allin.web.id', href: 'mailto:info@allin.web.id' },
     { icon: Phone, label: 'Telepon', value: '+62 21 1234 5678', href: 'tel:+622112345678' },
     { icon: MapPin, label: 'Alamat', value: 'Jakarta, Indonesia', href: null },
   ]
@@ -90,7 +131,7 @@ export default function KontakPage() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="text-white/70 text-lg max-w-2xl"
           >
-            Kami siap membantu Anda. Silakan hubungi kami melalui formulir atau informasi kontak berikut.
+            Silakan pilih pengurus yang ingin dihubungi, lalu kirim pesan Anda.
           </motion.p>
         </div>
       </section>
@@ -110,12 +151,12 @@ export default function KontakPage() {
                   <CheckCircle2 className="w-12 h-12 text-allin-green mx-auto mb-4" />
                   <h3 className="text-xl font-bold mb-2">Pesan Terkirim!</h3>
                   <p className="text-muted-foreground mb-6">
-                    Terima kasih telah menghubungi kami. Tim kami akan segera merespons pesan Anda.
+                    Terima kasih telah menghubungi kami. Pesan Anda akan diteruskan ke pengurus yang dipilih.
                   </p>
                   <Button
                     onClick={() => {
                       setSuccess(false)
-                      setForm({ name: '', email: '', subject: '', message: '' })
+                      setForm({ name: '', email: '', subject: '', message: '', recipientKey: '' })
                     }}
                     variant="outline"
                     className="border-allin-green text-allin-green"
@@ -127,6 +168,28 @@ export default function KontakPage() {
                 <div className="bg-background border shadow-sm rounded-2xl p-6 md:p-8">
                   <h2 className="text-xl font-bold mb-6">Kirim Pesan</h2>
                   <div className="space-y-4">
+                    {/* Recipient Selector */}
+                    {recipients.length > 0 && (
+                      <div>
+                        <Label>Tujuan Pesan *</Label>
+                        <Select
+                          value={form.recipientKey}
+                          onValueChange={(v) => setForm((p) => ({ ...p, recipientKey: v }))}
+                        >
+                          <SelectTrigger className={cn(errors.recipientKey && 'border-destructive')}>
+                            <SelectValue placeholder="Pilih pengurus..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {recipients.map((r) => (
+                              <SelectItem key={r.key} value={r.key}>
+                                {r.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.recipientKey && <p className="text-xs text-destructive mt-1">{errors.recipientKey}</p>}
+                      </div>
+                    )}
                     <div>
                       <Label htmlFor="name">Nama *</Label>
                       <Input
