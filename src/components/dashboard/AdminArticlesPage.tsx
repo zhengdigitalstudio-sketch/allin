@@ -275,7 +275,7 @@ export function AdminArticlesPage() {
                       <TableCell className="text-xs hidden md:table-cell">
                         <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">{article.author}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">{typeof article.author === 'string' ? article.author : article.author?.name || '-'}</TableCell>
                       <TableCell>{getStatusBadge(article.status)}</TableCell>
                       <TableCell className="text-xs text-muted-foreground hidden sm:table-cell">{article.views ?? 0}</TableCell>
                       <TableCell className="text-xs text-muted-foreground hidden xl:table-cell">

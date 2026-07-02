@@ -4,10 +4,22 @@ import { useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAppStore, type PageKey } from '@/lib/store'
+import { Skeleton } from '@/components/ui/skeleton'
 
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
 import { DashboardLayout } from './DashboardLayout'
+import { ErrorBoundary } from './ErrorBoundary'
+
+const PageLoading = () => (
+  <div className="space-y-6 p-4">
+    <Skeleton className="h-8 w-64" />
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {[1, 2, 3].map((i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
+    </div>
+    <Skeleton className="h-80 rounded-xl" />
+  </div>
+)
 
 import HomePage from '@/components/pages/HomePage'
 import TentangPage from '@/components/pages/TentangPage'
@@ -24,86 +36,70 @@ import PrivacyPolicyPage from '@/components/pages/PrivacyPolicyPage'
 import SitemapPage from '@/components/pages/SitemapPage'
 import LoginPage from '@/components/pages/LoginPage'
 
-const AdminDashboardPage = dynamic(
+const dyn = (importFn: () => Promise<{ [key: string]: React.ComponentType }>) =>
+  dynamic(importFn, { ssr: false, loading: () => <PageLoading /> })
+
+const AdminDashboardPage = dyn(
   () => import('@/components/dashboard/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })),
-  { ssr: false },
 )
-const AdminUsersPage = dynamic(
+const AdminUsersPage = dyn(
   () => import('@/components/dashboard/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })),
-  { ssr: false },
 )
-const AdminArticlesPage = dynamic(
+const AdminArticlesPage = dyn(
   () => import('@/components/dashboard/AdminArticlesPage').then((m) => ({ default: m.AdminArticlesPage })),
-  { ssr: false },
 )
-const AdminMembersPage = dynamic(
+const AdminMembersPage = dyn(
   () => import('@/components/dashboard/AdminMembersPage').then((m) => ({ default: m.AdminMembersPage })),
-  { ssr: false },
 )
-const AdminAgendaPage = dynamic(
+const AdminAgendaPage = dyn(
   () => import('@/components/dashboard/AdminAgendaPage').then((m) => ({ default: m.AdminAgendaPage })),
-  { ssr: false },
 )
-const AdminGalleryPage = dynamic(
+const AdminGalleryPage = dyn(
   () => import('@/components/dashboard/AdminGalleryPage').then((m) => ({ default: m.AdminGalleryPage })),
-  { ssr: false },
 )
-const AdminContactsPage = dynamic(
+const AdminContactsPage = dyn(
   () => import('@/components/dashboard/AdminContactsPage').then((m) => ({ default: m.AdminContactsPage })),
-  { ssr: false },
 )
-const AdminBannersPage = dynamic(
+const AdminBannersPage = dyn(
   () => import('@/components/dashboard/AdminBannersPage').then((m) => ({ default: m.AdminBannersPage })),
-  { ssr: false },
 )
-const AdminSeoPage = dynamic(
+const AdminSeoPage = dyn(
   () => import('@/components/dashboard/AdminSeoPage').then((m) => ({ default: m.AdminSeoPage })),
-  { ssr: false },
 )
-const AdminActivityPage = dynamic(
+const AdminActivityPage = dyn(
   () => import('@/components/dashboard/AdminActivityPage').then((m) => ({ default: m.AdminActivityPage })),
-  { ssr: false },
 )
-const AdminBackupPage = dynamic(
+const AdminBackupPage = dyn(
   () => import('@/components/dashboard/AdminBackupPage').then((m) => ({ default: m.AdminBackupPage })),
-  { ssr: false },
 )
-const PengurusDashboardPage = dynamic(
+const PengurusDashboardPage = dyn(
   () => import('@/components/dashboard/PengurusDashboardPage').then((m) => ({ default: m.PengurusDashboardPage })),
-  { ssr: false },
 )
-const PengurusArticlesPage = dynamic(
+const PengurusArticlesPage = dyn(
   () => import('@/components/dashboard/PengurusArticlesPage').then((m) => ({ default: m.PengurusArticlesPage })),
-  { ssr: false },
 )
-const PengurusProfilePage = dynamic(
+const PengurusProfilePage = dyn(
   () => import('@/components/dashboard/PengurusProfilePage').then((m) => ({ default: m.PengurusProfilePage })),
-  { ssr: false },
 )
-const MemberDashboardPage = dynamic(
+const MemberDashboardPage = dyn(
   () => import('@/components/dashboard/MemberDashboardPage').then((m) => ({ default: m.MemberDashboardPage })),
-  { ssr: false },
 )
-const MemberProfilePage = dynamic(
+const MemberProfilePage = dyn(
   () => import('@/components/dashboard/MemberProfilePage').then((m) => ({ default: m.MemberProfilePage })),
-  { ssr: false },
 )
-const MemberDocumentsPage = dynamic(
+const MemberDocumentsPage = dyn(
   () => import('@/components/dashboard/MemberDocumentsPage').then((m) => ({ default: m.MemberDocumentsPage })),
-  { ssr: false },
 )
-const MemberArticlesPage = dynamic(
+const MemberArticlesPage = dyn(
   () => import('@/components/dashboard/MemberArticlesPage').then((m) => ({ default: m.MemberArticlesPage })),
-  { ssr: false },
 )
-const MemberInboxPage = dynamic(
+const MemberInboxPage = dyn(
   () => import('@/components/dashboard/MemberInboxPage').then((m) => ({ default: m.MemberInboxPage })),
-  { ssr: false },
 )
-const MemberAgendaPage = dynamic(
+const MemberAgendaPage = dyn(
   () => import('@/components/dashboard/MemberAgendaPage').then((m) => ({ default: m.MemberAgendaPage })),
-  { ssr: false },
 )
+
 
 const pageComponents: Record<PageKey, React.ComponentType> = {
   home: HomePage,
@@ -159,17 +155,19 @@ export function AppRouter() {
   }, [currentPage])
 
   const pageElement = (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={currentPage}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <PageComponent />
-      </motion.div>
-    </AnimatePresence>
+    <ErrorBoundary>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentPage}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <PageComponent />
+        </motion.div>
+      </AnimatePresence>
+    </ErrorBoundary>
   )
 
   if (currentPage === 'login') {
