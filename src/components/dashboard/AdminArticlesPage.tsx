@@ -235,73 +235,132 @@ export function AdminArticlesPage() {
         </CardContent>
       </Card>
 
-      {/* Table */}
+      {/* Mobile Card List */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-        <Card className="border-0 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="text-xs w-10">No</TableHead>
-                  <TableHead className="text-xs">Judul</TableHead>
-                  <TableHead className="text-xs hidden md:table-cell">Kategori</TableHead>
-                  <TableHead className="text-xs hidden lg:table-cell">Penulis</TableHead>
-                  <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs hidden sm:table-cell">Views</TableHead>
-                  <TableHead className="text-xs hidden xl:table-cell">Tanggal</TableHead>
-                  <TableHead className="text-xs text-right">Aksi</TableHead>
+        <div className="md:hidden space-y-3">
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="border-0 shadow-sm"><CardContent className="p-4 space-y-3">
+                <Skeleton className="h-5 w-3/4" />
+                <div className="flex gap-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-5 w-12" /></div>
+                <Skeleton className="h-8 w-full" />
+              </CardContent></Card>
+            ))
+          ) : articles.length === 0 ? (
+            <Card className="border-0 shadow-sm"><CardContent className="p-12 text-center text-muted-foreground">
+              Tidak ada artikel ditemukan.
+            </CardContent></Card>
+          ) : (
+            articles.map((article) => (
+              <Card key={article.id} className="border-0 shadow-sm">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium leading-snug flex-1">{article.title}</p>
+                    {getStatusBadge(article.status)}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
+                    <span>{new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    <span>{article.views ?? 0} views</span>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1 border-t">
+                    <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5" onClick={() => openEditDialog(article)}>
+                      <Pencil className="h-3.5 w-3.5" /> Edit
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5" onClick={() => handleTogglePublish(article)}>
+                      {article.status === 'PUBLISHED' ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      {article.status === 'PUBLISHED' ? 'Draft' : 'Publikasi'}
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200 gap-1.5" onClick={() => handleDelete(article.id)}>
+                      <Trash2 className="h-3.5 w-3.5" /> Hapus
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+          {/* Mobile Pagination */}
+          {!loading && articles.length > 0 && (
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-xs text-muted-foreground">
+                {articles.length} artikel
+              </p>
+              <div className="flex items-center gap-1">
+                <Button size="icon" variant="outline" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="px-3 text-sm font-medium">{page}</span>
+                <Button size="icon" variant="outline" className="h-8 w-8" disabled={articles.length < ITEMS_PER_PAGE} onClick={() => setPage(page + 1)}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Table */}
+        <Card className="border-0 shadow-sm overflow-hidden hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="text-xs w-10">No</TableHead>
+                <TableHead className="text-xs">Judul</TableHead>
+                <TableHead className="text-xs">Kategori</TableHead>
+                <TableHead className="text-xs">Penulis</TableHead>
+                <TableHead className="text-xs">Status</TableHead>
+                <TableHead className="text-xs">Views</TableHead>
+                <TableHead className="text-xs">Tanggal</TableHead>
+                <TableHead className="text-xs text-right">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    {Array.from({ length: 8 }).map((_, j) => (
+                      <TableCell key={j}><Skeleton className="h-5 w-full" /></TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : articles.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                    Tidak ada artikel ditemukan.
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      {Array.from({ length: 8 }).map((_, j) => (
-                        <TableCell key={j}><Skeleton className="h-5 w-full" /></TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : articles.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
-                      Tidak ada artikel ditemukan.
+              ) : (
+                articles.map((article, idx) => (
+                  <TableRow key={article.id} className="hover:bg-muted/30">
+                    <TableCell className="text-xs text-muted-foreground">{(page - 1) * ITEMS_PER_PAGE + idx + 1}</TableCell>
+                    <TableCell className="text-sm font-medium max-w-[250px] truncate">{article.title}</TableCell>
+                    <TableCell className="text-xs">
+                      <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{typeof article.author === 'string' ? article.author : article.author?.name || '-'}</TableCell>
+                    <TableCell>{getStatusBadge(article.status)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{article.views ?? 0}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEditDialog(article)} title="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleTogglePublish(article)} title={article.status === 'PUBLISHED' ? 'Jadikan Draft' : 'Publikasi'}>
+                          {article.status === 'PUBLISHED' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(article.id)} title="Hapus">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  articles.map((article, idx) => (
-                    <TableRow key={article.id} className="hover:bg-muted/30">
-                      <TableCell className="text-xs text-muted-foreground">{(page - 1) * ITEMS_PER_PAGE + idx + 1}</TableCell>
-                      <TableCell className="text-sm font-medium max-w-[200px] truncate">{article.title}</TableCell>
-                      <TableCell className="text-xs hidden md:table-cell">
-                        <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground hidden lg:table-cell">{typeof article.author === 'string' ? article.author : article.author?.name || '-'}</TableCell>
-                      <TableCell>{getStatusBadge(article.status)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground hidden sm:table-cell">{article.views ?? 0}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground hidden xl:table-cell">
-                        {new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEditDialog(article)} title="Edit">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleTogglePublish(article)} title={article.status === 'PUBLISHED' ? 'Jadikan Draft' : 'Publikasi'}>
-                            {article.status === 'PUBLISHED' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(article.id)} title="Hapus">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Pagination */}
+                ))
+              )}
+            </TableBody>
+          </Table>
+          {/* Desktop Pagination */}
           {!loading && articles.length > 0 && (
             <div className="flex items-center justify-between p-4 border-t">
               <p className="text-xs text-muted-foreground">
