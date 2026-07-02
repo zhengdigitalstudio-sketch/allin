@@ -224,8 +224,14 @@ export default function ArtikelPage() {
                         >
                           <div className="flex flex-col sm:flex-row">
                             {/* Cover */}
-                            <div className="sm:w-48 h-32 sm:h-auto gradient-green flex items-center justify-center flex-shrink-0 relative">
-                              <Newspaper className="w-8 h-8 text-white/30" />
+                            <div className="sm:w-48 h-32 sm:h-auto flex-shrink-0 relative overflow-hidden">
+                              {article.coverImage ? (
+                                <img src={article.coverImage} alt={article.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full gradient-green flex items-center justify-center">
+                                  <Newspaper className="w-8 h-8 text-white/30" />
+                                </div>
+                              )}
                               <Badge className="absolute top-2 left-2 bg-allin-yellow-light text-allin-green-dark text-[10px] font-semibold">
                                 {article.category}
                               </Badge>

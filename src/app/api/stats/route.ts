@@ -9,10 +9,25 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession(request)
+
+    // Public stats (no auth required) — used by homepage
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      const [totalMembers, totalArticles, totalPengurus, totalAgenda] = await Promise.all([
+        db.user.count({ where: { role: 'MEMBER', isActive: true } }),
+        db.article.count({ where: { status: 'PUBLISHED' } }),
+        db.user.count({ where: { role: { in: PENGURUS_ROLES }, isActive: true } }),
+        db.agenda.count({ where: { status: 'AKTIF', isInternal: false } }),
+      ])
+
+      return NextResponse.json({
+        totalMembers,
+        totalArticles,
+        totalPengurus,
+        totalAgenda,
+      })
     }
 
+    // Dashboard stats (auth required) — full data for admin/pengurus
     const userRole = session.role
     if (!PENGURUS_ROLES.includes(userRole)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

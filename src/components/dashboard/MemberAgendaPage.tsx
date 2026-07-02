@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, MapPin, Clock } from 'lucide-react'
+import { Calendar, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { format, isPast, isFuture, startOfDay } from 'date-fns'
+import { format, isPast, startOfDay } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 
 interface AgendaItem { id: string; title: string; description: string | null; date: string; location: string | null; status: string }
@@ -20,7 +20,8 @@ export function MemberAgendaPage() {
     try {
       const res = await fetch('/api/agenda?status=AKTIF&limit=50')
       const data = await res.json()
-      setAgendas((data.agenda || []).filter((a: AgendaItem) => a.isInternal !== false || isFuture(new Date(a.date))))
+      // Member can see all agendas (internal + public) because session cookie is sent
+      setAgendas(data.agenda || [])
     } catch {} finally { setLoading(false) }
   }, [])
 

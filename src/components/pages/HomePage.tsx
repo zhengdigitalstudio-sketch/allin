@@ -377,10 +377,15 @@ export default function HomePage() {
                       navigate('artikel-detail')
                     }}
                   >
-                    {/* Cover placeholder */}
-                    <div className="h-44 gradient-green flex items-center justify-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors" />
-                      <Newspaper className="w-12 h-12 text-white/40" />
+                    {/* Cover image or placeholder */}
+                    <div className="h-44 relative overflow-hidden">
+                      {article.coverImage ? (
+                        <img src={article.coverImage} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full gradient-green flex items-center justify-center">
+                          <Newspaper className="w-12 h-12 text-white/40" />
+                        </div>
+                      )}
                       <Badge className="absolute top-3 left-3 bg-allin-yellow-light text-allin-green-dark text-xs font-semibold">
                         {article.category}
                       </Badge>

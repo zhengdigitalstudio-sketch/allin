@@ -42,6 +42,8 @@ export default function ArtikelDetailPage() {
   useEffect(() => {
     if (!selectedArticleId) {
       setLoading(false)
+      setArticle(null)
+      setRelatedArticles([])
       return
     }
 
@@ -62,9 +64,12 @@ export default function ArtikelDetailPage() {
           if (!relatedData.error && relatedData.articles) {
             setRelatedArticles(relatedData.articles.filter((a: Article) => a.id !== found.id).slice(0, 3))
           }
+        } else {
+          setArticle(null)
+          setRelatedArticles([])
         }
       } catch {
-        // silent fail
+        setArticle(null)
       } finally {
         setLoading(false)
       }
@@ -255,10 +260,6 @@ export default function ArtikelDetailPage() {
                       className="h-full cursor-pointer border-0 shadow-sm hover:shadow-md transition-all group"
                       onClick={() => {
                         setSelectedArticle(related.id)
-                        window.scrollTo(0, 0)
-                        // Re-fetch
-                        setArticle(related)
-                        setRelatedArticles(relatedArticles.filter(a => a.id !== related.id).slice(0, 3))
                       }}
                     >
                       <CardContent className="p-5">
