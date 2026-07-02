@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useAppStore, type PageKey } from '@/lib/store'
+import { useAppStore, initFromUrl, type PageKey } from '@/lib/store'
 import { Skeleton } from '@/components/ui/skeleton'
 
 import { Navbar } from './Navbar'
@@ -150,9 +150,25 @@ export function AppRouter() {
   const currentPage = useAppStore((state) => state.currentPage)
   const PageComponent = pageComponents[currentPage]
 
+  // Sync state from URL on mount + handle browser back/forward
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' })
-  }, [currentPage])
+    // Set initial state from URL (for refresh / direct link / share)
+    const parsed = initFromUrl()
+    useAppStore.setState({
+      currentPage: parsed.page,
+      selectedArticleSlug: parsed.articleSlug,
+    })
+
+    const handlePopState = () => {
+      const p = initFromUrl()
+      useAppStore.setState({
+        currentPage: p.page,
+        selectedArticleSlug: p.articleSlug,
+      })
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   const pageElement = (
     <ErrorBoundary>

@@ -25,6 +25,7 @@ import { id as localeId } from 'date-fns/locale'
 interface Article {
   id: string
   title: string
+  slug: string
   excerpt: string | null
   category: string
   coverImage: string | null
@@ -41,7 +42,7 @@ interface CategoryCount {
 const categories = ['Semua', ...ARTICLE_CATEGORIES]
 
 export default function ArtikelPage() {
-  const { navigate, setSelectedArticle } = useAppStore()
+  const { navigate, navigateArticle, setSelectedArticle } = useAppStore()
   const [articles, setArticles] = useState<Article[]>([])
   const [popularArticles, setPopularArticles] = useState<Article[]>([])
   const [categoryCounts, setCategoryCounts] = useState<CategoryCount[]>([])
@@ -218,8 +219,7 @@ export default function ArtikelPage() {
                         <Card
                           className="hover:shadow-md transition-shadow cursor-pointer overflow-hidden group border-0 shadow-sm"
                           onClick={() => {
-                            setSelectedArticle(article.id)
-                            navigate('artikel-detail')
+                            if (article.slug) navigateArticle(article.slug)
                           }}
                         >
                           <div className="flex flex-col sm:flex-row">
@@ -317,8 +317,7 @@ export default function ArtikelPage() {
                         key={article.id}
                         className="flex gap-3 cursor-pointer group"
                         onClick={() => {
-                          setSelectedArticle(article.id)
-                          navigate('artikel-detail')
+                          if (article.slug) navigateArticle(article.slug)
                         }}
                       >
                         <div className="w-8 h-8 rounded-lg bg-allin-green/10 flex items-center justify-center flex-shrink-0 text-sm font-bold text-allin-green">

@@ -13,12 +13,12 @@ import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 
-interface Article { id: string; title: string; excerpt: string | null; category: string; viewCount: number; author: { name: string } | null; createdAt: string }
+interface Article { id: string; slug: string; title: string; excerpt: string | null; category: string; viewCount: number; author: { name: string } | null; createdAt: string }
 
 const categories = ['Semua', ...ARTICLE_CATEGORIES]
 
 export function MemberArticlesPage() {
-  const { navigate, setSelectedArticle } = useAppStore()
+  const { navigate, navigateArticle, setSelectedArticle } = useAppStore()
   const [articles, setArticles] = useState<Article[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState('Semua')
@@ -57,7 +57,7 @@ export function MemberArticlesPage() {
       <div className="space-y-3">
         {articles.map((a, i) => (
           <motion.div key={a.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer group" onClick={() => { setSelectedArticle(a.id); navigate('artikel-detail') }}>
+            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer group" onClick={() => { if (a.slug) navigateArticle(a.slug) }}>
               <CardContent className="p-4 flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <h3 className="font-semibold text-sm line-clamp-1 group-hover:text-allin-green transition-colors">{a.title}</h3>

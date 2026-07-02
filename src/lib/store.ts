@@ -36,9 +36,84 @@ export type PageKey =
   | 'member-inbox'
   | 'member-agenda'
 
+// ── URL mapping ──────────────────────────────────────────────
+const PAGE_URLS: Record<PageKey, string> = {
+  'home': '/',
+  'tentang': '/tentang',
+  'visi-misi': '/visi-misi',
+  'struktur-pengurus': '/struktur-pengurus',
+  'artikel': '/artikel',
+  'artikel-detail': '/artikel/__slug__',
+  'agenda': '/agenda',
+  'galeri': '/galeri',
+  'pendaftaran': '/pendaftaran',
+  'kontak': '/kontak',
+  'faq': '/faq',
+  'privacy-policy': '/privacy-policy',
+  'sitemap': '/sitemap',
+  'login': '/login',
+  'admin-dashboard': '/dashboard',
+  'admin-members': '/dashboard/anggota',
+  'admin-articles': '/dashboard/artikel',
+  'admin-agenda': '/dashboard/agenda',
+  'admin-gallery': '/dashboard/galeri',
+  'admin-contacts': '/dashboard/kontak',
+  'admin-users': '/dashboard/pengguna',
+  'admin-banners': '/dashboard/banner',
+  'admin-seo': '/dashboard/seo',
+  'admin-activity': '/dashboard/aktivitas',
+  'admin-backup': '/dashboard/backup',
+  'pengurus-dashboard': '/dashboard',
+  'pengurus-articles': '/dashboard/artikel',
+  'pengurus-profile': '/dashboard/profil',
+  'member-dashboard': '/dashboard',
+  'member-profile': '/dashboard/profil',
+  'member-documents': '/dashboard/dokumen',
+  'member-articles': '/dashboard/artikel',
+  'member-inbox': '/dashboard/pesan',
+  'member-agenda': '/dashboard/agenda',
+}
+
+const URL_TO_PAGE: Record<string, PageKey> = {}
+for (const [key, url] of Object.entries(PAGE_URLS)) {
+  if (url !== '/artikel/__slug__') {
+    URL_TO_PAGE[url] = key as PageKey
+  }
+}
+
+function syncUrl(page: PageKey, articleSlug?: string | null) {
+  let url = PAGE_URLS[page] || '/'
+  if (page === 'artikel-detail' && articleSlug) {
+    url = `/artikel/${articleSlug}`
+  }
+  window.history.pushState({}, '', url)
+  document.title = page === 'home' ? 'ALLIN' : `ALLIN - ${page.replace(/-/g, ' ')}`
+}
+
+export function initFromUrl(): { page: PageKey; articleSlug: string | null } {
+  const pathname = window.location.pathname
+
+  // /artikel/some-slug → article detail
+  if (pathname.startsWith('/artikel/') && pathname !== '/artikel') {
+    const slug = pathname.slice('/artikel/'.length)
+    if (slug) {
+      return { page: 'artikel-detail', articleSlug: slug }
+    }
+  }
+
+  // Regular page
+  const page = URL_TO_PAGE[pathname]
+  if (page) {
+    return { page, articleSlug: null }
+  }
+
+  return { page: 'home', articleSlug: null }
+}
+
+// ── Store ────────────────────────────────────────────────────
 interface AppState {
   currentPage: PageKey
-  selectedArticleId: string | null
+  selectedArticleSlug: string | null
   user: {
     id: string
     name: string
@@ -48,21 +123,44 @@ interface AppState {
   } | null
   sidebarOpen: boolean
   navigate: (page: PageKey) => void
+  navigateArticle: (slug: string) => void
   setSelectedArticle: (id: string | null) => void
   setUser: (user: AppState['user']) => void
   setSidebarOpen: (open: boolean) => void
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  currentPage: 'home',
-  selectedArticleId: null,
-  user: null,
-  sidebarOpen: false,
-  navigate: (page) => set({ currentPage: page, sidebarOpen: false }),
-  setSelectedArticle: (id) => set({ selectedArticleId: id }),
-  setUser: (user) => set({ user }),
-  setSidebarOpen: (open) => set({ sidebarOpen: open }),
-}))
+export const useAppStore = create<AppState>((set, get) => {
+  // Initialize from URL on server/default
+  let initialState = { currentPage: 'home' as PageKey, selectedArticleSlug: null as string | null }
+  if (typeof window !== 'undefined') {
+    const parsed = initFromUrl()
+    initialState = { currentPage: parsed.page, selectedArticleSlug: parsed.articleSlug }
+  }
+
+  return {
+    ...initialState,
+    user: null,
+    sidebarOpen: false,
+    navigate: (page) => {
+      syncUrl(page)
+      set({ currentPage: page, selectedArticleSlug: null, sidebarOpen: false })
+    },
+    navigateArticle: (slug) => {
+      syncUrl('artikel-detail', slug)
+      set({ currentPage: 'artikel-detail', selectedArticleSlug: slug })
+    },
+    setSelectedArticle: (id) => {
+      // Keep for backward compat — just store the slug if article data available
+      const state = get()
+      if (id === null) {
+        set({ selectedArticleSlug: null })
+      }
+      // If called with ID, we ignore it for URL purposes
+    },
+    setUser: (user) => set({ user }),
+    setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  }
+})
 
 export const PENGURUS_ROLES = ['KETUA', 'WAKIL_KETUA', 'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA'] as const
 export const ALL_ROLES = ['SUPER_ADMIN', ...PENGURUS_ROLES, 'MEMBER'] as const

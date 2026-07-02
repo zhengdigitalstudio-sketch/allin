@@ -22,6 +22,7 @@ import { id as localeId } from 'date-fns/locale'
 
 interface Article {
   id: string
+  slug: string
   title: string
   content: string | null
   excerpt: string | null
@@ -34,13 +35,13 @@ interface Article {
 }
 
 export default function ArtikelDetailPage() {
-  const { navigate, selectedArticleId, setSelectedArticle } = useAppStore()
+  const { navigate, navigateArticle, selectedArticleSlug, setSelectedArticle } = useAppStore()
   const [article, setArticle] = useState<Article | null>(null)
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!selectedArticleId) {
+    if (!selectedArticleSlug) {
       setLoading(false)
       setArticle(null)
       setRelatedArticles([])
@@ -50,13 +51,16 @@ export default function ArtikelDetailPage() {
     const fetchArticle = async () => {
       setLoading(true)
       try {
-        // Fetch single article directly
-        const articleRes = await fetch(`/api/articles/${selectedArticleId}`)
+        // Fetch article by slug
+        const articleRes = await fetch(`/api/articles?slug=${encodeURIComponent(selectedArticleSlug)}&status=PUBLISHED`)
         const articleData = await articleRes.json()
 
-        if (!articleData.error && articleData.article) {
-          const found = articleData.article
+        if (!articleData.error && articleData.articles?.length > 0) {
+          const found = articleData.articles[0] as Article
           setArticle(found)
+
+          // Update document title
+          document.title = `${found.title} - ALLIN`
 
           // Fetch related articles (same category, published)
           const relatedRes = await fetch(`/api/articles?status=PUBLISHED&category=${encodeURIComponent(found.category)}&limit=10`)
@@ -75,12 +79,12 @@ export default function ArtikelDetailPage() {
       }
     }
     fetchArticle()
-  }, [selectedArticleId])
+  }, [selectedArticleSlug])
 
   // Scroll to top when article changes (must be before any early returns - Rules of Hooks)
   useEffect(() => {
     window.scrollTo({ top: 0 })
-  }, [selectedArticleId])
+  }, [selectedArticleSlug])
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
   const shareText = article?.title || ''
@@ -264,7 +268,7 @@ export default function ArtikelDetailPage() {
                     <Card
                       className="h-full cursor-pointer border-0 shadow-sm hover:shadow-md transition-all group"
                       onClick={() => {
-                        setSelectedArticle(related.id)
+                        if (related.slug) navigateArticle(related.slug)
                       }}
                     >
                       <CardContent className="p-5">

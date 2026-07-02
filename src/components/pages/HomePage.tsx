@@ -28,6 +28,7 @@ import { id as localeId } from 'date-fns/locale'
 
 interface Article {
   id: string
+  slug: string
   title: string
   excerpt: string | null
   category: string
@@ -96,7 +97,7 @@ function SectionWrapper({ children, className }: { children: React.ReactNode; cl
 }
 
 export default function HomePage() {
-  const { navigate, setSelectedArticle } = useAppStore()
+  const { navigate, navigateArticle, setSelectedArticle } = useAppStore()
   const [stats, setStats] = useState<Stats | null>(null)
   const [articles, setArticles] = useState<Article[]>([])
   const [agendas, setAgendas] = useState<AgendaItem[]>([])
@@ -373,8 +374,7 @@ export default function HomePage() {
                   <Card
                     className="h-full cursor-pointer border-0 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group overflow-hidden"
                     onClick={() => {
-                      setSelectedArticle(article.id)
-                      navigate('artikel-detail')
+                      if (article.slug) navigateArticle(article.slug)
                     }}
                   >
                     {/* Cover image or placeholder */}
