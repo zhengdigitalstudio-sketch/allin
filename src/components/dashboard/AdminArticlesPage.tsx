@@ -47,7 +47,7 @@ const ITEMS_PER_PAGE = 10
 const emptyForm = {
   title: '',
   category: 'Berita',
-  status: 'PUBLISHED',
+  status: 'DRAFT',
   excerpt: '',
   content: '',
   coverImage: '',
@@ -169,7 +169,7 @@ export function AdminArticlesPage() {
     setForm((prev) => ({ ...prev, coverImage: '' }))
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (submitStatus: 'DRAFT' | 'PUBLISHED') => {
     if (!form.title.trim()) {
       toast.error('Judul artikel wajib diisi')
       return
@@ -178,13 +178,22 @@ export function AdminArticlesPage() {
     try {
       const url = editingId ? `/api/articles/${editingId}` : '/api/articles'
       const method = editingId ? 'PUT' : 'POST'
+      const body = { ...form, status: submitStatus }
+      // For PUT, include the article id
+      if (editingId) {
+        Object.assign(body, { id: editingId })
+      }
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(body),
       })
       if (res.ok) {
-        toast.success(editingId ? 'Artikel berhasil diperbarui' : 'Artikel berhasil dibuat')
+        if (submitStatus === 'PUBLISHED') {
+          toast.success(editingId ? 'Artikel berhasil dipublikasi' : 'Artikel berhasil dipublikasi')
+        } else {
+          toast.success(editingId ? 'Artikel disimpan sebagai draft' : 'Artikel disimpan sebagai draft')
+        }
         setDialogOpen(false)
         setIsFullscreen(false)
         fetchArticles()
@@ -456,25 +465,7 @@ export function AdminArticlesPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Status</Label>
-              <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DRAFT">
-                    <span className="flex items-center gap-2"><EyeOff className="h-3.5 w-3.5 text-muted-foreground" /> Draft</span>
-                  </SelectItem>
-                  <SelectItem value="PUBLISHED">
-                    <span className="flex items-center gap-2"><Eye className="h-3.5 w-3.5 text-green-600" /> Publikasi</span>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                {form.status === 'PUBLISHED' ? 'Artikel akan langsung tampil di website publik.' : 'Artikel disimpan tapi belum tampil di website.'}
-              </p>
-            </div>
+            {/* Status selector removed — use the Publikasikan / Simpan Draft buttons below */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Ringkasan</Label>
               <Textarea
@@ -606,11 +597,19 @@ export function AdminArticlesPage() {
             <div className="flex justify-end gap-2 pt-2 border-t">
               <Button variant="outline" onClick={() => { setDialogOpen(false); setIsFullscreen(false) }}>Batal</Button>
               <Button
-                className="bg-green-700 hover:bg-green-800 text-white"
-                onClick={handleSubmit}
+                variant="outline"
+                className="border-gray-300 text-gray-600 hover:bg-gray-100"
+                onClick={() => handleSubmit('DRAFT')}
                 disabled={submitting || !form.title.trim()}
               >
-                {submitting ? 'Menyimpan...' : form.status === 'PUBLISHED' ? 'Publikasikan' : 'Simpan sebagai Draft'}
+                {submitting ? 'Menyimpan...' : 'Simpan Draft'}
+              </Button>
+              <Button
+                className="bg-green-700 hover:bg-green-800 text-white font-semibold"
+                onClick={() => handleSubmit('PUBLISHED')}
+                disabled={submitting || !form.title.trim()}
+              >
+                {submitting ? 'Mempublikasi...' : <><Eye className="h-4 w-4 mr-1.5" /> Publikasikan</>}
               </Button>
             </div>
           </div>
