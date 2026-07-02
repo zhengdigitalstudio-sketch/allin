@@ -179,9 +179,9 @@ export function AppRouter() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       <Navbar />
-      <main className="flex-1">{pageElement}</main>
+      <main className="flex-1 overflow-x-hidden">{pageElement}</main>
       <Footer />
     </div>
   )

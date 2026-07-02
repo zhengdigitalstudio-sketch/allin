@@ -143,8 +143,13 @@ export default function ArtikelDetailPage() {
     )
   }
 
+  // Scroll to top when article loads
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
+  }, [selectedArticleId])
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       {/* Breadcrumb in hero */}
       <section className="gradient-hero py-16 md:py-24 relative overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
@@ -182,7 +187,7 @@ export default function ArtikelDetailPage() {
 
       {/* Content */}
       <section className="py-12 md:py-16">
-        <div className="container mx-auto px-4 max-w-4xl">
+        <div className="container mx-auto px-4 max-w-4xl w-full">
           {/* Back button */}
           <Button
             variant="ghost"
@@ -205,10 +210,10 @@ export default function ArtikelDetailPage() {
           )}
 
           {/* Article body */}
-          <div className="prose prose-lg max-w-none">
+          <div className="prose prose-lg max-w-none [&_img]:max-w-full [&_img]:h-auto [&_iframe]:max-w-full [&_video]:max-w-full [&_a]:break-all [&_pre]:overflow-x-auto">
             {article.content ? (
               <div
-                className="text-muted-foreground leading-relaxed space-y-4"
+                className="text-muted-foreground leading-relaxed space-y-4 break-words overflow-wrap-anywhere"
                 dangerouslySetInnerHTML={{ __html: article.content }}
               />
             ) : (
