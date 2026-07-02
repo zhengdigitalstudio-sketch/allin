@@ -4,10 +4,7 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import {
   Facebook,
-  Twitter,
   Instagram,
-  Linkedin,
-  Youtube,
   Mail,
   Phone,
   MapPin,
@@ -28,11 +25,8 @@ const QUICK_LINKS: { label: string; page: PageKey }[] = [
 ]
 
 const SOCIAL_LINKS = [
-  { icon: Facebook, label: 'Facebook', href: '#' },
-  { icon: Twitter, label: 'Twitter', href: '#' },
-  { icon: Instagram, label: 'Instagram', href: '#' },
-  { icon: Linkedin, label: 'LinkedIn', href: '#' },
-  { icon: Youtube, label: 'YouTube', href: '#' },
+  { icon: Facebook, label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61591731504254' },
+  { icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/allin.web.id?igsh=ZzN6MG5veGV2ZGM1' },
 ]
 
 const containerVariants = {
@@ -159,7 +153,7 @@ export function Footer() {
               <h3 className="text-sm font-semibold uppercase tracking-wider text-allin-yellow-light mb-5">
                 Media Sosial
               </h3>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 w-fit">
                 {SOCIAL_LINKS.map((social) => (
                   <a
                     key={social.label}
