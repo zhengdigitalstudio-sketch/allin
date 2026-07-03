@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     }
 
     const userRole = session?.role || ''
-    if (userRole !== 'SUPER_ADMIN') {
+    if (!PENGURUS_ROLES.includes(userRole)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

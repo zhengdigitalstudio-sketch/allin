@@ -44,7 +44,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (session.role !== 'SUPER_ADMIN') {
+    if (!PENGURUS_ROLES.includes(session.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

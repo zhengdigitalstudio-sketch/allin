@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const userRole = session?.role || ''
-    if (userRole !== 'SUPER_ADMIN') {
+    if (!PENGURUS_ROLES.includes(userRole)) {
       return NextResponse.json({ error: 'Forbidden — hanya SUPER_ADMIN' }, { status: 403 })
     }
 

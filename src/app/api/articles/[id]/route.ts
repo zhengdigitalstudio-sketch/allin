@@ -105,7 +105,7 @@ export async function PUT(
     const userRole = session.role || ''
     const userId = session.id || ''
 
-    if (userRole !== 'SUPER_ADMIN' && existing.authorId !== userId) {
+    if (!PENGURUS_ROLES.includes(userRole) && existing.authorId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -179,7 +179,7 @@ export async function DELETE(
     const userRole = session.role || ''
     const userId = session.id || ''
 
-    if (userRole !== 'SUPER_ADMIN' && existing.authorId !== userId) {
+    if (!PENGURUS_ROLES.includes(userRole) && existing.authorId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

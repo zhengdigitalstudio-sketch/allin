@@ -1,4 +1,4 @@
-import { getSession } from '@/lib/auth'
+import { getSession, PENGURUS_ROLES } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     }
 
     const userRole = session?.role || ''
-    if (userRole !== 'SUPER_ADMIN') {
+    if (!PENGURUS_ROLES.includes(userRole)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -99,7 +99,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const userRole = session?.role || ''
-    if (userRole !== 'SUPER_ADMIN') {
+    if (!PENGURUS_ROLES.includes(userRole)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

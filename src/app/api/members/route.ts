@@ -156,7 +156,7 @@ export async function PUT(request: NextRequest) {
 
     // SUPER_ADMIN can update any member including status
     // Other users can only update their own profile (non-status fields)
-    if (userRole !== 'SUPER_ADMIN') {
+    if (!PENGURUS_ROLES.includes(userRole)) {
       if (existing.userId !== userId) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
@@ -197,7 +197,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const userRole = session?.role || ''
-    if (userRole !== 'SUPER_ADMIN') {
+    if (!PENGURUS_ROLES.includes(userRole)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

@@ -78,9 +78,8 @@ function getInitials(name: string): string {
 }
 
 function getDashboardPage(role: string): PageKey {
-  if (role === 'SUPER_ADMIN') return 'admin-dashboard'
-  if (['KETUA', 'WAKIL_KETUA', 'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA'].includes(role)) {
-    return 'pengurus-dashboard'
+  if (['SUPER_ADMIN', 'KETUA', 'WAKIL_KETUA', 'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA'].includes(role)) {
+    return 'admin-dashboard'
   }
   return 'member-dashboard'
 }
