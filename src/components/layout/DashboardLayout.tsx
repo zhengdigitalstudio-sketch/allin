@@ -26,9 +26,6 @@ const PAGE_NAMES: Record<string, string> = {
   'admin-seo': 'SEO',
   'admin-activity': 'Activity Log',
   'admin-backup': 'Backup',
-  'pengurus-dashboard': 'Dashboard Pengurus',
-  'pengurus-articles': 'Artikel Saya',
-  'pengurus-profile': 'Profil',
   'member-dashboard': 'Dashboard Member',
   'member-profile': 'Profil',
   'member-documents': 'Dokumen',
@@ -88,8 +85,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { currentPage, navigate, user } = useAppStore()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const userName = user?.name || ''
-  const userRole = user?.role || 'MEMBER'
+  // Jangan render dashboard sampai user session sudah load
+  if (!user) return null
+
+  const userName = user.name
+  const userRole = user.role
 
   const pageName = PAGE_NAMES[currentPage] || 'Dashboard'
 

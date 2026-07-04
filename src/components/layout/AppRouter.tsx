@@ -72,15 +72,6 @@ const AdminActivityPage = dyn(
 const AdminBackupPage = dyn(
   () => import('@/components/dashboard/AdminBackupPage').then((m) => ({ default: m.AdminBackupPage })),
 )
-const PengurusDashboardPage = dyn(
-  () => import('@/components/dashboard/PengurusDashboardPage').then((m) => ({ default: m.PengurusDashboardPage })),
-)
-const PengurusArticlesPage = dyn(
-  () => import('@/components/dashboard/PengurusArticlesPage').then((m) => ({ default: m.PengurusArticlesPage })),
-)
-const PengurusProfilePage = dyn(
-  () => import('@/components/dashboard/PengurusProfilePage').then((m) => ({ default: m.PengurusProfilePage })),
-)
 const MemberDashboardPage = dyn(
   () => import('@/components/dashboard/MemberDashboardPage').then((m) => ({ default: m.MemberDashboardPage })),
 )
@@ -127,9 +118,6 @@ const pageComponents: Record<PageKey, React.ComponentType> = {
   'admin-seo': AdminSeoPage,
   'admin-activity': AdminActivityPage,
   'admin-backup': AdminBackupPage,
-  'pengurus-dashboard': PengurusDashboardPage,
-  'pengurus-articles': PengurusArticlesPage,
-  'pengurus-profile': PengurusProfilePage,
   'member-dashboard': MemberDashboardPage,
   'member-profile': MemberProfilePage,
   'member-documents': MemberDocumentsPage,
@@ -141,7 +129,6 @@ const pageComponents: Record<PageKey, React.ComponentType> = {
 function isDashboardPage(page: PageKey): boolean {
   return (
     page.startsWith('admin-') ||
-    page.startsWith('pengurus-') ||
     page.startsWith('member-')
   )
 }

@@ -26,9 +26,6 @@ export type PageKey =
   | 'admin-seo'
   | 'admin-activity'
   | 'admin-backup'
-  | 'pengurus-dashboard'
-  | 'pengurus-articles'
-  | 'pengurus-profile'
   | 'member-dashboard'
   | 'member-profile'
   | 'member-documents'
@@ -63,9 +60,6 @@ const PAGE_URLS: Record<PageKey, string> = {
   'admin-seo': '/dashboard/seo',
   'admin-activity': '/dashboard/aktivitas',
   'admin-backup': '/dashboard/backup',
-  'pengurus-dashboard': '/dashboard',
-  'pengurus-articles': '/dashboard/artikel',
-  'pengurus-profile': '/dashboard/profil',
   'member-dashboard': '/dashboard',
   'member-profile': '/dashboard/profil',
   'member-documents': '/dashboard/dokumen',
@@ -76,7 +70,8 @@ const PAGE_URLS: Record<PageKey, string> = {
 
 const URL_TO_PAGE: Record<string, PageKey> = {}
 for (const [key, url] of Object.entries(PAGE_URLS)) {
-  if (url !== '/artikel/__slug__') {
+  if (url !== '/artikel/__slug__' && !URL_TO_PAGE[url]) {
+    // First wins — admin pages before member pages for /dashboard
     URL_TO_PAGE[url] = key as PageKey
   }
 }

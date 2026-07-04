@@ -15,7 +15,6 @@ import {
   Database,
   ArrowLeft,
   LogOut,
-  PenLine,
   UserCircle,
   FileStack,
   Inbox,
@@ -34,7 +33,8 @@ interface SidebarItem {
   icon: LucideIcon
 }
 
-const SUPER_ADMIN_MENU: SidebarItem[] = [
+// Full admin menu - 11 items for SUPER_ADMIN & all pengurus
+const ADMIN_MENU: SidebarItem[] = [
   { label: 'Dashboard', page: 'admin-dashboard', icon: LayoutDashboard },
   { label: 'Manajemen User', page: 'admin-users', icon: Users },
   { label: 'Manajemen Artikel', page: 'admin-articles', icon: FileText },
@@ -48,12 +48,7 @@ const SUPER_ADMIN_MENU: SidebarItem[] = [
   { label: 'Backup', page: 'admin-backup', icon: Database },
 ]
 
-const PENGURUS_MENU: SidebarItem[] = [
-  { label: 'Dashboard', page: 'pengurus-dashboard', icon: LayoutDashboard },
-  { label: 'Artikel Saya', page: 'pengurus-articles', icon: PenLine },
-  { label: 'Profil', page: 'pengurus-profile', icon: UserCircle },
-]
-
+// Member menu - limited 6 items
 const MEMBER_MENU: SidebarItem[] = [
   { label: 'Dashboard', page: 'member-dashboard', icon: LayoutDashboard },
   { label: 'Profil', page: 'member-profile', icon: UserCircle },
@@ -116,12 +111,6 @@ function getAvatarBg(role: string): string {
   return 'bg-allin-green'
 }
 
-function getMenuForRole(role: string): SidebarItem[] {
-  // Bukan MEMBER = full admin menu (SUPER_ADMIN + semua pengurus)
-  if (role !== 'MEMBER') return SUPER_ADMIN_MENU
-  return MEMBER_MENU
-}
-
 interface DashboardSidebarProps {
   role: string
   userName: string
@@ -130,7 +119,9 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ role, userName, userRole }: DashboardSidebarProps) {
   const { currentPage, navigate } = useAppStore()
-  const menuItems = getMenuForRole(role)
+
+  // v2: hanya MEMBER yang dapat menu terbatas, semua role lain = full admin
+  const menuItems = role === 'MEMBER' ? MEMBER_MENU : ADMIN_MENU
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white border-r border-border">

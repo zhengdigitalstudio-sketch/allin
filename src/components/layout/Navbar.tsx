@@ -101,7 +101,7 @@ export function Navbar() {
   const isActive = (page: PageKey) => currentPage === page
 
   // Don't show navbar on dashboard pages
-  const isDashboardPage = currentPage.startsWith('admin-') || currentPage.startsWith('pengurus-') || currentPage.startsWith('member-')
+  const isDashboardPage = currentPage.startsWith('admin-') || currentPage.startsWith('member-')
 
   if (isDashboardPage) return null
 
