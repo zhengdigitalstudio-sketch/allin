@@ -119,7 +119,7 @@ export async function PUT(
     // Only SUPER_ADMIN or the member's own linked user can update other fields
     if (Object.keys(otherFields).length > 0) {
       const isOwner = existing.userId === session.id
-      const isAdmin = userRole === 'SUPER_ADMIN'
+      const isAdmin = PENGURUS_ROLES.includes(userRole)
       if (!isAdmin && !isOwner) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }

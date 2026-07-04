@@ -370,7 +370,7 @@ export async function DELETE(request: NextRequest) {
 
     const userRole = (session.user as any).role as string
 
-    if (userRole !== 'SUPER_ADMIN') {
+    if (!['SUPER_ADMIN','KETUA','WAKIL_KETUA','SEKRETARIS','WAKIL_SEKRETARIS','BENDAHARA'].includes(userRole)) {
       return NextResponse.json(
         { error: 'Hanya SUPER_ADMIN yang dapat menghapus transaksi' },
         { status: 403 },

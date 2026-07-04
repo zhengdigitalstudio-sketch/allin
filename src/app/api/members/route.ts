@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
 
     const where: any = {}
 
-    if (userRole === 'SUPER_ADMIN') {
-      // SUPER_ADMIN sees all
+    if (PENGURUS_ROLES.includes(userRole)) {
+      // All pengurus see all
       if (status) where.status = status
       if (search) {
         where.OR = [
