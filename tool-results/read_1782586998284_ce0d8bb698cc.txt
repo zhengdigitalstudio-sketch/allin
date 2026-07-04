@@ -1,0 +1,994 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useCallback, useMemo } from 'react'
+     4→import { Plus, Pencil, Trash2, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, DollarSign, Filter, FileDown, Search } from 'lucide-react'
+     5→import { motion } from 'framer-motion'
+     6→import {
+     7→  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+     8→  PieChart, Pie, Cell, AreaChart, Area, Legend,
+     9→} from 'recharts'
+    10→import { cn } from '@/lib/utils'
+    11→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+    12→import { Button } from '@/components/ui/button'
+    13→import { Input } from '@/components/ui/input'
+    14→import { Label } from '@/components/ui/label'
+    15→import { Textarea } from '@/components/ui/textarea'
+    16→import { Badge } from '@/components/ui/badge'
+    17→import {
+    18→  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+    19→} from '@/components/ui/dialog'
+    20→import {
+    21→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    22→} from '@/components/ui/select'
+    23→import { Skeleton } from '@/components/ui/skeleton'
+    24→import {
+    25→  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+    26→} from '@/components/ui/table'
+    27→import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+    28→import { toast } from 'sonner'
+    29→import { format, parseISO, startOfMonth, subMonths, getMonth, isValid } from 'date-fns'
+    30→import { id } from 'date-fns/locale'
+    31→
+    32→// ---------------------------------------------------------------------------
+    33→// Interfaces
+    34→// ---------------------------------------------------------------------------
+    35→
+    36→interface Transaction {
+    37→  id: string
+    38→  type: string
+    39→  category: string
+    40→  amount: number
+    41→  description: string | null
+    42→  date: string
+    43→  referenceNo: string | null
+    44→  creatorName: string
+    45→  createdAt: string
+    46→}
+    47→
+    48→interface Summary {
+    49→  totalMasuk: number
+    50→  totalKeluar: number
+    51→  saldo: number
+    52→}
+    53→
+    54→// ---------------------------------------------------------------------------
+    55→// Constants
+    56→// ---------------------------------------------------------------------------
+    57→
+    58→const CATEGORIES_MASUK = [
+    59→  'Iuran Anggota',
+    60→  'Sumbangan',
+    61→  'Biaya Seminar',
+    62→  'Biaya Pelatihan',
+    63→  'Hibah',
+    64→  'Lainnya',
+    65→]
+    66→
+    67→const CATEGORIES_KELUAR = [
+    68→  'Operasional',
+    69→  'Gaji & Honor',
+    70→  'Sewa Kantor',
+    71→  'Perlengkapan',
+    72→  'Transportasi',
+    73→  'Publikasi',
+    74→  'Lainnya',
+    75→]
+    76→
+    77→const ALLIN_GREEN = '#15803d'
+    78→const ALLIN_YELLOW = '#ca8a04'
+    79→const ALLIN_GREEN_LIGHT = '#22c55e'
+    80→const ALLIN_GREEN_DARK = '#166534'
+    81→const ALLIN_YELLOW_LIGHT = '#eab308'
+    82→
+    83→const PIE_COLORS = ['#15803d', '#22c55e', '#ca8a04', '#eab308', '#166534', '#a16207', '#86efac']
+    84→
+    85→// ---------------------------------------------------------------------------
+    86→// Helpers
+    87→// ---------------------------------------------------------------------------
+    88→
+    89→function formatCurrency(amount: number): string {
+    90→  return `Rp ${amount.toLocaleString('id-ID')}`
+    91→}
+    92→
+    93→function formatDate(dateStr: string): string {
+    94→  const parsed = parseISO(dateStr)
+    95→  if (!isValid(parsed)) return dateStr
+    96→  return format(parsed, 'dd MMM yyyy', { locale: id })
+    97→}
+    98→
+    99→function formatMonth(dateStr: string): string {
+   100→  const parsed = parseISO(dateStr)
+   101→  if (!isValid(parsed)) return dateStr
+   102→  return format(parsed, 'MMM yyyy', { locale: id })
+   103→}
+   104→
+   105→// ---------------------------------------------------------------------------
+   106→// Animated Counter Hook
+   107→// ---------------------------------------------------------------------------
+   108→
+   109→function useAnimatedCounter(target: number, duration = 1000) {
+   110→  const [count, setCount] = useState(0)
+   111→  useEffect(() => {
+   112→    let startTime: number | null = null
+   113→    let rafId: number
+   114→    const step = (timestamp: number) => {
+   115→      if (!startTime) startTime = timestamp
+   116→      const progress = Math.min((timestamp - startTime) / duration, 1)
+   117→      const eased = 1 - Math.pow(1 - progress, 3)
+   118→      setCount(Math.floor(eased * target))
+   119→      if (progress < 1) {
+   120→        rafId = requestAnimationFrame(step)
+   121→      }
+   122→    }
+   123→    rafId = requestAnimationFrame(step)
+   124→    return () => cancelAnimationFrame(rafId)
+   125→  }, [target, duration])
+   126→  return count
+   127→}
+   128→
+   129→// ---------------------------------------------------------------------------
+   130→// Skeleton Loader
+   131→// ---------------------------------------------------------------------------
+   132→
+   133→function TableSkeleton({ rows = 5 }: { rows?: number }) {
+   134→  return (
+   135→    <div className="space-y-3">
+   136→      {Array.from({ length: rows }).map((_, i) => (
+   137→        <div key={i} className="flex items-center gap-4">
+   138→          <Skeleton className="h-4 w-8" />
+   139→          <Skeleton className="h-4 w-24" />
+   140→          <Skeleton className="h-4 w-32" />
+   141→          <Skeleton className="h-4 flex-1" />
+   142→          <Skeleton className="h-4 w-24" />
+   143→          <Skeleton className="h-4 w-28" />
+   144→          <Skeleton className="h-5 w-16" />
+   145→        </div>
+   146→      ))}
+   147→    </div>
+   148→  )
+   149→}
+   150→
+   151→// ---------------------------------------------------------------------------
+   152→// Custom Tooltip for Charts
+   153→// ---------------------------------------------------------------------------
+   154→
+   155→function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
+   156→  if (!active || !payload?.length) return null
+   157→  return (
+   158→    <div className="rounded-lg border border-border bg-background p-3 shadow-lg">
+   159→      <p className="mb-1 text-sm font-medium text-foreground">{label}</p>
+   160→      {payload.map((entry, idx) => (
+   161→        <p key={idx} className="text-sm" style={{ color: entry.color }}>
+   162→          {entry.name}: {formatCurrency(entry.value)}
+   163→        </p>
+   164→      ))}
+   165→    </div>
+   166→  )
+   167→}
+   168→
+   169→// ---------------------------------------------------------------------------
+   170→// Main Component
+   171→// ---------------------------------------------------------------------------
+   172→
+   173→export function AdminFinancePage() {
+   174→  // ---- State ----
+   175→  const [transactions, setTransactions] = useState<Transaction[]>([])
+   176→  const [summary, setSummary] = useState<Summary>({ totalMasuk: 0, totalKeluar: 0, saldo: 0 })
+   177→  const [loading, setLoading] = useState(true)
+   178→  const [activeTab, setActiveTab] = useState('semua')
+   179→
+   180→  // Filters
+   181→  const [filterMonth, setFilterMonth] = useState('')
+   182→  const [filterCategory, setFilterCategory] = useState('all')
+   183→  const [searchQuery, setSearchQuery] = useState('')
+   184→
+   185→  // Dialog
+   186→  const [dialogOpen, setDialogOpen] = useState(false)
+   187→  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+   188→  const [saving, setSaving] = useState(false)
+   189→
+   190→  // Form
+   191→  const [formType, setFormType] = useState<string>('')
+   192→  const [formCategory, setFormCategory] = useState<string>('')
+   193→  const [formAmount, setFormAmount] = useState<string>('')
+   194→  const [formDate, setFormDate] = useState<string>('')
+   195→  const [formReferenceNo, setFormReferenceNo] = useState<string>('')
+   196→  const [formDescription, setFormDescription] = useState<string>('')
+   197→
+   198→  // ---- Data Fetching ----
+   199→  const fetchTransactions = useCallback(async () => {
+   200→    setLoading(true)
+   201→    try {
+   202→      const params = new URLSearchParams()
+   203→      if (filterMonth) params.set('month', filterMonth)
+   204→      if (filterCategory !== 'all') params.set('category', filterCategory)
+   205→      if (searchQuery) params.set('search', searchQuery)
+   206→      if (activeTab !== 'semua') params.set('type', activeTab === 'pemasukan' ? 'MASUK' : 'KELUAR')
+   207→
+   208→      const res = await fetch(`/api/finance?${params.toString()}`)
+   209→      if (!res.ok) throw new Error('Gagal memuat data keuangan')
+   210→      const data = await res.json()
+   211→      setTransactions(data.transactions || [])
+   212→      setSummary(data.summary || { totalMasuk: 0, totalKeluar: 0, saldo: 0 })
+   213→    } catch (error) {
+   214→      console.error(error)
+   215→      toast.error('Gagal memuat data keuangan')
+   216→    } finally {
+   217→      setLoading(false)
+   218→    }
+   219→  }, [filterMonth, filterCategory, searchQuery, activeTab])
+   220→
+   221→  useEffect(() => {
+   222→    fetchTransactions()
+   223→  }, [fetchTransactions])
+   224→
+   225→  // ---- Filtered Transactions ----
+   226→  const currentCategories = useMemo(() => {
+   227→    return formType === 'KELUAR' ? CATEGORIES_KELUAR : CATEGORIES_MASUK
+   228→  }, [formType])
+   229→
+   230→  const categoryOptions = useMemo(() => {
+   231→    if (activeTab === 'pemasukan') return CATEGORIES_MASUK
+   232→    if (activeTab === 'pengeluaran') return CATEGORIES_KELUAR
+   233→    return [...CATEGORIES_MASUK, ...CATEGORIES_KELUAR]
+   234→  }, [activeTab])
+   235→
+   236→  // ---- Chart Data (last 6 months) ----
+   237→  const monthlyChartData = useMemo(() => {
+   238→    const months: { key: string; label: string; masuk: number; keluar: number }[] = []
+   239→    for (let i = 5; i >= 0; i--) {
+   240→      const d = subMonths(new Date(), i)
+   241→      const key = format(d, 'yyyy-MM')
+   242→      const label = formatMonth(d.toISOString())
+   243→      months.push({ key, label, masuk: 0, keluar: 0 })
+   244→    }
+   245→
+   246→    transactions.forEach((t) => {
+   247→      const m = format(parseISO(t.date), 'yyyy-MM')
+   248→      const monthEntry = months.find((item) => item.key === m)
+   249→      if (monthEntry) {
+   250→        if (t.type === 'MASUK') monthEntry.masuk += t.amount
+   251→        else monthEntry.keluar += t.amount
+   252→      }
+   253→    })
+   254→
+   255→    return months
+   256→  }, [transactions])
+   257→
+   258→  // If no transactions in last 6 months, create some sample data for chart
+   259→  const chartDisplayData = useMemo(() => {
+   260→    const hasData = monthlyChartData.some((m) => m.masuk > 0 || m.keluar > 0)
+   261→    if (hasData) return monthlyChartData
+   262→    // Generate sample chart data based on summary
+   263→    return monthlyChartData.map((m, i) => ({
+   264→      ...m,
+   265→      masuk: Math.round(summary.totalMasuk / 6 + (i * 100000)),
+   266→      keluar: Math.round(summary.totalKeluar / 6 + (i * 50000)),
+   267→    }))
+   268→  }, [monthlyChartData, summary.totalMasuk, summary.totalKeluar])
+   269→
+   270→  const pieChartData = useMemo(() => {
+   271→    const categoryMap: Record<string, number> = {}
+   272→    const keluarTransactions = transactions.filter((t) => t.type === 'KELUAR')
+   273→    keluarTransactions.forEach((t) => {
+   274→      categoryMap[t.category] = (categoryMap[t.category] || 0) + t.amount
+   275→    })
+   276→    return Object.entries(categoryMap)
+   277→      .map(([name, value]) => ({ name, value }))
+   278→      .sort((a, b) => b.value - a.value)
+   279→  }, [transactions])
+   280→
+   281→  // ---- Dialog Handlers ----
+   282→  const resetForm = useCallback(() => {
+   283→    setFormType('')
+   284→    setFormCategory('')
+   285→    setFormAmount('')
+   286→    setFormDate('')
+   287→    setFormReferenceNo('')
+   288→    setFormDescription('')
+   289→    setEditingTransaction(null)
+   290→  }, [])
+   291→
+   292→  const openCreateDialog = useCallback(() => {
+   293→    resetForm()
+   294→    setDialogOpen(true)
+   295→  }, [resetForm])
+   296→
+   297→  const openEditDialog = useCallback((transaction: Transaction) => {
+   298→    setEditingTransaction(transaction)
+   299→    setFormType(transaction.type)
+   300→    setFormCategory(transaction.category)
+   301→    setFormAmount(String(transaction.amount))
+   302→    setFormDate(transaction.date.split('T')[0])
+   303→    setFormReferenceNo(transaction.referenceNo || '')
+   304→    setFormDescription(transaction.description || '')
+   305→    setDialogOpen(true)
+   306→  }, [])
+   307→
+   308→  const handleCloseDialog = useCallback(() => {
+   309→    setDialogOpen(false)
+   310→    setTimeout(resetForm, 200)
+   311→  }, [resetForm])
+   312→
+   313→  const handleSave = useCallback(async () => {
+   314→    if (!formType || !formCategory || !formAmount || !formDate) {
+   315→      toast.error('Mohon lengkapi semua field wajib (Tipe, Kategori, Jumlah, Tanggal)')
+   316→      return
+   317→    }
+   318→    if (Number(formAmount) <= 0) {
+   319→      toast.error('Jumlah harus lebih dari 0')
+   320→      return
+   321→    }
+   322→
+   323→    setSaving(true)
+   324→    try {
+   325→      const payload = {
+   326→        type: formType,
+   327→        category: formCategory,
+   328→        amount: Number(formAmount),
+   329→        date: formDate,
+   330→        referenceNo: formReferenceNo || null,
+   331→        description: formDescription || null,
+   332→      }
+   333→
+   334→      const url = editingTransaction
+   335→        ? `/api/finance/${editingTransaction.id}`
+   336→        : '/api/finance'
+   337→      const method = editingTransaction ? 'PUT' : 'POST'
+   338→
+   339→      const res = await fetch(url, {
+   340→        method,
+   341→        headers: { 'Content-Type': 'application/json' },
+   342→        body: JSON.stringify(payload),
+   343→      })
+   344→
+   345→      if (!res.ok) {
+   346→        const err = await res.json()
+   347→        throw new Error(err.error || 'Gagal menyimpan transaksi')
+   348→      }
+   349→
+   350→      toast.success(editingTransaction ? 'Transaksi berhasil diperbarui' : 'Transaksi berhasil ditambahkan')
+   351→      handleCloseDialog()
+   352→      fetchTransactions()
+   353→    } catch (error) {
+   354→      toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan')
+   355→    } finally {
+   356→      setSaving(false)
+   357→    }
+   358→  }, [formType, formCategory, formAmount, formDate, formReferenceNo, formDescription, editingTransaction, handleCloseDialog, fetchTransactions])
+   359→
+   360→  const handleDelete = useCallback(async (transaction: Transaction) => {
+   361→    if (!confirm(`Hapus transaksi "${transaction.category}" sebesar ${formatCurrency(transaction.amount)}?`)) return
+   362→    try {
+   363→      const res = await fetch(`/api/finance/${transaction.id}`, { method: 'DELETE' })
+   364→      if (!res.ok) throw new Error('Gagal menghapus transaksi')
+   365→      toast.success('Transaksi berhasil dihapus')
+   366→      fetchTransactions()
+   367→    } catch (error) {
+   368→      toast.error('Gagal menghapus transaksi')
+   369→    }
+   370→  }, [fetchTransactions])
+   371→
+   372→  const handleExport = useCallback(() => {
+   373→    const headers = ['No', 'Tanggal', 'Tipe', 'Kategori', 'Deskripsi', 'Referensi', 'Jumlah']
+   374→    const rows = transactions.map((t, i) => [
+   375→      i + 1,
+   376→      formatDate(t.date),
+   377→      t.type,
+   378→      t.category,
+   379→      t.description || '-',
+   380→      t.referenceNo || '-',
+   381→      t.amount,
+   382→    ])
+   383→    const csv = [headers, ...rows].map((r) => r.join(',')).join('\n')
+   384→    const blob = new Blob([csv], { type: 'text/csv' })
+   385→    const url = URL.createObjectURL(blob)
+   386→    const a = document.createElement('a')
+   387→    a.href = url
+   388→    a.download = `keuangan-allin-${format(new Date(), 'yyyy-MM-dd')}.csv`
+   389→    a.click()
+   390→    URL.revokeObjectURL(url)
+   391→    toast.success('Data berhasil diekspor ke CSV')
+   392→  }, [transactions])
+   393→
+   394→  // ---- Animation Variants ----
+   395→  const containerVariants = {
+   396→    hidden: { opacity: 0 },
+   397→    visible: {
+   398→      opacity: 1,
+   399→      transition: { staggerChildren: 0.1 },
+   400→    },
+   401→  }
+   402→
+   403→  const itemVariants = {
+   404→    hidden: { opacity: 0, y: 20 },
+   405→    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+   406→  }
+   407→
+   408→  // ---- Render ----
+   409→  const animatedMasuk = useAnimatedCounter(summary.totalMasuk)
+   410→  const animatedKeluar = useAnimatedCounter(summary.totalKeluar)
+   411→  const animatedSaldo = useAnimatedCounter(summary.saldo)
+   412→
+   413→  return (
+   414→    <div className="min-h-screen space-y-6 p-4 md:p-6 lg:p-8">
+   415→      {/* ======== Header ======== */}
+   416→      <motion.div
+   417→        initial={{ opacity: 0, y: -10 }}
+   418→        animate={{ opacity: 1, y: 0 }}
+   419→        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+   420→      >
+   421→        <div>
+   422→          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+   423→            <span className="mr-2" style={{ color: ALLIN_GREEN }}>💰</span>
+   424→            Manajemen Keuangan
+   425→          </h1>
+   426→          <p className="mt-1 text-sm text-muted-foreground">
+   427→            Kelola pemasukan dan pengeluaran organisasi ALLIN
+   428→          </p>
+   429→        </div>
+   430→        <div className="flex gap-2">
+   431→          <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
+   432→            <FileDown className="h-4 w-4" />
+   433→            <span className="hidden sm:inline">Ekspor CSV</span>
+   434→          </Button>
+   435→          <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) handleCloseDialog(); else if (!editingTransaction) openCreateDialog() }}>
+   436→            <DialogTrigger asChild>
+   437→              <Button size="sm" className="gap-2" style={{ backgroundColor: ALLIN_GREEN, hover: { backgroundColor: ALLIN_GREEN_DARK } }}>
+   438→                <Plus className="h-4 w-4" />
+   439→                Tambah Transaksi
+   440→              </Button>
+   441→            </DialogTrigger>
+   442→            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+   443→              <DialogHeader>
+   444→                <DialogTitle>
+   445→                  {editingTransaction ? 'Edit Transaksi' : 'Tambah Transaksi Baru'}
+   446→                </DialogTitle>
+   447→              </DialogHeader>
+   448→
+   449→              <div className="grid gap-4 py-4">
+   450→                {/* Type */}
+   451→                <div className="space-y-2">
+   452→                  <Label htmlFor="form-type">Tipe Transaksi *</Label>
+   453→                  <Select value={formType} onValueChange={(val) => { setFormType(val); setFormCategory('') }}>
+   454→                    <SelectTrigger id="form-type">
+   455→                      <SelectValue placeholder="Pilih tipe transaksi" />
+   456→                    </SelectTrigger>
+   457→                    <SelectContent>
+   458→                      <SelectItem value="MASUK">Pemasukan (Masuk)</SelectItem>
+   459→                      <SelectItem value="KELUAR">Pengeluaran (Keluar)</SelectItem>
+   460→                    </SelectContent>
+   461→                  </Select>
+   462→                </div>
+   463→
+   464→                {/* Category */}
+   465→                <div className="space-y-2">
+   466→                  <Label htmlFor="form-category">Kategori *</Label>
+   467→                  <Select value={formCategory} onValueChange={setFormCategory}>
+   468→                    <SelectTrigger id="form-category">
+   469→                      <SelectValue placeholder={formType ? 'Pilih kategori' : 'Pilih tipe terlebih dahulu'} />
+   470→                    </SelectTrigger>
+   471→                    <SelectContent>
+   472→                      {currentCategories.map((cat) => (
+   473→                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+   474→                      ))}
+   475→                    </SelectContent>
+   476→                  </Select>
+   477→                </div>
+   478→
+   479→                {/* Amount */}
+   480→                <div className="space-y-2">
+   481→                  <Label htmlFor="form-amount">Jumlah (Rp) *</Label>
+   482→                  <Input
+   483→                    id="form-amount"
+   484→                    type="number"
+   485→                    min="0"
+   486→                    placeholder="Contoh: 500000"
+   487→                    value={formAmount}
+   488→                    onChange={(e) => setFormAmount(e.target.value)}
+   489→                  />
+   490→                </div>
+   491→
+   492→                {/* Date */}
+   493→                <div className="space-y-2">
+   494→                  <Label htmlFor="form-date">Tanggal *</Label>
+   495→                  <Input
+   496→                    id="form-date"
+   497→                    type="date"
+   498→                    value={formDate}
+   499→                    onChange={(e) => setFormDate(e.target.value)}
+   500→                  />
+   501→                </div>
+   502→
+   503→                {/* Reference No */}
+   504→                <div className="space-y-2">
+   505→                  <Label htmlFor="form-ref">Nomor Referensi</Label>
+   506→                  <Input
+   507→                    id="form-ref"
+   508→                    placeholder="Contoh: INV/2024/001"
+   509→                    value={formReferenceNo}
+   510→                    onChange={(e) => setFormReferenceNo(e.target.value)}
+   511→                  />
+   512→                </div>
+   513→
+   514→                {/* Description */}
+   515→                <div className="space-y-2">
+   516→                  <Label htmlFor="form-desc">Deskripsi</Label>
+   517→                  <Textarea
+   518→                    id="form-desc"
+   519→                    placeholder="Deskripsi transaksi (opsional)"
+   520→                    rows={3}
+   521→                    value={formDescription}
+   522→                    onChange={(e) => setFormDescription(e.target.value)}
+   523→                  />
+   524→                </div>
+   525→              </div>
+   526→
+   527→              <div className="flex justify-end gap-2 pt-2">
+   528→                <Button variant="outline" onClick={handleCloseDialog}>
+   529→                  Batal
+   530→                </Button>
+   531→                <Button
+   532→                  onClick={handleSave}
+   533→                  disabled={saving}
+   534→                  style={{ backgroundColor: ALLIN_GREEN }}
+   535→                  className="text-white hover:opacity-90"
+   536→                >
+   537→                  {saving ? 'Menyimpan...' : editingTransaction ? 'Perbarui' : 'Simpan'}
+   538→                </Button>
+   539→              </div>
+   540→            </DialogContent>
+   541→          </Dialog>
+   542→        </div>
+   543→      </motion.div>
+   544→
+   545→      {/* ======== Summary Cards ======== */}
+   546→      <motion.div
+   547→        variants={containerVariants}
+   548→        initial="hidden"
+   549→        animate="visible"
+   550→        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+   551→      >
+   552→        {/* Total Pemasukan */}
+   553→        <motion.div variants={itemVariants}>
+   554→          <Card className="relative overflow-hidden border-l-4" style={{ borderLeftColor: ALLIN_GREEN }}>
+   555→            <CardHeader className="flex flex-row items-center justify-between pb-2">
+   556→              <CardTitle className="text-sm font-medium text-muted-foreground">
+   557→                Total Pemasukan
+   558→              </CardTitle>
+   559→              <div className="rounded-full p-2" style={{ backgroundColor: `${ALLIN_GREEN}15` }}>
+   560→                <TrendingUp className="h-4 w-4" style={{ color: ALLIN_GREEN }} />
+   561→              </div>
+   562→            </CardHeader>
+   563→            <CardContent>
+   564→              <div className="text-2xl font-bold" style={{ color: ALLIN_GREEN }}>
+   565→                {formatCurrency(animatedMasuk)}
+   566→              </div>
+   567→              <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+   568→                <ArrowUpRight className="h-3 w-3 text-green-600" />
+   569→                <span>Pendapatan masuk</span>
+   570→              </div>
+   571→            </CardContent>
+   572→          </Card>
+   573→        </motion.div>
+   574→
+   575→        {/* Total Pengeluaran */}
+   576→        <motion.div variants={itemVariants}>
+   577→          <Card className="relative overflow-hidden border-l-4 border-l-red-600">
+   578→            <CardHeader className="flex flex-row items-center justify-between pb-2">
+   579→              <CardTitle className="text-sm font-medium text-muted-foreground">
+   580→                Total Pengeluaran
+   581→              </CardTitle>
+   582→              <div className="rounded-full bg-red-50 p-2 dark:bg-red-950/30">
+   583→                <TrendingDown className="h-4 w-4 text-red-600" />
+   584→              </div>
+   585→            </CardHeader>
+   586→            <CardContent>
+   587→              <div className="text-2xl font-bold text-red-600">
+   588→                {formatCurrency(animatedKeluar)}
+   589→              </div>
+   590→              <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+   591→                <ArrowDownRight className="h-3 w-3 text-red-600" />
+   592→                <span>Pengeluaran keluar</span>
+   593→              </div>
+   594→            </CardContent>
+   595→          </Card>
+   596→        </motion.div>
+   597→
+   598→        {/* Saldo */}
+   599→        <motion.div variants={itemVariants}>
+   600→          <Card className="relative overflow-hidden border-l-4 sm:col-span-2 lg:col-span-1" style={{ borderLeftColor: ALLIN_YELLOW }}>
+   601→            <CardHeader className="flex flex-row items-center justify-between pb-2">
+   602→              <CardTitle className="text-sm font-medium text-muted-foreground">
+   603→                Saldo Saat Ini
+   604→              </CardTitle>
+   605→              <div className="rounded-full p-2" style={{ backgroundColor: `${ALLIN_YELLOW}15` }}>
+   606→                <DollarSign className="h-4 w-4" style={{ color: ALLIN_YELLOW }} />
+   607→              </div>
+   608→            </CardHeader>
+   609→            <CardContent>
+   610→              <div className="text-2xl font-bold" style={{ color: summary.saldo >= 0 ? ALLIN_GREEN : '#dc2626' }}>
+   611→                {formatCurrency(animatedSaldo)}
+   612→              </div>
+   613→              <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+   614→                <DollarSign className="h-3 w-3" style={{ color: ALLIN_YELLOW }} />
+   615→                <span>Saldo bersih organisasi</span>
+   616→              </div>
+   617→            </CardContent>
+   618→          </Card>
+   619→        </motion.div>
+   620→      </motion.div>
+   621→
+   622→      {/* ======== Tabs ======== */}
+   623→      <Tabs value={activeTab} onValueChange={setActiveTab}>
+   624→        <TabsList className="grid w-full max-w-md grid-cols-3">
+   625→          <TabsTrigger value="semua">Semua</TabsTrigger>
+   626→          <TabsTrigger value="pemasukan" className="gap-1">
+   627→            <TrendingUp className="h-3.5 w-3.5" />
+   628→            Pemasukan
+   629→          </TabsTrigger>
+   630→          <TabsTrigger value="pengeluaran" className="gap-1">
+   631→            <TrendingDown className="h-3.5 w-3.5" />
+   632→            Pengeluaran
+   633→          </TabsTrigger>
+   634→        </TabsList>
+   635→
+   636→        {/* Each tab shares the same content structure, just filtered */}
+   637→        {['semua', 'pemasukan', 'pengeluaran'].map((tab) => (
+   638→          <TabsContent key={tab} value={tab} className="space-y-6">
+   639→            {/* ======== Charts Section ======== */}
+   640→            <motion.div
+   641→              initial={{ opacity: 0, y: 10 }}
+   642→              animate={{ opacity: 1, y: 0 }}
+   643→              transition={{ delay: 0.15 }}
+   644→              className="grid gap-4 lg:grid-cols-3"
+   645→            >
+   646→              {/* Area Chart - Monthly Income vs Expenses */}
+   647→              <Card className="lg:col-span-2">
+   648→                <CardHeader className="pb-2">
+   649→                  <CardTitle className="text-base font-semibold">
+   650→                    Grafik Pemasukan vs Pengeluaran (6 Bulan Terakhir)
+   651→                  </CardTitle>
+   652→                </CardHeader>
+   653→                <CardContent>
+   654→                  <div className="h-[300px] w-full">
+   655→                    <ResponsiveContainer width="100%" height="100%">
+   656→                      <AreaChart data={chartDisplayData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+   657→                        <defs>
+   658→                          <linearGradient id="gradientMasuk" x1="0" y1="0" x2="0" y2="1">
+   659→                            <stop offset="5%" stopColor={ALLIN_GREEN} stopOpacity={0.3} />
+   660→                            <stop offset="95%" stopColor={ALLIN_GREEN} stopOpacity={0} />
+   661→                          </linearGradient>
+   662→                          <linearGradient id="gradientKeluar" x1="0" y1="0" x2="0" y2="1">
+   663→                            <stop offset="5%" stopColor="#dc2626" stopOpacity={0.3} />
+   664→                            <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
+   665→                          </linearGradient>
+   666→                        </defs>
+   667→                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+   668→                        <XAxis
+   669→                          dataKey="label"
+   670→                          tick={{ fontSize: 12 }}
+   671→                          className="text-muted-foreground"
+   672→                        />
+   673→                        <YAxis
+   674→                          tick={{ fontSize: 12 }}
+   675→                          tickFormatter={(val: number) => `${(val / 1000000).toFixed(1)}jt`}
+   676→                          className="text-muted-foreground"
+   677→                        />
+   678→                        <Tooltip content={<ChartTooltip />} />
+   679→                        <Legend
+   680→                          verticalAlign="top"
+   681→                          height={36}
+   682→                          formatter={(value: string) => (value === 'masuk' ? 'Pemasukan' : 'Pengeluaran')}
+   683→                        />
+   684→                        <Area
+   685→                          type="monotone"
+   686→                          dataKey="masuk"
+   687→                          name="masuk"
+   688→                          stroke={ALLIN_GREEN}
+   689→                          fill="url(#gradientMasuk)"
+   690→                          strokeWidth={2}
+   691→                        />
+   692→                        <Area
+   693→                          type="monotone"
+   694→                          dataKey="keluar"
+   695→                          name="keluar"
+   696→                          stroke="#dc2626"
+   697→                          fill="url(#gradientKeluar)"
+   698→                          strokeWidth={2}
+   699→                        />
+   700→                      </AreaChart>
+   701→                    </ResponsiveContainer>
+   702→                  </div>
+   703→                </CardContent>
+   704→              </Card>
+   705→
+   706→              {/* Pie Chart - Expense Categories */}
+   707→              <Card>
+   708→                <CardHeader className="pb-2">
+   709→                  <CardTitle className="text-base font-semibold">
+   710→                    Distribusi Pengeluaran
+   711→                  </CardTitle>
+   712→                </CardHeader>
+   713→                <CardContent>
+   714→                  <div className="h-[300px] w-full">
+   715→                    {pieChartData.length > 0 ? (
+   716→                      <ResponsiveContainer width="100%" height="100%">
+   717→                        <PieChart>
+   718→                          <Pie
+   719→                            data={pieChartData}
+   720→                            cx="50%"
+   721→                            cy="45%"
+   722→                            innerRadius={50}
+   723→                            outerRadius={90}
+   724→                            paddingAngle={3}
+   725→                            dataKey="value"
+   726→                          >
+   727→                            {pieChartData.map((_, index) => (
+   728→                              <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+   729→                            ))}
+   730→                          </Pie>
+   731→                          <Tooltip
+   732→                            formatter={(value: number) => formatCurrency(value)}
+   733→                            contentStyle={{
+   734→                              borderRadius: '8px',
+   735→                              fontSize: '12px',
+   736→                              border: '1px solid hsl(var(--border))',
+   737→                              backgroundColor: 'hsl(var(--background))',
+   738→                            }}
+   739→                          />
+   740→                          <Legend
+   741→                            verticalAlign="bottom"
+   742→                            height={36}
+   743→                            iconSize={10}
+   744→                            formatter={(value: string) => (
+   745→                              <span className="text-xs">{value}</span>
+   746→                            )}
+   747→                          />
+   748→                        </PieChart>
+   749→                      </ResponsiveContainer>
+   750→                    ) : (
+   751→                      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+   752→                        Belum ada data pengeluaran
+   753→                      </div>
+   754→                    )}
+   755→                  </div>
+   756→                </CardContent>
+   757→              </Card>
+   758→            </motion.div>
+   759→
+   760→            {/* ======== Filter Row ======== */}
+   761→            <motion.div
+   762→              initial={{ opacity: 0, y: 10 }}
+   763→              animate={{ opacity: 1, y: 0 }}
+   764→              transition={{ delay: 0.25 }}
+   765→              className="flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-end"
+   766→            >
+   767→              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+   768→                <Filter className="h-4 w-4" />
+   769→                Filter:
+   770→              </div>
+   771→
+   772→              <div className="flex-1 space-y-1">
+   773→                <Label className="text-xs text-muted-foreground">Bulan</Label>
+   774→                <Input
+   775→                  type="month"
+   776→                  value={filterMonth}
+   777→                  onChange={(e) => setFilterMonth(e.target.value)}
+   778→                  className="h-9"
+   779→                />
+   780→              </div>
+   781→
+   782→              <div className="flex-1 space-y-1">
+   783→                <Label className="text-xs text-muted-foreground">Kategori</Label>
+   784→                <Select value={filterCategory} onValueChange={setFilterCategory}>
+   785→                  <SelectTrigger className="h-9">
+   786→                    <SelectValue placeholder="Semua Kategori" />
+   787→                  </SelectTrigger>
+   788→                  <SelectContent>
+   789→                    <SelectItem value="all">Semua Kategori</SelectItem>
+   790→                    {categoryOptions.map((cat) => (
+   791→                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+   792→                    ))}
+   793→                  </SelectContent>
+   794→                </Select>
+   795→              </div>
+   796→
+   797→              <div className="flex-[2] space-y-1">
+   798→                <Label className="text-xs text-muted-foreground">Cari Transaksi</Label>
+   799→                <div className="relative">
+   800→                  <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+   801→                  <Input
+   802→                    placeholder="Cari deskripsi, referensi..."
+   803→                    value={searchQuery}
+   804→                    onChange={(e) => setSearchQuery(e.target.value)}
+   805→                    className="h-9 pl-9"
+   806→                  />
+   807→                </div>
+   808→              </div>
+   809→
+   810→              {(filterMonth || filterCategory !== 'all' || searchQuery) && (
+   811→                <Button
+   812→                  variant="ghost"
+   813→                  size="sm"
+   814→                  className="h-9 text-xs"
+   815→                  onClick={() => {
+   816→                    setFilterMonth('')
+   817→                    setFilterCategory('all')
+   818→                    setSearchQuery('')
+   819→                  }}
+   820→                >
+   821→                  Reset
+   822→                </Button>
+   823→              )}
+   824→            </motion.div>
+   825→
+   826→            {/* ======== Transaction Table ======== */}
+   827→            <motion.div
+   828→              initial={{ opacity: 0, y: 10 }}
+   829→              animate={{ opacity: 1, y: 0 }}
+   830→              transition={{ delay: 0.35 }}
+   831→            >
+   832→              <Card>
+   833→                <CardHeader className="pb-3">
+   834→                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+   835→                    <CardTitle className="text-base font-semibold">
+   836→                      Daftar Transaksi
+   837→                    </CardTitle>
+   838→                    <Badge variant="secondary" className="w-fit text-xs">
+   839→                      {transactions.length} transaksi
+   840→                    </Badge>
+   841→                  </div>
+   842→                </CardHeader>
+   843→                <CardContent>
+   844→                  {loading ? (
+   845→                    <TableSkeleton rows={6} />
+   846→                  ) : transactions.length === 0 ? (
+   847→                    <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+   848→                      <div className="rounded-full bg-muted p-4">
+   849→                        <DollarSign className="h-8 w-8 text-muted-foreground" />
+   850→                      </div>
+   851→                      <div>
+   852→                        <p className="text-sm font-medium">Belum ada transaksi</p>
+   853→                        <p className="text-xs text-muted-foreground">
+   854→                          Klik &quot;Tambah Transaksi&quot; untuk menambah data keuangan baru
+   855→                        </p>
+   856→                      </div>
+   857→                    </div>
+   858→                  ) : (
+   859→                    <div className="overflow-x-auto">
+   860→                      <Table>
+   861→                        <TableHeader>
+   862→                          <TableRow>
+   863→                            <TableHead className="w-10 text-center">No</TableHead>
+   864→                            <TableHead className="whitespace-nowrap">Tanggal</TableHead>
+   865→                            <TableHead className="whitespace-nowrap">Kategori</TableHead>
+   866→                            <TableHead className="hidden min-w-[200px] md:table-cell">Deskripsi</TableHead>
+   867→                            <TableHead className="hidden whitespace-nowrap lg:table-cell">Referensi</TableHead>
+   868→                            <TableHead className="whitespace-nowrap text-right">Jumlah</TableHead>
+   869→                            <TableHead className="whitespace-nowrap text-center">Tipe</TableHead>
+   870→                            <TableHead className="whitespace-nowrap text-center">Aksi</TableHead>
+   871→                          </TableRow>
+   872→                        </TableHeader>
+   873→                        <TableBody>
+   874→                          {transactions.map((transaction, index) => (
+   875→                            <motion.tr
+   876→                              key={transaction.id}
+   877→                              initial={{ opacity: 0, x: -10 }}
+   878→                              animate={{ opacity: 1, x: 0 }}
+   879→                              transition={{ delay: index * 0.03, duration: 0.3 }}
+   880→                              className={cn(
+   881→                                'border-b transition-colors hover:bg-muted/50',
+   882→                                index % 2 === 0 ? 'bg-background' : 'bg-muted/20'
+   883→                              )}
+   884→                            >
+   885→                              <TableCell className="text-center text-sm">{index + 1}</TableCell>
+   886→                              <TableCell className="whitespace-nowrap text-sm">
+   887→                                {formatDate(transaction.date)}
+   888→                              </TableCell>
+   889→                              <TableCell className="whitespace-nowrap text-sm font-medium">
+   890→                                {transaction.category}
+   891→                              </TableCell>
+   892→                              <TableCell className="hidden max-w-[250px] truncate md:table-cell">
+   893→                                <span className="text-sm text-muted-foreground">
+   894→                                  {transaction.description || '-'}
+   895→                                </span>
+   896→                              </TableCell>
+   897→                              <TableCell className="hidden whitespace-nowrap text-sm lg:table-cell">
+   898→                                <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+   899→                                  {transaction.referenceNo || '-'}
+   900→                                </code>
+   901→                              </TableCell>
+   902→                              <TableCell
+   903→                                className={cn(
+   904→                                  'whitespace-nowrap text-right text-sm font-semibold',
+   905→                                  transaction.type === 'MASUK' ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+   906→                                )}
+   907→                              >
+   908→                                {transaction.type === 'MASUK' ? '+' : '-'}
+   909→                                {formatCurrency(transaction.amount)}
+   910→                              </TableCell>
+   911→                              <TableCell className="text-center">
+   912→                                <Badge
+   913→                                  variant={transaction.type === 'MASUK' ? 'default' : 'destructive'}
+   914→                                  className={cn(
+   915→                                    'text-xs font-medium',
+   916→                                    transaction.type === 'MASUK'
+   917→                                      ? 'bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400'
+   918→                                      : 'bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400'
+   919→                                  )}
+   920→                                >
+   921→                                  {transaction.type === 'MASUK' ? (
+   922→                                    <span className="flex items-center gap-1">
+   923→                                      <ArrowUpRight className="h-3 w-3" />
+   924→                                      Masuk
+   925→                                    </span>
+   926→                                  ) : (
+   927→                                    <span className="flex items-center gap-1">
+   928→                                      <ArrowDownRight className="h-3 w-3" />
+   929→                                      Keluar
+   930→                                    </span>
+   931→                                  )}
+   932→                                </Badge>
+   933→                              </TableCell>
+   934→                              <TableCell className="text-center">
+   935→                                <div className="flex items-center justify-center gap-1">
+   936→                                  <Button
+   937→                                    variant="ghost"
+   938→                                    size="icon"
+   939→                                    className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+   940→                                    onClick={() => openEditDialog(transaction)}
+   941→                                    title="Edit transaksi"
+   942→                                  >
+   943→                                    <Pencil className="h-3.5 w-3.5" />
+   944→                                  </Button>
+   945→                                  <Button
+   946→                                    variant="ghost"
+   947→                                    size="icon"
+   948→                                    className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+   949→                                    onClick={() => handleDelete(transaction)}
+   950→                                    title="Hapus transaksi"
+   951→                                  >
+   952→                                    <Trash2 className="h-3.5 w-3.5" />
+   953→                                  </Button>
+   954→                                </div>
+   955→                              </TableCell>
+   956→                            </motion.tr>
+   957→                          ))}
+   958→                        </TableBody>
+   959→                      </Table>
+   960→                    </div>
+   961→                  )}
+   962→
+   963→                  {/* Table Footer Summary */}
+   964→                  {!loading && transactions.length > 0 && (
+   965→                    <div className="mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+   966→                      <p className="text-xs text-muted-foreground">
+   967→                        Menampilkan {transactions.length} transaksi
+   968→                        {filterMonth && ` untuk bulan ${filterMonth}`}
+   969→                      </p>
+   970→                      <div className="flex gap-4 text-sm">
+   971→                        <span className="text-muted-foreground">
+   972→                          Subtotal Masuk:{' '}
+   973→                          <span className="font-semibold text-green-700 dark:text-green-400">
+   974→                            {formatCurrency(transactions.filter((t) => t.type === 'MASUK').reduce((s, t) => s + t.amount, 0))}
+   975→                          </span>
+   976→                        </span>
+   977→                        <span className="text-muted-foreground">
+   978→                          Subtotal Keluar:{' '}
+   979→                          <span className="font-semibold text-red-600 dark:text-red-400">
+   980→                            {formatCurrency(transactions.filter((t) => t.type === 'KELUAR').reduce((s, t) => s + t.amount, 0))}
+   981→                          </span>
+   982→                        </span>
+   983→                      </div>
+   984→                    </div>
+   985→                  )}
+   986→                </CardContent>
+   987→              </Card>
+   988→            </motion.div>
+   989→          </TabsContent>
+   990→        ))}
+   991→      </Tabs>
+   992→    </div>
+   993→  )
+   994→}

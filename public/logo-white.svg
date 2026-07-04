@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 44" fill="none">
+  <circle cx="22" cy="22" r="20" fill="rgba(255,255,255,0.15)"/>
+  <path d="M25 8L14 24h6l-3 12 11-16h-6l3-12z" fill="#F9A825" stroke="#F9A825" stroke-width="0.5" stroke-linejoin="round"/>
+  <text x="50" y="20" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="800" fill="#FFFFFF" letter-spacing="1">ALLIN</text>
+  <text x="50" y="36" font-family="Arial, Helvetica, sans-serif" font-size="7.5" fill="rgba(255,255,255,0.6)" letter-spacing="0.3">Asosiasi Lingkungan Industri Ketenagalistrikan Nasional</text>
+</svg>

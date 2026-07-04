@@ -1,0 +1,252 @@
+/home/z/my-project/src/components/layout/Footer.tsx:27:  { label: 'Kontak', page: 'kontak' },
+/home/z/my-project/src/components/layout/Footer.tsx:30:const SOCIAL_LINKS = [
+/home/z/my-project/src/components/layout/Footer.tsx:55:export function Footer() {
+/home/z/my-project/src/components/layout/Footer.tsx:67:    <footer className="relative mt-auto">
+/home/z/my-project/src/components/layout/Footer.tsx:136:                Kontak
+/home/z/my-project/src/components/layout/Footer.tsx:143:                    <p className="text-xs text-white/50 mt-0.5">Email resmi</p>
+/home/z/my-project/src/components/layout/Footer.tsx:165:            {/* Column 4: Social Media */}
+/home/z/my-project/src/components/layout/Footer.tsx:171:                {SOCIAL_LINKS.map((social) => (
+/home/z/my-project/src/components/layout/Footer.tsx:173:                    key={social.label}
+/home/z/my-project/src/components/layout/Footer.tsx:174:                    href={social.href}
+/home/z/my-project/src/components/layout/Footer.tsx:177:                    aria-label={social.label}
+/home/z/my-project/src/components/layout/Footer.tsx:180:                    <social.icon className="h-5 w-5 text-white/70 group-hover:text-allin-yellow-light transition-colors duration-200" />
+/home/z/my-project/src/components/layout/Footer.tsx:182:                      {social.label}
+/home/z/my-project/src/components/layout/Footer.tsx:217:    </footer>
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:44:  { label: 'Kontak Masuk', page: 'admin-contacts', icon: MessageSquare },
+/home/z/my-project/src/components/layout/DashboardSidebar.tsx:160:      {/* Navigation */}
+/home/z/my-project/src/components/layout/AppRouter.tsx:8:import { Navbar } from './Navbar'
+/home/z/my-project/src/components/layout/AppRouter.tsx:9:import { Footer } from './Footer'
+/home/z/my-project/src/components/layout/AppRouter.tsx:21:import KontakPage from '@/components/pages/KontakPage'
+/home/z/my-project/src/components/layout/AppRouter.tsx:118:  kontak: KontakPage,
+/home/z/my-project/src/components/layout/AppRouter.tsx:185:      <Navbar />
+/home/z/my-project/src/components/layout/AppRouter.tsx:187:      <Footer />
+/home/z/my-project/src/components/layout/DashboardLayout.tsx:25:  'admin-contacts': 'Kontak Masuk',
+/home/z/my-project/src/components/layout/DashboardLayout.tsx:116:        <header className="sticky top-0 z-30 flex items-center gap-4 h-16 px-4 sm:px-6 border-b bg-white/80 backdrop-blur-md">
+/home/z/my-project/src/components/layout/DashboardLayout.tsx:148:        </header>
+/home/z/my-project/src/components/layout/AuthProvider.tsx:13:    const sessionKey = session?.user?.email ?? null
+/home/z/my-project/src/components/layout/AuthProvider.tsx:23:          email: session.user.email || '',
+/home/z/my-project/src/components/layout/Navbar.tsx:50:  { label: 'Kontak', page: 'kontak' },
+/home/z/my-project/src/components/layout/Navbar.tsx:93:export function Navbar() {
+/home/z/my-project/src/components/layout/Navbar.tsx:110:  // Don't show navbar on dashboard pages
+/home/z/my-project/src/components/layout/Navbar.tsx:120:      <motion.header
+/home/z/my-project/src/components/layout/Navbar.tsx:194:                          {session.user.email}
+/home/z/my-project/src/components/layout/Navbar.tsx:256:                      {/* Mobile Header */}
+/home/z/my-project/src/components/layout/Navbar.tsx:307:                      {/* Mobile Footer */}
+/home/z/my-project/src/components/layout/Navbar.tsx:355:      </motion.header>
+/home/z/my-project/src/components/layout/Navbar.tsx:357:      {/* Spacer for fixed navbar */}
+/home/z/my-project/src/lib/auth.ts:12:      allowDangerousEmailAccountLinking: true,
+/home/z/my-project/src/lib/auth.ts:18:      if (account?.provider === 'google' && user.email) {
+/home/z/my-project/src/lib/auth.ts:19:        const existing = await db.user.findUnique({ where: { email: user.email } })
+/home/z/my-project/src/lib/auth.ts:27:            where: { email: user.email },
+/home/z/my-project/src/lib/auth.ts:38:              email: user.email,
+/home/z/my-project/src/lib/auth.ts:49:      if (session.user && token.email) {
+/home/z/my-project/src/lib/auth.ts:50:        const email = String(token.email)
+/home/z/my-project/src/lib/auth.ts:51:        const dbUser = await db.user.findUnique({ where: { email } })
+/home/z/my-project/src/lib/auth.ts:64:        token.email = user.email
+/home/z/my-project/src/lib/store.ts:13:  | 'kontak'
+/home/z/my-project/src/lib/store.ts:45:    email: string
+/home/z/my-project/src/lib/store.ts:71:  { name: 'Koespraptini Ria', role: 'KETUA', roleLabel: 'Ketua', email: 'sampitaria@gmail.com' },
+/home/z/my-project/src/lib/store.ts:72:  { name: 'Mekkadinah', role: 'WAKIL_KETUA', roleLabel: 'Wakil Ketua', email: 'mekkadinah@gmail.com' },
+/home/z/my-project/src/lib/store.ts:73:  { name: 'Alibeta Sembiring', role: 'SEKRETARIS', roleLabel: 'Sekretaris', email: 'alelbiwi@gmail.com' },
+/home/z/my-project/src/lib/store.ts:74:  { name: 'Jaswadi', role: 'WAKIL_SEKRETARIS', roleLabel: 'Wakil Sekretaris', email: 'anjas0875@gmail.com' },
+/home/z/my-project/src/lib/store.ts:75:  { name: 'Viviane Tazaq', role: 'BENDAHARA', roleLabel: 'Bendahara', email: 'vtanzaq@gmail.com' },
+/home/z/my-project/src/components/ui/dialog.tsx:83:function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+/home/z/my-project/src/components/ui/dialog.tsx:86:      data-slot="dialog-header"
+/home/z/my-project/src/components/ui/dialog.tsx:93:function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
+/home/z/my-project/src/components/ui/dialog.tsx:96:      data-slot="dialog-footer"
+/home/z/my-project/src/components/ui/dialog.tsx:137:  DialogFooter,
+/home/z/my-project/src/components/ui/dialog.tsx:138:  DialogHeader,
+/home/z/my-project/src/app/sitemap.ts:12:    '/kontak',
+/home/z/my-project/src/app/layout.tsx:118:                email: "info@allin.web.id",
+/home/z/my-project/src/components/ui/command.tsx:12:  DialogHeader,
+/home/z/my-project/src/components/ui/command.tsx:47:      <DialogHeader className="sr-only">
+/home/z/my-project/src/components/ui/command.tsx:50:      </DialogHeader>
+/home/z/my-project/src/components/ui/pagination.tsx:14:      role="navigation"
+/home/z/my-project/src/components/ui/card.tsx:18:function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+/home/z/my-project/src/components/ui/card.tsx:21:      data-slot="card-header"
+/home/z/my-project/src/components/ui/card.tsx:23:        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6",
+/home/z/my-project/src/components/ui/card.tsx:74:function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
+/home/z/my-project/src/components/ui/card.tsx:77:      data-slot="card-footer"
+/home/z/my-project/src/components/ui/card.tsx:86:  CardHeader,
+/home/z/my-project/src/components/ui/card.tsx:87:  CardFooter,
+/home/z/my-project/src/components/ui/sidebar.tsx:17:  SheetHeader,
+/home/z/my-project/src/components/ui/sidebar.tsx:198:          <SheetHeader className="sr-only">
+/home/z/my-project/src/components/ui/sidebar.tsx:201:          </SheetHeader>
+/home/z/my-project/src/components/ui/sidebar.tsx:335:function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
+/home/z/my-project/src/components/ui/sidebar.tsx:338:      data-slot="sidebar-header"
+/home/z/my-project/src/components/ui/sidebar.tsx:339:      data-sidebar="header"
+/home/z/my-project/src/components/ui/sidebar.tsx:346:function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
+/home/z/my-project/src/components/ui/sidebar.tsx:349:      data-slot="sidebar-footer"
+/home/z/my-project/src/components/ui/sidebar.tsx:350:      data-sidebar="footer"
+/home/z/my-project/src/components/ui/sidebar.tsx:704:  SidebarFooter,
+/home/z/my-project/src/components/ui/sidebar.tsx:709:  SidebarHeader,
+/home/z/my-project/src/components/ui/alert-dialog.tsx:66:function AlertDialogHeader({
+/home/z/my-project/src/components/ui/alert-dialog.tsx:72:      data-slot="alert-dialog-header"
+/home/z/my-project/src/components/ui/alert-dialog.tsx:79:function AlertDialogFooter({
+/home/z/my-project/src/components/ui/alert-dialog.tsx:85:      data-slot="alert-dialog-footer"
+/home/z/my-project/src/components/ui/alert-dialog.tsx:151:  AlertDialogHeader,
+/home/z/my-project/src/components/ui/alert-dialog.tsx:152:  AlertDialogFooter,
+/home/z/my-project/src/components/ui/calendar.tsx:94:        week_number_header: cn(
+/home/z/my-project/src/components/ui/calendar.tsx:96:          defaultClassNames.week_number_header
+/home/z/my-project/src/app/api/seed/route.ts:44:      where: { email: 'admin@allin.web.id' },
+/home/z/my-project/src/app/api/seed/route.ts:48:        email: 'admin@allin.web.id',
+/home/z/my-project/src/app/api/seed/route.ts:58:      where: { email: 'sirikotampan111@gmail.com' },
+/home/z/my-project/src/app/api/seed/route.ts:62:        email: 'sirikotampan111@gmail.com',
+/home/z/my-project/src/app/api/seed/route.ts:74:        email: 'sampitaria@gmail.com',
+/home/z/my-project/src/app/api/seed/route.ts:81:        email: 'mekkadinah@gmail.com',
+/home/z/my-project/src/app/api/seed/route.ts:88:        email: 'alelbiwi@gmail.com',
+/home/z/my-project/src/app/api/seed/route.ts:95:        email: 'anjas0875@gmail.com',
+/home/z/my-project/src/app/api/seed/route.ts:102:        email: 'vtanzaq@gmail.com',
+/home/z/my-project/src/app/api/seed/route.ts:112:        where: { email: p.email },
+/home/z/my-project/src/components/ui/accordion.tsx:34:    <AccordionPrimitive.Header className="flex">
+/home/z/my-project/src/components/ui/accordion.tsx:46:    </AccordionPrimitive.Header>
+/home/z/my-project/src/app/api/members/route.ts:34:          { email: { contains: search } },
+/home/z/my-project/src/app/api/members/route.ts:44:          { email: { contains: search } },
+/home/z/my-project/src/app/api/members/route.ts:90:    const { fullName, email, phone, companyName, institution, position, address, city, province, memberType, logo, photo, document, reason } = body
+/home/z/my-project/src/app/api/members/route.ts:92:    if (!fullName || !email) {
+/home/z/my-project/src/app/api/members/route.ts:93:      return NextResponse.json({ error: 'Nama dan email wajib diisi' }, { status: 400 })
+/home/z/my-project/src/app/api/members/route.ts:96:    // Check if email already registered
+/home/z/my-project/src/app/api/members/route.ts:97:    const existingMember = await db.member.findUnique({ where: { email } })
+/home/z/my-project/src/app/api/members/route.ts:99:      return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 409 })
+/home/z/my-project/src/app/api/members/route.ts:105:        email,
+/home/z/my-project/src/app/api/members/route.ts:131:      return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 409 })
+/home/z/my-project/src/app/api/members/route.ts:170:    const allowedFields = ['fullName', 'email', 'phone', 'companyName', 'institution', 'position', 'address', 'city', 'province', 'memberType', 'logo', 'photo', 'document', 'reason', 'status']
+/home/z/my-project/src/app/api/activity-log/route.ts:35:            select: { id: true, name: true, email: true, avatar: true },
+/home/z/my-project/src/app/api/contacts/route.ts:53:    return NextResponse.json({ error: error.message || 'Gagal mengambil pesan kontak' }, { status: 500 })
+/home/z/my-project/src/app/api/contacts/route.ts:60:    const { name, email, phone, subject, message } = body
+/home/z/my-project/src/app/api/contacts/route.ts:62:    if (!name || !email || !message) {
+/home/z/my-project/src/app/api/contacts/route.ts:63:      return NextResponse.json({ error: 'Nama, email, dan pesan wajib diisi' }, { status: 400 })
+/home/z/my-project/src/app/api/contacts/route.ts:69:        email,
+/home/z/my-project/src/app/api/contacts/route.ts:103:      return NextResponse.json({ error: 'ID kontak wajib diisi' }, { status: 400 })
+/home/z/my-project/src/app/api/contacts/route.ts:121:    return NextResponse.json({ error: error.message || 'Gagal memperbarui pesan kontak' }, { status: 500 })
+/home/z/my-project/src/app/api/users/route.ts:28:        { email: { contains: search } },
+/home/z/my-project/src/app/api/users/route.ts:43:          email: true,
+/home/z/my-project/src/app/api/users/route.ts:92:    const { name, email, role, avatar, phone, position, company, bio } = body
+/home/z/my-project/src/app/api/users/route.ts:94:    if (!name || !email) {
+/home/z/my-project/src/app/api/users/route.ts:95:      return NextResponse.json({ error: 'Nama dan email wajib diisi' }, { status: 400 })
+/home/z/my-project/src/app/api/users/route.ts:98:    const existing = await db.user.findUnique({ where: { email } })
+/home/z/my-project/src/app/api/users/route.ts:100:      return NextResponse.json({ error: 'Email sudah terdaftar. Pengguna dapat login langsung melalui Google.' }, { status: 409 })
+/home/z/my-project/src/app/api/users/route.ts:106:        email,
+/home/z/my-project/src/app/api/users/route.ts:120:        email: user.email,
+/home/z/my-project/src/app/api/users/route.ts:134:      return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 409 })
+/home/z/my-project/src/app/api/users/route.ts:153:    const { id, name, email, role, avatar, phone, position, company, bio, isActive } = body
+/home/z/my-project/src/app/api/users/route.ts:166:    if (email !== undefined) updateData.email = email
+/home/z/my-project/src/app/api/users/route.ts:184:        email: user.email,
+/home/z/my-project/src/app/api/users/route.ts:198:      return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 409 })
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:6:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:12:  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:15:  Dialog, DialogContent, DialogHeader, DialogTitle,
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:22:  email: string
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:72:        headers: { 'Content-Type': 'application/json' },
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:92:            headers: { 'Content-Type': 'application/json' },
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:106:      {/* Header */}
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:110:            <h2 className="text-2xl font-bold">Pesan Kontak Masuk</h2>
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:111:            <p className="text-sm text-muted-foreground">Pesan yang diterima melalui formulir kontak.</p>
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:131:              placeholder="Cari nama, email, atau subjek..."
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:145:              <TableHeader>
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:149:                  <TableHead className="text-xs hidden md:table-cell">Email</TableHead>
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:155:              </TableHeader>
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:168:                      Belum ada pesan kontak masuk.
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:184:                      <TableCell className="text-xs text-muted-foreground hidden md:table-cell">{contact.email}</TableCell>
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:213:          <DialogHeader>
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:215:          </DialogHeader>
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:224:                  <p className="text-xs text-muted-foreground">Email</p>
+/home/z/my-project/src/components/dashboard/AdminContactsPage.tsx:225:                  <p className="text-sm font-medium">{selectedContact.email}</p>
+/home/z/my-project/src/components/dashboard/MemberInboxPage.tsx:12:import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+/home/z/my-project/src/components/dashboard/MemberInboxPage.tsx:72:                  <DialogContent><DialogHeader><DialogTitle>Balas Pesan</DialogTitle></DialogHeader>
+/home/z/my-project/src/components/pages/LoginPage.tsx:26:        email: userData.email || '',
+/home/z/my-project/src/components/pages/LoginPage.tsx:97:              Gunakan akun Google Anda untuk masuk. Akun pengurus ALLIN akan otomatis teridentifikasi berdasarkan email.
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:18:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:36:  email: string
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:64:    email: '',
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:91:    if (!form.email.trim()) e.email = 'Email wajib diisi'
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:92:    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Format email tidak valid'
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:136:        headers: { 'Content-Type': 'application/json' },
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:140:          email: form.email,
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:182:            Terima kasih telah mendaftar sebagai anggota ALLIN. Pendaftaran Anda sedang dalam proses verifikasi oleh pengurus. Anda akan menerima konfirmasi melalui email.
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:238:              <CardHeader>
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:245:              </CardHeader>
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:269:                    <Label htmlFor="email">Email *</Label>
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:271:                      id="email"
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:272:                      type="email"
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:273:                      value={form.email}
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:274:                      onChange={(e) => updateField('email', e.target.value)}
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:275:                      placeholder="email@perusahaan.com"
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:276:                      className={cn(errors.email && 'border-destructive')}
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:278:                    {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:298:              <CardHeader>
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:305:              </CardHeader>
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:332:              <CardHeader>
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:339:              </CardHeader>
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:376:              <CardHeader>
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:383:              </CardHeader>
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:401:              <CardHeader>
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:408:              </CardHeader>
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:440:              <CardHeader>
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:447:              </CardHeader>
+/home/z/my-project/src/components/pages/StrukturPengurusPage.tsx:77:            <span className="truncate max-w-[200px]">{person.email}</span>
+/home/z/my-project/src/components/dashboard/PengurusArticlesPage.tsx:15:import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+/home/z/my-project/src/components/dashboard/PengurusArticlesPage.tsx:51:      const res = await fetch(url, { method: editingId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+/home/z/my-project/src/components/dashboard/PengurusArticlesPage.tsx:73:          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{editingId ? 'Edit' : 'Tulis'} Artikel</DialogTitle></DialogHeader>
+/home/z/my-project/src/components/dashboard/AdminBackupPage.tsx:6:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+/home/z/my-project/src/components/dashboard/AdminBackupPage.tsx:35:            <CardHeader><CardTitle className="text-base flex items-center gap-2"><HardDrive className="w-5 h-5 text-allin-green" />Informasi Database</CardTitle></CardHeader>
+/home/z/my-project/src/components/dashboard/AdminBackupPage.tsx:47:            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Shield className="w-5 h-5 text-allin-green" />Aksi</CardTitle></CardHeader>
+/home/z/my-project/src/components/dashboard/AdminBackupPage.tsx:62:          <CardHeader><CardTitle className="text-base">Riwayat Backup</CardTitle></CardHeader>
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:13:  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:16:  Dialog, DialogContent, DialogHeader, DialogTitle,
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:27:  email: string
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:91:        headers: { 'Content-Type': 'application/json' },
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:124:      {/* Header */}
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:147:                placeholder="Cari nama, email, atau perusahaan..."
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:188:              <TableHeader>
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:192:                  <TableHead className="text-xs hidden md:table-cell">Email</TableHead>
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:199:              </TableHeader>
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:220:                      <TableCell className="text-xs text-muted-foreground hidden md:table-cell">{member.email}</TableCell>
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:289:          <DialogHeader>
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:291:          </DialogHeader>
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:300:                  <p className="text-xs text-muted-foreground">Email</p>
+/home/z/my-project/src/components/dashboard/AdminMembersPage.tsx:301:                  <p className="text-sm font-medium">{selectedMember.email}</p>
+/home/z/my-project/src/components/pages/HomePage.tsx:7:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+/home/z/my-project/src/components/pages/HomePage.tsx:508:                    <CardHeader className="pb-3">
+/home/z/my-project/src/components/pages/HomePage.tsx:514:                    </CardHeader>
+/home/z/my-project/src/components/pages/KontakPage.tsx:22:export default function KontakPage() {
+/home/z/my-project/src/components/pages/KontakPage.tsx:24:  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+/home/z/my-project/src/components/pages/KontakPage.tsx:32:    if (!form.email.trim()) e.email = 'Email wajib diisi'
+/home/z/my-project/src/components/pages/KontakPage.tsx:33:    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Format email tidak valid'
+/home/z/my-project/src/components/pages/KontakPage.tsx:45:        headers: { 'Content-Type': 'application/json' },
+/home/z/my-project/src/components/pages/KontakPage.tsx:48:          email: form.email,
+/home/z/my-project/src/components/pages/KontakPage.tsx:64:    { icon: Mail, label: 'Email', value: 'info@allin.web.id', href: 'mailto:info@allin.web.id' },
+/home/z/my-project/src/components/pages/KontakPage.tsx:77:            <span className="text-white">Kontak</span>
+/home/z/my-project/src/components/pages/KontakPage.tsx:93:            Kami siap membantu Anda. Silakan hubungi kami melalui formulir atau informasi kontak berikut.
+/home/z/my-project/src/components/pages/KontakPage.tsx:118:                      setForm({ name: '', email: '', subject: '', message: '' })
+/home/z/my-project/src/components/pages/KontakPage.tsx:142:                      <Label htmlFor="email">Email *</Label>
+/home/z/my-project/src/components/pages/KontakPage.tsx:144:                        id="email"
+/home/z/my-project/src/components/pages/KontakPage.tsx:145:                        type="email"
+/home/z/my-project/src/components/pages/KontakPage.tsx:146:                        value={form.email}
+/home/z/my-project/src/components/pages/KontakPage.tsx:147:                        onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+/home/z/my-project/src/components/pages/KontakPage.tsx:148:                        placeholder="email@domain.com"
+/home/z/my-project/src/components/pages/KontakPage.tsx:149:                        className={cn(errors.email && 'border-destructive')}
+/home/z/my-project/src/components/pages/KontakPage.tsx:151:                      {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
+/home/z/my-project/src/components/dashboard/AdminBannersPage.tsx:12:import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+/home/z/my-project/src/components/dashboard/AdminBannersPage.tsx:45:          <DialogContent><DialogHeader><DialogTitle>{editingId ? 'Edit' : 'Tambah'} Banner</DialogTitle></DialogHeader>
+/home/z/my-project/src/components/pages/FAQPage.tsx:26:    answer: 'Pendaftaran dapat dilakukan secara online melalui halaman Pendaftaran di website ini. Anda perlu mengisi formulir pendaftaran dengan data pribadi dan perusahaan, memilih jenis keanggotaan, serta melampirkan dokumen yang diperlukan. Setelah pendaftaran dikirim, tim pengurus ALLIN akan melakukan verifikasi dan memberikan konfirmasi melalui email.',
+/home/z/my-project/src/components/pages/FAQPage.tsx:30:    answer: 'Informasi mengenai biaya keanggotaan (iuran) disampaikan setelah pendaftaran Anda disetujui. Besaran iuran dapat bervariasi tergantung pada jenis keanggotaan yang dipilih. Untuk informasi lebih lanjut, silakan hubungi sekretariat ALLIN melalui halaman Kontak.',
+/home/z/my-project/src/components/pages/FAQPage.tsx:38:    answer: 'Proses verifikasi pendaftaran biasanya memerlukan waktu 7-14 hari kerja. Tim pengurus akan memeriksa kelengkapan data dan dokumen yang Anda kirimkan. Jika terdapat kekurangan, Anda akan dihubungi melalui email untuk melengkapi persyaratan.',
+/home/z/my-project/src/components/pages/FAQPage.tsx:46:    answer: 'Anda dapat menghubungi pengurus ALLIN melalui halaman Kontak di website ini, atau mengirim email langsung ke alamat email yang tercantum. Untuk keperluan mendesak, Anda juga dapat menghubungi melalui nomor telepon yang tersedia.',
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:19:1. Data yang Anda berikan secara sukarela: Saat Anda mendaftar sebagai anggota, mengisi formulir kontak, atau berinteraksi dengan fitur website lainnya, kami mengumpulkan data seperti nama, email, nomor telepon, alamat, nama perusahaan, dan informasi lain yang Anda sampaikan.
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:32:4. Merespons pertanyaan, permintaan, dan keluhan yang disampaikan melalui formulir kontak.
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:43:Jika Anda mengetahui atau menduga adanya pelanggaran keamanan data, silakan segera hubungi kami melalui informasi kontak yang tersedia di website ini.`,
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:55:Untuk mengajukan permintaan terkait hak-hak Anda, silakan hubungi kami melalui halaman Kontak.`,
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:64:    title: 'Kontak',
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:68:Email: info@allin.web.id
+/home/z/my-project/src/components/dashboard/MemberDashboardPage.tsx:7:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+/home/z/my-project/src/components/dashboard/MemberDashboardPage.tsx:53:        <Card className="border-0 shadow-sm"><CardHeader className="pb-3"><CardTitle className="text-base">Pengumuman Terbaru</CardTitle></CardHeader><CardContent>
+/home/z/my-project/src/components/dashboard/PengurusDashboardPage.tsx:8:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+/home/z/my-project/src/components/dashboard/PengurusDashboardPage.tsx:66:        <Card className="border-0 shadow-sm"><CardHeader className="pb-3"><CardTitle className="text-base">Artikel Terbaru</CardTitle></CardHeader><CardContent>
+/home/z/my-project/src/components/pages/SitemapPage.tsx:48:      { label: 'Hubungi Kami', page: 'kontak' },
+/home/z/my-project/src/components/dashboard/AdminSeoPage.tsx:6:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+/home/z/my-project/src/components/dashboard/AdminSeoPage.tsx:12:import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+/home/z/my-project/src/components/dashboard/AdminSeoPage.tsx:23:  { page: 'kontak', label: 'Kontak', metaTitle: 'Hubungi ALLIN', metaDescription: 'Hubungi tim ALLIN.', ogTitle: 'Kontak ALLIN', ogDescription: 'Hubungi Kami' },
+/home/z/my-project/src/components/dashboard/AdminSeoPage.tsx:45:              <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Globe className="w-4 h-4 text-allin-green" />{seo.label}<Badge variant="secondary" className="text-[10px] ml-auto">{seo.page}</Badge></CardTitle></CardHeader>
+
+[Showing results with pagination = limit: 250]

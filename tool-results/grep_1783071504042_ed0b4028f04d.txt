@@ -1,0 +1,171 @@
+/home/z/my-project/src/app/api/seed/route.ts:64:        company: 'ALLIN',
+/home/z/my-project/src/app/api/seed/route.ts:127:        title: 'ALLIN Gelar Rapat Koordinasi Nasional Tahun 2024',
+/home/z/my-project/src/app/api/seed/route.ts:129:        content: `<p>Asosiasi Lingkungan Industri Ketenagalistrikan Nasional (ALLIN) berhasil menyelenggarakan Rapat Koordinasi Nasional Tahun 2024 yang dihadiri oleh seluruh pengurus dan perwakilan anggota dari berbagai daerah di Indonesia.</p>
+/home/z/my-project/src/app/api/seed/route.ts:130:<p>Rapat ini membahas berbagai agenda penting termasuk program kerja tahunan, laporan keuangan, serta strategi pengembangan organisasi ke depan. Ketua Umum ALLIN, Koespraptini Ria, menyampaikan bahwa organisasi harus terus beradaptasi dengan perkembangan industri ketenagalistrikan yang semakin dinamis.</p>
+/home/z/my-project/src/app/api/seed/route.ts:133:        excerpt: 'ALLIN berhasil menyelenggarakan Rapat Koordinasi Nasional Tahun 2024 yang membahas program kerja dan strategi pengembangan organisasi.',
+/home/z/my-project/src/app/api/seed/route.ts:151:<p>ALLIN akan terus memantau implementasi regulasi ini dan memberikan masukan kepada pemerintah terkait dampaknya bagi industri.</p>`,
+/home/z/my-project/src/app/api/seed/route.ts:182:        title: 'Workshop Peningkatan Kompetensi Teknis Anggota ALLIN',
+/home/z/my-project/src/app/api/seed/route.ts:184:        content: `<p>ALLIN telah menyelenggarakan Workshop Peningkatan Kompetensi Teknis yang diikuti oleh lebih dari 100 peserta dari berbagai perusahaan anggota. Workshop ini berlangsung selama dua hari di Jakarta dan menghadirkan para ahli dari industri ketenagalistrikan nasional dan internasional.</p>
+/home/z/my-project/src/app/api/seed/route.ts:192:<p>"Workshop ini merupakan bagian dari komitmen ALLIN untuk meningkatkan kompetensi seluruh anggota agar mampu bersaing di tingkat global," kata Alibeta Sembiring selaku Sekretaris Umum.</p>
+/home/z/my-project/src/app/api/seed/route.ts:214:<h3>Peran ALLIN</h3>
+/home/z/my-project/src/app/api/seed/route.ts:215:<p>ALLIN berkomitmen untuk menjadi jembatan antara pemerintah, industri, dan akademisi dalam mewujudkan transisi energi yang berkelanjutan di Indonesia. Melalui program kerja dan kolaborasi dengan berbagai pemangku kepentingan, ALLIN siap berkontribusi dalam percepatan pengembangan energi terbarukan nasional.</p>`,
+/home/z/my-project/src/app/api/seed/route.ts:216:        excerpt: 'Analisis komprehensif mengenai potensi, peluang, dan tantangan pengembangan energi terbarukan di Indonesia serta peran ALLIN dalam transisi energi.',
+/home/z/my-project/src/app/api/seed/route.ts:236:        title: 'Musyawarah Nasional ALLIN 2024',
+/home/z/my-project/src/app/api/seed/route.ts:237:        description: 'Musyawarah Nasional tahunan ALLIN yang akan membahas laporan pertanggungjawaban pengurus, program kerja, serta pemilihan pengurus baru periode 2024-2027.',
+/home/z/my-project/src/app/api/seed/route.ts:253:        description: 'Rapat rutin bulanan pengurus harian ALLIN untuk membahas progres program kerja dan isu-isu terkini di industri ketenagalistrikan.',
+/home/z/my-project/src/app/api/seed/route.ts:255:        location: 'Kantor Sekretariat ALLIN, Jakarta',
+/home/z/my-project/src/app/api/seed/route.ts:269:        description: 'Dokumentasi kegiatan Rapat Koordinasi Nasional ALLIN Tahun 2024 yang dihadiri seluruh pengurus dan perwakilan anggota.',
+/home/z/my-project/src/app/api/seed/route.ts:275:        description: 'Kunjungan kerja ALLIN ke Pembangkit Listrik Tenaga Uap (PLTU) untuk mempelajari teknologi terbaru dalam pembangkitan tenaga listrik.',
+/home/z/my-project/src/app/api/seed/route.ts:281:        description: 'Kegiatan sosialisasi program kerja ALLIN tahun 2024 kepada seluruh anggota melalui pertemuan virtual dan tatap muka.',
+/home/z/my-project/src/app/api/seed/route.ts:294:        title: 'Selamat Datang di ALLIN',
+/home/z/my-project/src/app/api/seed/route.ts:302:        title: 'Bergabunglah dengan ALLIN',
+/home/z/my-project/src/app/api/seed/route.ts:319:        content: 'Dengan ini kami informasikan bahwa pendaftaran keanggotaan baru ALLIN untuk tahun 2024 telah resmi dibuka. Calon anggota dapat mendaftar melalui formulir yang tersedia di website ini. Persyaratan dan prosedur pendaftaran dapat dilihat di halaman keanggotaan.',
+/home/z/my-project/src/app/api/seed/route.ts:324:        content: 'Rapat Pengurus Harian bulan Juli 2024 akan dilaksanakan pada hari Jumat, 26 Juli 2024 pukul 09.00 WIB di Ruang Rapat Sekretariat ALLIN. Agenda rapat meliputi evaluasi program kerja semester I dan perencanaan semester II. Mohon seluruh pengurus hadir tepat waktu.',
+/home/z/my-project/src/app/api/seed/route.ts:329:        content: 'Kami informasikan bahwa sistem keanggotaan online ALLIN telah diperbarui. Seluruh anggota diharapkan untuk memperbarui data profil mereka melalui portal anggota. Jika mengalami kendala, silakan hubungi sekretariat.',
+/home/z/my-project/src/app/api/seed/route.ts:344:        metaTitle: 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional',
+/home/z/my-project/src/app/api/seed/route.ts:345:        metaDescription: 'ALLIN adalah organisasi profesi yang menaungi para praktisi dan pelaku industri ketenagalistrikan di Indonesia. Bergabunglah untuk pengembangan kompetensi dan jejaring profesional.',
+/home/z/my-project/src/app/api/seed/route.ts:346:        ogTitle: 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional',
+/home/z/my-project/src/app/api/seed/route.ts:352:          name: 'ALLIN',
+/home/z/my-project/src/app/api/registration-pdf/[id]/route.ts:35:        Title: `Formulir Pendaftaran Anggota ALLIN - ${member.fullName}`,
+/home/z/my-project/src/app/api/registration-pdf/[id]/route.ts:36:        Author: 'ALLIN',
+/home/z/my-project/src/app/api/registration-pdf/[id]/route.ts:53:    doc.font(FONT_BOLD).fontSize(12).text('ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional', left, y, { width: pageWidth, align: 'center' })
+/home/z/my-project/src/app/api/registration-pdf/[id]/route.ts:158:      'Formulir ini harap dicetak, ditandatangani, dan ditempel meterai Rp 10.000 kemudian dikirimkan ke sekretariat ALLIN.',
+/home/z/my-project/src/app/api/registration-pdf/[id]/route.ts:184:        'Content-Disposition': `attachment; filename="Formulir-Pendaftaran-ALLIN-${safeName}.pdf"`,
+/home/z/my-project/src/app/layout.tsx:19:    default: 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional',
+/home/z/my-project/src/app/layout.tsx:20:    template: '%s | ALLIN',
+/home/z/my-project/src/app/layout.tsx:23:    'ALLIN adalah organisasi asosiasi terbuka yang menaungi para pelaku industri ketenagalistrikan di Indonesia. Bergabunglah untuk pengembangan kompetensi dan jejaring profesional.',
+/home/z/my-project/src/app/layout.tsx:25:    'ALLIN',
+/home/z/my-project/src/app/layout.tsx:36:  authors: [{ name: 'ALLIN', url: 'https://allin.web.id' }],
+/home/z/my-project/src/app/layout.tsx:37:  creator: 'ALLIN',
+/home/z/my-project/src/app/layout.tsx:38:  publisher: 'ALLIN',
+/home/z/my-project/src/app/layout.tsx:49:    title: 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional',
+/home/z/my-project/src/app/layout.tsx:52:    siteName: 'ALLIN',
+/home/z/my-project/src/app/layout.tsx:61:        alt: 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional',
+/home/z/my-project/src/app/layout.tsx:67:    title: 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional',
+/home/z/my-project/src/app/layout.tsx:76:        alt: 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional',
+/home/z/my-project/src/app/layout.tsx:110:              name: "ALLIN",
+/home/z/my-project/src/lib/generate-registration-pdf.ts:1:// Zero-dependency PDF generator — layout persis formulir ALLIN
+/home/z/my-project/src/lib/generate-registration-pdf.ts:107:  textCenter(W / 2, y, 'ASOSIASI LINGKUNGAN INDUSTRI KETENAGALISTRIKAN NASIONAL (ALLIN)', 11, true)
+/home/z/my-project/src/lib/generate-registration-pdf.ts:133:  textCenter(W / 2, y, 'Dengan ini saya bermaksud mendaftar sebagai anggota ALLIN dengan data sebagai berikut:', 8.5, false)
+/home/z/my-project/src/lib/generate-registration-pdf.ts:366:  a.download = `Formulir-Keanggotaan-ALLIN-${safeName}.pdf`
+/home/z/my-project/src/lib/meta.ts:6:    description: 'ALLIN adalah organisasi asosiasi terbuka yang menaungi para pelaku industri ketenagalistrikan di Indonesia.',
+/home/z/my-project/src/lib/meta.ts:9:    description: 'Kenali lebih dekat Asosiasi Lingkungan Industri Ketenagalistrikan Nasional (ALLIN) dan perannya dalam industri kelistrikan Indonesia.',
+/home/z/my-project/src/lib/meta.ts:12:    description: 'Visi dan misi ALLIN dalam mewujudkan industri ketenagalistrikan nasional yang berdaya saing dan berkelanjutan.',
+/home/z/my-project/src/lib/meta.ts:15:    description: 'Struktur pengurus ALLIN - para pemimpin yang menggerakkan organisasi ketenagalistrikan nasional.',
+/home/z/my-project/src/lib/meta.ts:18:    description: 'Baca artikel terbaru seputar industri ketenagalistrikan, energi terbarukan, dan regulasi dari ALLIN.',
+/home/z/my-project/src/lib/meta.ts:21:    description: 'Jadwal kegiatan, seminar, workshop, dan acara ALLIN yang akan datang.',
+/home/z/my-project/src/lib/meta.ts:24:    description: 'Galeri foto kegiatan dan dokumentasi acara ALLIN.',
+/home/z/my-project/src/lib/meta.ts:27:    description: 'Daftarkan diri Anda sebagai anggota ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional.',
+/home/z/my-project/src/lib/meta.ts:30:    description: 'Hubungi ALLIN untuk informasi lebih lanjut mengenai keanggotaan, kerjasama, dan kegiatan.',
+/home/z/my-project/src/lib/meta.ts:33:    description: 'Pertanyaan yang sering diajukan seputar ALLIN dan keanggotaan.',
+/home/z/my-project/src/lib/meta.ts:54:  const description = articleData?.excerpt || meta?.description || 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional'
+/home/z/my-project/src/lib/store.ts:85:  'home': 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional',
+/home/z/my-project/src/lib/store.ts:86:  'tentang': 'Tentang ALLIN',
+/home/z/my-project/src/lib/store.ts:87:  'visi-misi': 'Visi & Misi ALLIN',
+/home/z/my-project/src/lib/store.ts:88:  'struktur-pengurus': 'Struktur Pengurus ALLIN',
+/home/z/my-project/src/lib/store.ts:89:  'artikel': 'Artikel - ALLIN',
+/home/z/my-project/src/lib/store.ts:90:  'agenda': 'Agenda Kegiatan ALLIN',
+/home/z/my-project/src/lib/store.ts:91:  'galeri': 'Galeri Foto ALLIN',
+/home/z/my-project/src/lib/store.ts:92:  'pendaftaran': 'Pendaftaran Anggota ALLIN',
+/home/z/my-project/src/lib/store.ts:93:  'kontak': 'Hubungi Kami - ALLIN',
+/home/z/my-project/src/lib/store.ts:94:  'faq': 'FAQ - ALLIN',
+/home/z/my-project/src/lib/store.ts:95:  'privacy-policy': 'Kebijakan Privasi - ALLIN',
+/home/z/my-project/src/lib/store.ts:96:  'sitemap': 'Peta Situs - ALLIN',
+/home/z/my-project/src/lib/store.ts:97:  'login': 'Login - ALLIN',
+/home/z/my-project/src/lib/store.ts:106:  document.title = PAGE_TITLES[page] || 'ALLIN'
+/home/z/my-project/src/components/layout/Navbar.tsx:127:              <Image src="/logo-icon.png" alt="ALLIN Logo" width={512} height={512} priority className="h-9 sm:h-10 w-auto rounded-full" />
+/home/z/my-project/src/components/layout/Navbar.tsx:194:                        <Image src="/logo-icon.png" alt="ALLIN Logo" width={512} height={512} className="h-7 w-auto" />
+/home/z/my-project/src/components/layout/Footer.tsx:83:                  alt="ALLIN Logo"
+/home/z/my-project/src/components/layout/Footer.tsx:90:                Asosiasi Lingkungan Industri Ketenagalistrikan Nasional (ALLIN) merupakan wadah
+/home/z/my-project/src/components/layout/Footer.tsx:183:              &copy; {new Date().getFullYear()} ALLIN — Asosiasi Lingkungan Industri Ketenagalistrikan Nasional.
+/home/z/my-project/src/components/dashboard/MemberArticlesPage.tsx:45:      <div><h2 className="text-2xl font-bold">Artikel</h2><p className="text-muted-foreground text-sm mt-1">Baca artikel terbaru dari ALLIN</p></div>
+/home/z/my-project/src/components/dashboard/AdminGalleryPage.tsx:97:        <div><h2 className="text-2xl font-bold">Manajemen Galeri</h2><p className="text-muted-foreground text-sm mt-1">Kelola foto dan dokumentasi kegiatan ALLIN</p></div>
+/home/z/my-project/src/components/dashboard/PengurusDashboardPage.tsx:55:      <div><h2 className="text-2xl sm:text-3xl font-bold">Selamat Datang, {userName}</h2><p className="text-muted-foreground mt-1">Dashboard pengurus ALLIN</p></div>
+/home/z/my-project/src/components/dashboard/MemberInboxPage.tsx:21:  { id: '1', sender: 'Sekretariat ALLIN', subject: 'Konfirmasi Keanggotaan', content: 'Selamat, keanggotaan Anda telah disetujui. Silakan lengkapi profil Anda di dashboard member.', date: '2024-12-15T10:00:00', isRead: false },
+/home/z/my-project/src/components/dashboard/MemberInboxPage.tsx:22:  { id: '2', sender: 'Sekretariat ALLIN', subject: 'Undangan Seminar Nasional', content: 'Anda diundang untuk menghadiri Seminar Nasional Transisi Energi yang akan diselenggarakan pada 20 Januari 2025 di Jakarta.', date: '2024-12-10T09:00:00', isRead: true },
+/home/z/my-project/src/components/dashboard/MemberInboxPage.tsx:23:  { id: '3', sender: 'Ketua ALLIN', subject: 'Pengumuman Rapat Anggota', content: 'Rapat Anggota Tahunan ALLIN akan dilaksanakan pada 15 Februari 2025. Mohon hadir tepat waktu.', date: '2024-12-05T14:00:00', isRead: true },
+/home/z/my-project/src/components/dashboard/AdminSeoPage.tsx:18:  { page: 'home', label: 'Beranda', metaTitle: 'ALLIN - Asosiasi Lingkungan Industri Ketenagalistrikan Nasional', metaDescription: 'Organisasi profesi ketenagalistrikan nasional.', ogTitle: 'ALLIN', ogDescription: 'Asosiasi Lingkungan Industri Ketenagalistrikan Nasional' },
+/home/z/my-project/src/components/dashboard/AdminSeoPage.tsx:19:  { page: 'tentang', label: 'Tentang', metaTitle: 'Tentang ALLIN - Asosiasi Ketenagalistrikan Nasional', metaDescription: 'Mengenal lebih dekat ALLIN.', ogTitle: 'Tentang ALLIN', ogDescription: 'Mengenal ALLIN' },
+/home/z/my-project/src/components/dashboard/AdminSeoPage.tsx:20:  { page: 'artikel', label: 'Artikel', metaTitle: 'Artikel ALLIN - Berita & Informasi Ketenagalistrikan', metaDescription: 'Baca artikel terbaru dari ALLIN.', ogTitle: 'Artikel ALLIN', ogDescription: 'Berita & Informasi' },
+/home/z/my-project/src/components/dashboard/AdminSeoPage.tsx:21:  { page: 'agenda', label: 'Agenda', metaTitle: 'Agenda & Kegiatan ALLIN', metaDescription: 'Jadwal kegiatan ALLIN.', ogTitle: 'Agenda ALLIN', ogDescription: 'Kegiatan ALLIN' },
+/home/z/my-project/src/components/dashboard/AdminSeoPage.tsx:22:  { page: 'galeri', label: 'Galeri', metaTitle: 'Galeri ALLIN', metaDescription: 'Dokumentasi kegiatan ALLIN.', ogTitle: 'Galeri ALLIN', ogDescription: 'Galeri Kegiatan' },
+/home/z/my-project/src/components/dashboard/AdminSeoPage.tsx:23:  { page: 'kontak', label: 'Kontak', metaTitle: 'Hubungi ALLIN', metaDescription: 'Hubungi tim ALLIN.', ogTitle: 'Kontak ALLIN', ogDescription: 'Hubungi Kami' },
+/home/z/my-project/src/components/dashboard/MemberDocumentsPage.tsx:11:  { id: '1', title: 'SK Keanggotaan', desc: 'Surat Keputusan Keanggotaan ALLIN', size: '245 KB', downloads: 128, icon: FileCheck },
+/home/z/my-project/src/components/dashboard/MemberDocumentsPage.tsx:12:  { id: '2', title: 'AD/ART ALLIN', desc: 'Anggaran Dasar dan Anggaran Rumah Tangga', size: '1.2 MB', downloads: 256, icon: BookOpen },
+/home/z/my-project/src/components/dashboard/MemberDocumentsPage.tsx:21:      <div><h2 className="text-2xl font-bold">Dokumen</h2><p className="text-muted-foreground text-sm mt-1">Download dokumen dan publikasi ALLIN</p></div>
+/home/z/my-project/src/components/dashboard/AdminBannersPage.tsx:18:  { id: '1', title: 'Selamat Datang di ALLIN', subtitle: 'Asosiasi Lingkungan Industri Ketenagalistrikan Nasional', imageUrl: '/banner-1.jpg', linkUrl: '/tentang', order: 1, isActive: true },
+/home/z/my-project/src/components/dashboard/AdminBannersPage.tsx:19:  { id: '2', title: 'Bergabunglah dengan ALLIN', subtitle: 'Wujudkan ketenagalistrikan nasional yang berkelanjutan', imageUrl: '/banner-2.jpg', linkUrl: '/pendaftaran', order: 2, isActive: true },
+/home/z/my-project/src/components/dashboard/AdminBackupPage.tsx:30:      <div><h2 className="text-2xl font-bold">Backup Database</h2><p className="text-muted-foreground text-sm mt-1">Kelola backup dan export data website ALLIN</p></div>
+/home/z/my-project/src/components/dashboard/MemberDashboardPage.tsx:28:      <div><h2 className="text-2xl sm:text-3xl font-bold">Selamat Datang, {userName}</h2><p className="text-muted-foreground mt-1">Dashboard member ALLIN</p></div>
+/home/z/my-project/src/components/pages/KontakPage.tsx:74:      ? `[ALLIN] ${form.subject}`
+/home/z/my-project/src/components/pages/KontakPage.tsx:75:      : '[ALLIN] Pesan dari Website'
+/home/z/my-project/src/components/pages/VisiMisiPage.tsx:92:            Arah dan tujuan yang menjadi landasan setiap langkah ALLIN
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:11:    content: `Kebijakan Privasi ini menjelaskan bagaimana Asosiasi Lingkungan Industri Ketenagalistrikan Nasional (ALLIN) mengumpulkan, menggunakan, menyimpan, dan melindungi data pribadi pengguna website ini. Kebijakan ini berlaku untuk seluruh pengunjung dan pengguna layanan yang tersedia di website ALLIN.
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:17:    content: `ALLIN mengumpulkan data pribadi melalui beberapa cara:
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:29:1. Mengelola keanggotaan ALLIN, termasuk verifikasi, persetujuan, dan komunikasi terkait status keanggotaan.
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:35:7. Menyelenggarakan kegiatan dan program ALLIN, termasuk pendaftaran acara dan pelatihan.`,
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:39:    content: `ALLIN berkomitmen untuk melindungi data pribadi Anda dengan menerapkan langkah-langkah keamanan teknis dan organisasi yang sesuai. Meskipun demikian, perlu diketahui bahwa tidak ada metode transmisi data melalui internet atau metode penyimpanan elektronik yang 100% aman.
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:47:    content: `Sebagai pengguna website ALLIN, Anda memiliki hak untuk:
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:59:    content: `ALLIN berhak untuk memperbarui atau mengubah Kebijakan Privasi ini sewaktu-waktu. Perubahan akan diumumkan melalui website ini dan berlaku segera setelah dipublikasikan. Kami menyarankan Anda untuk meninjau halaman ini secara berkala untuk mengetahui perubahan terbaru.
+/home/z/my-project/src/components/pages/PrivacyPolicyPage.tsx:67:Asosiasi Lingkungan Industri Ketenagalistrikan Nasional (ALLIN)
+/home/z/my-project/src/components/pages/AgendaPage.tsx:89:            Jadwal kegiatan, seminar, workshop, dan acara ALLIN
+/home/z/my-project/src/components/pages/LoginPage.tsx:96:                <Image src="/logo-icon.png" alt="ALLIN" width={80} height={80} className="w-16 h-16 rounded-full" />
+/home/z/my-project/src/components/pages/LoginPage.tsx:98:              <h1 className="text-2xl font-bold text-white">ALLIN</h1>
+/home/z/my-project/src/components/pages/ArtikelDetailPage.tsx:63:          document.title = `${found.title} - ALLIN`
+/home/z/my-project/src/components/pages/ArtikelDetailPage.tsx:177:                {article.author?.name || 'Redaksi ALLIN'}
+/home/z/my-project/src/components/pages/TentangPage.tsx:95:            <span className="text-white">Tentang ALLIN</span>
+/home/z/my-project/src/components/pages/TentangPage.tsx:103:            Tentang ALLIN
+/home/z/my-project/src/components/pages/TentangPage.tsx:116:      {/* What is ALLIN */}
+/home/z/my-project/src/components/pages/TentangPage.tsx:124:            <h2 className="text-2xl md:text-4xl font-bold mb-8">Apa itu ALLIN?</h2>
+/home/z/my-project/src/components/pages/TentangPage.tsx:128:                Asosiasi Lingkungan Industri Ketenagalistrikan Nasional (ALLIN) adalah organisasi kemasyarakatan yang berbentuk asosiasi terbuka, didirikan sebagai wadah pemersatu bagi seluruh pelaku industri ketenagalistrikan di Indonesia. ALLIN hadir untuk menjembatani kepentingan berbagai pemangku kepentingan mulai dari perusahaan energi primer, pembangkit listrik, transmisi, distribusi, hingga profesi dan institusi akademis yang terlibat dalam ekosistem ketenagalistrikan nasional.
+/home/z/my-project/src/components/pages/TentangPage.tsx:131:                Sebagai asosiasi terbuka, ALLIN tidak membatasi keanggotaan hanya pada satu segmen industri tertentu. Sebaliknya, ALLIN membuka pintu seluas-luasnya bagi perusahaan Badan Usaha Milik Negara (BUMN), swasta nasional, perusahaan patungan, maupun entitas asing yang beroperasi di sektor ketenagalistrikan Indonesia. Hal ini menjadikan ALLIN sebagai platform yang benar-benar inklusif dan representatif dalam mewakili suara industri ketenagalistrikan di tingkat nasional.
+/home/z/my-project/src/components/pages/TentangPage.tsx:134:                Dalam menjalankan perannya, ALLIN aktif berkomunikasi dengan pemerintah, khususnya Kementerian Energi dan Sumber Daya Mineral (ESDM), regulator sektor kelistrikan, serta lembaga terkait lainnya. ALLIN berperan dalam menyampaikan aspirasi anggota, memberikan masukan terhadap kebijakan publik, serta memfasilitasi dialog konstruktif yang bertujuan untuk mewujudkan industri ketenagalistrikan yang transparan, berdaya saing, dan berkelanjutan demi kesejahteraan masyarakat Indonesia.
+/home/z/my-project/src/components/pages/TentangPage.tsx:153:              ALLIN menerima keanggotaan dari berbagai jenis entitas yang terlibat dalam ekosistem industri ketenagalistrikan nasional:
+/home/z/my-project/src/components/pages/TentangPage.tsx:193:                  ALLIN didirikan oleh sekelompok profesional dan pelaku industri ketenagalistrikan yang menyadari pentingnya sebuah wadah organisasi yang mampu menyatukan berbagai elemen industri. Mereka melihat kebutuhan akan sebuah platform yang bisa menjadi jembatan komunikasi antara pelaku industri, pemerintah, dan masyarakat.
+/home/z/my-project/src/components/pages/TentangPage.tsx:200:                  Seiring berjalannya waktu, ALLIN terus berkembang dan memperluas basis keanggotaannya. Dari yang semula hanya diikuti oleh segelintir perusahaan, kini ALLIN telah menjadi asosiasi yang dihormati dengan anggota dari berbagai segmen industri ketenagalistrikan di seluruh Indonesia.
+/home/z/my-project/src/components/pages/TentangPage.tsx:207:                  ALLIN berkomitmen untuk terus menjadi mitra strategis pemerintah dan masyarakat dalam mewujudkan ketahanan energi nasional. Melalui program-program yang inovatif dan kolaboratif, ALLIN terus mendorong transformasi industri ketenagalistrikan Indonesia menuju arah yang lebih hijau, efisien, dan berkelanjutan.
+/home/z/my-project/src/components/pages/TentangPage.tsx:225:              <h2 className="text-2xl md:text-4xl font-bold mb-4">Nilai & Tujuan ALLIN</h2>
+/home/z/my-project/src/components/pages/TentangPage.tsx:227:                Empat pilar utama yang menjadi landasan setiap langkah dan kebijakan ALLIN dalam melayani anggota dan industri ketenagalistrikan.
+/home/z/my-project/src/components/pages/TentangPage.tsx:259:          <h2 className="text-2xl md:text-4xl font-bold text-white mb-4">Bergabunglah dengan ALLIN</h2>
+/home/z/my-project/src/components/pages/TentangPage.tsx:261:            Jadilah bagian dari keluarga besar ALLIN dan berkontribusi dalam memajukan industri ketenagalistrikan Indonesia.
+/home/z/my-project/src/components/pages/StrukturPengurusPage.tsx:117:            Susunan pengurus ALLIN yang berkomitmen memajukan industri ketenagalistrikan
+/home/z/my-project/src/components/pages/ArtikelPage.tsx:245:                                {article.excerpt || 'Artikel terbaru dari ALLIN mengenai perkembangan industri ketenagalistrikan nasional.'}
+/home/z/my-project/src/components/pages/ArtikelPage.tsx:251:                                    {article.author?.name || 'Redaksi ALLIN'}
+/home/z/my-project/src/components/pages/HomePage.tsx:145:    { icon: Scale, title: 'Advokasi Kebijakan', description: 'ALLIN berperan aktif dalam mengadvokasi kebijakan yang mendukung perkembangan industri ketenagalistrikan yang berkelanjutan.' },
+/home/z/my-project/src/components/pages/HomePage.tsx:200:              ALLIN adalah asosiasi terbuka yang menghimpun seluruh pemangku kepentingan di industri ketenagalistrikan Indonesia. Bersama kita membangun ekosistem industri yang lebih kuat, berkelanjutan, dan berdaya saing.
+/home/z/my-project/src/components/pages/HomePage.tsx:267:            <h2 className="text-2xl md:text-4xl font-bold mb-8">Tentang ALLIN</h2>
+/home/z/my-project/src/components/pages/HomePage.tsx:271:                Asosiasi Lingkungan Industri Ketenagalistrikan Nasional (ALLIN) merupakan organisasi yang berdedikasi untuk memajukan dan mengembangkan industri ketenagalistrikan di Indonesia. Didirikan sebagai wadah bagi seluruh pelaku industri, ALLIN berkomitmen untuk menciptakan lingkungan bisnis yang kondusif bagi pertumbuhan sektor kelistrikan nasional.
+/home/z/my-project/src/components/pages/HomePage.tsx:274:                Sebagai asosiasi terbuka, ALLIN menerima keanggotaan dari berbagai lapisan industri mulai dari perusahaan energi primer, pembangkit listrik, transmisi, distribusi, hingga perguruan tinggi dan perorangan yang memiliki kepedulian terhadap kemajuan ketenagalistrikan Indonesia. Dengan keragaman anggota ini, ALLIN mampu menjadi forum yang representatif untuk menyuarakan aspirasi seluruh pemangku kepentingan.
+/home/z/my-project/src/components/pages/HomePage.tsx:277:                Melalui berbagai program dan kegiatan, ALLIN terus berupaya meningkatkan kompetensi sumber daya manusia, mendorong inovasi teknologi, serta memperkuat kerja sama antar pemangku kepentingan dalam rangka mewujudkan ketahanan energi nasional yang berkelanjutan.
+/home/z/my-project/src/components/pages/HomePage.tsx:302:            <h2 className="text-2xl md:text-4xl font-bold mb-4">Mengapa Bergabung dengan ALLIN?</h2>
+/home/z/my-project/src/components/pages/HomePage.tsx:304:              Manfaat nyata yang akan Anda dapatkan sebagai anggota ALLIN untuk mendukung pertumbuhan bisnis dan profesionalisme Anda.
+/home/z/my-project/src/components/pages/HomePage.tsx:398:                        {article.excerpt || 'Artikel terbaru dari ALLIN mengenai perkembangan industri ketenagalistrikan nasional.'}
+/home/z/my-project/src/components/pages/HomePage.tsx:401:                        <span>{article.author?.name || 'Redaksi ALLIN'}</span>
+/home/z/my-project/src/components/pages/FAQPage.tsx:17:    question: 'Apa itu ALLIN?',
+/home/z/my-project/src/components/pages/FAQPage.tsx:18:    answer: 'ALLIN (Asosiasi Lingkungan Industri Ketenagalistrikan Nasional) adalah organisasi asosiasi terbuka yang menghimpun seluruh pelaku industri ketenagalistrikan di Indonesia. ALLIN berperan sebagai wadah komunikasi, advokasi, dan kolaborasi antar pemangku kepentingan di sektor kelistrikan nasional.',
+/home/z/my-project/src/components/pages/FAQPage.tsx:21:    question: 'Siapa saja yang bisa bergabung menjadi anggota ALLIN?',
+/home/z/my-project/src/components/pages/FAQPage.tsx:22:    answer: 'ALLIN menerima keanggotaan dari berbagai jenis entitas, termasuk perusahaan energi primer, pembangkit listrik, transmisi, gardu induk, distribusi, profesi individu, asosiasi nirlaba, BUMN, perusahaan swasta, perusahaan patungan dan asing, perguruan tinggi, koperasi, dan perorangan yang memiliki kepedulian terhadap industri ketenagalistrikan.',
+/home/z/my-project/src/components/pages/FAQPage.tsx:25:    question: 'Bagaimana cara mendaftar sebagai anggota ALLIN?',
+/home/z/my-project/src/components/pages/FAQPage.tsx:26:    answer: 'Pendaftaran dapat dilakukan secara online melalui halaman Pendaftaran di website ini. Anda perlu mengisi formulir pendaftaran dengan data pribadi dan perusahaan, memilih jenis keanggotaan, serta melampirkan dokumen yang diperlukan. Setelah pendaftaran dikirim, tim pengurus ALLIN akan melakukan verifikasi dan memberikan konfirmasi melalui email.',
+/home/z/my-project/src/components/pages/FAQPage.tsx:30:    answer: 'Informasi mengenai biaya keanggotaan (iuran) disampaikan setelah pendaftaran Anda disetujui. Besaran iuran dapat bervariasi tergantung pada jenis keanggotaan yang dipilih. Untuk informasi lebih lanjut, silakan hubungi sekretariat ALLIN melalui halaman Kontak.',
+/home/z/my-project/src/components/pages/FAQPage.tsx:33:    question: 'Apa saja manfaat menjadi anggota ALLIN?',
+/home/z/my-project/src/components/pages/FAQPage.tsx:34:    answer: 'Sebagai anggota ALLIN, Anda mendapatkan akses ke jaringan profesional industri ketenagalistrikan, informasi regulasi terkini, program pelatihan dan seminar, akses dokumen dan publikasi, partisipasi dalam advokasi kebijakan, serta kesempatan kolaborasi dengan berbagai pemangku kepentingan industri.',
+/home/z/my-project/src/components/pages/FAQPage.tsx:41:    question: 'Apakah ALLIN menyelenggarakan kegiatan rutin?',
+/home/z/my-project/src/components/pages/FAQPage.tsx:42:    answer: 'Ya, ALLIN secara rutin menyelenggarakan berbagai kegiatan seperti seminar, workshop, pelatihan, rapat anggota, dan pertemuan dengan pemangku kepentingan. Informasi mengenai jadwal kegiatan dapat dilihat pada halaman Agenda di website ini.',
+/home/z/my-project/src/components/pages/FAQPage.tsx:45:    question: 'Bagaimana cara menghubungi pengurus ALLIN?',
+/home/z/my-project/src/components/pages/FAQPage.tsx:46:    answer: 'Anda dapat menghubungi pengurus ALLIN melalui halaman Kontak di website ini, atau mengirim email langsung ke alamat email yang tercantum. Untuk keperluan mendesak, Anda juga dapat menghubungi melalui nomor telepon yang tersedia.',
+/home/z/my-project/src/components/pages/FAQPage.tsx:49:    question: 'Apakah anggota ALLIN bisa berpartisipasi dalam kebijakan regulasi?',
+/home/z/my-project/src/components/pages/FAQPage.tsx:50:    answer: 'Salah satu fungsi utama ALLIN adalah mengadvokasi kebijakan yang mendukung industri ketenagalistrikan. Anggota dapat berpartisipasi dengan menyampaikan aspirasi melalui forum diskusi, rapat anggota, atau secara langsung kepada tim pengurus yang berkomunikasi dengan regulator dan pemerintah.',
+/home/z/my-project/src/components/pages/FAQPage.tsx:53:    question: 'Apakah ALLIN bekerja sama dengan lembaga internasional?',
+/home/z/my-project/src/components/pages/FAQPage.tsx:54:    answer: 'Ya, ALLIN terbuka untuk menjalin kerja sama dengan berbagai organisasi dan lembaga internasional di bidang ketenagalistrikan. Kerja sama ini bertujuan untuk memperluas wawasan, berbagi praktik terbaik, dan meningkatkan daya saing industri ketenagalistrikan Indonesia di tingkat global.',
+/home/z/my-project/src/components/pages/FAQPage.tsx:96:            Temukan jawaban untuk pertanyaan yang sering diajukan tentang ALLIN
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:140:            Terima kasih telah mendaftar sebagai anggota ALLIN. Data Anda telah tersimpan.
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:152:                  5. Kirimkan formulir ke sekretariat ALLIN
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:211:            <img src="/logo.png" alt="ALLIN" className="h-16 mx-auto mb-3" />
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:213:              ASOSIASI LINGKUNGAN INDUSTRI KETENAGALISTRIKAN NASIONAL (ALLIN)
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:228:              Dengan ini saya bermaksud mendaftar sebagai anggota ALLIN dengan data sebagai berikut:
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:283:                  placeholder="Alasan ingin bergabung dengan ALLIN..."
+/home/z/my-project/src/components/pages/PendaftaranPage.tsx:304:                    Saya menyatakan data yang saya isikan adalah benar dan menyetujui syarat keanggotaan ALLIN. *
+/home/z/my-project/src/components/pages/SitemapPage.tsx:23:      { label: 'Tentang ALLIN', page: 'tentang' },
+/home/z/my-project/src/components/pages/SitemapPage.tsx:110:            Daftar seluruh halaman yang tersedia di website ALLIN
+/home/z/my-project/src/components/pages/GaleriPage.tsx:91:            Dokumentasi kegiatan dan momen penting ALLIN

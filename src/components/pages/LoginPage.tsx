@@ -50,10 +50,8 @@ export default function LoginPage() {
       })
 
       // Navigate based on role
-      if (u.role === 'SUPER_ADMIN') {
+      if (u.role === 'SUPER_ADMIN' || ['KETUA', 'WAKIL_KETUA', 'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA'].includes(u.role)) {
         navigate('admin-dashboard')
-      } else if (['KETUA', 'WAKIL_KETUA', 'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA'].includes(u.role)) {
-        navigate('pengurus-dashboard')
       } else {
         navigate('member-dashboard')
       }
