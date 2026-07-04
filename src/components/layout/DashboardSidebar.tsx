@@ -21,7 +21,7 @@ import {
   Inbox,
   type LucideIcon,
 } from 'lucide-react'
-import { useAppStore, type PageKey, PENGURUS_ROLES } from '@/lib/store'
+import { useAppStore, type PageKey } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -117,7 +117,8 @@ function getAvatarBg(role: string): string {
 }
 
 function getMenuForRole(role: string): SidebarItem[] {
-  if (role === 'SUPER_ADMIN' || PENGURUS_ROLES.includes(role as any)) return SUPER_ADMIN_MENU
+  // Bukan MEMBER = full admin menu (SUPER_ADMIN + semua pengurus)
+  if (role !== 'MEMBER') return SUPER_ADMIN_MENU
   return MEMBER_MENU
 }
 
