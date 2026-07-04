@@ -117,7 +117,7 @@ function getAvatarBg(role: string): string {
 }
 
 function getMenuForRole(role: string): SidebarItem[] {
-  if (PENGURUS_ROLES.includes(role as any)) return SUPER_ADMIN_MENU
+  if (role === 'SUPER_ADMIN' || PENGURUS_ROLES.includes(role as any)) return SUPER_ADMIN_MENU
   return MEMBER_MENU
 }
 
