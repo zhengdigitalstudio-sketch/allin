@@ -125,14 +125,14 @@ export function Footer() {
                 <li className="flex items-start gap-3">
                   <Mail className="h-4 w-4 shrink-0 mt-0.5 text-allin-yellow-light" />
                   <div>
-                    <p className="text-sm text-white/70">info@allin.web.id</p>
+                    <p className="text-sm text-white/70">asosialis.allin@gmail.com</p>
                     <p className="text-xs text-white/50 mt-0.5">Email resmi</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <Phone className="h-4 w-4 shrink-0 mt-0.5 text-allin-yellow-light" />
                   <div>
-                    <p className="text-sm text-white/70">+62 21 1234 5678</p>
+                    <p className="text-sm text-white/70">+62 813-5954-5500</p>
                     <p className="text-xs text-white/50 mt-0.5">Senin - Jumat, 08:00 - 17:00</p>
                   </div>
                 </li>
@@ -140,8 +140,10 @@ export function Footer() {
                   <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-allin-yellow-light" />
                   <div>
                     <p className="text-sm text-white/70">
-                      Jl. Ketenagalistrikan No. 123<br />
-                      Jakarta Pusat 10110
+                      Ruko Sentra Menteng, Bintaro Jaya,<br />
+                      Sektor VII Blok MN 47, Pd. Jaya,<br />
+                      Kec. Pd. Aren, Kota Tangerang Selatan,<br />
+                      Banten 15227
                     </p>
                   </div>
                 </li>

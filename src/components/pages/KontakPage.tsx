@@ -87,8 +87,8 @@ export default function KontakPage() {
   }
 
   const contactInfo = [
-    { icon: Phone, label: 'Telepon', value: '+62 21 1234 5678', href: 'tel:+622112345678' },
-    { icon: MapPin, label: 'Alamat', value: 'Jakarta, Indonesia', href: null },
+    { icon: Phone, label: 'Telepon', value: '+62 813-5954-5500', href: 'tel:+6281359545500' },
+    { icon: MapPin, label: 'Alamat', value: 'Ruko Sentra Menteng, Bintaro Jaya, Sektor VII Blok MN 47, Pd. Jaya, Kec. Pd. Aren, Kota Tangerang Selatan, Banten 15227', href: null },
   ]
 
   return (

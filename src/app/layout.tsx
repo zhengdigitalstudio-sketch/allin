@@ -115,8 +115,8 @@ export default function RootLayout({
                 "Organisasi profesi yang menaungi para pelaku industri ketenagalistrikan di Indonesia.",
               contactPoint: {
                 "@type": "ContactPoint",
-                email: "info@allin.web.id",
-                telephone: "+62-21-1234-5678",
+                email: "asosialis.allin@gmail.com",
+                telephone: "+62-813-5954-5500",
                 contactType: "customer service",
                 areaServed: "ID",
                 availableLanguage: "Indonesian",
