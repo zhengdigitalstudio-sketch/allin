@@ -42,7 +42,7 @@ async function getLogoJpeg(): Promise<{ bytes: number[]; w: number; h: number } 
     const res = await fetch('/logo.png')
     const blob = await res.blob()
     const img = await createImageBitmap(blob)
-    const maxPts = 45
+    const maxPts = 40
     const scale = Math.min(maxPts / img.width, maxPts / img.height)
     const w = Math.round(img.width * scale)
     const h = Math.round(img.height * scale)
@@ -59,10 +59,12 @@ async function getLogoJpeg(): Promise<{ bytes: number[]; w: number; h: number } 
 
 export async function generateRegistrationPdf(data: RegistrationData): Promise<void> {
   const W = 595.28, H = 841.89
-  const ML = 60, MR = 60, CW = W - ML - MR
+  const ML = 65, MR = 55
+  const CW = W - ML - MR  // content width ~475
   const ops: string[] = []
-  let y = H - 50
+  let y = H - 45
 
+  // ── Helper functions ──
   const rg = (r: number, g: number, b: number, stroke = false) =>
     ops.push(`${(r/255).toFixed(3)} ${(g/255).toFixed(3)} ${(b/255).toFixed(3)} ${stroke ? 'RG' : 'rg'}`)
 
@@ -77,7 +79,7 @@ export async function generateRegistrationPdf(data: RegistrationData): Promise<v
   const line = (x1: number, x2: number, yy: number, lw: number) =>
     ops.push(`${lw} w ${x1.toFixed(1)} ${yy.toFixed(1)} m ${x2.toFixed(1)} ${yy.toFixed(1)} l S`)
 
-  // Load logo
+  // ── Load logo ──
   const logo = await getLogoJpeg()
   let logoX = 0, logoY = 0, logoW = 0, logoH = 0
   if (logo) {
@@ -85,33 +87,42 @@ export async function generateRegistrationPdf(data: RegistrationData): Promise<v
     logoX = (W - logoW) / 2
     logoY = y - logoH + 2
   }
-  y -= (logo ? logoH + 10 : 10)
+  y -= (logo ? logoH + 12 : 12)
 
-  // ── Header ──
+  // ── Header: Nama Organisasi ──
   rg(0, 0, 0)
-  txtC(W / 2, y, 'ASOSIASI LINGKUNGAN INDUSTRI KETENAGALISTRIKAN NASIONAL (ALLIN)', 11, true)
-  y -= 15
-  rg(0, 0, 0, true); line(ML, ML + CW, y, 0.8)
-  y -= 13
+  txtC(W / 2, y, 'ASOSIASI LINGKUNGAN INDUSTRI', 12, true)
+  y -= 16
+  txtC(W / 2, y, 'KETENAGALISTRIKAN NASIONAL (ALLIN)', 12, true)
+  y -= 6
+  rg(0, 0, 0, true); line(ML, ML + CW, y, 0.6)
+  y -= 12
 
+  // ── Sekretariat ──
   rg(80, 80, 80)
-  txtC(W / 2, y, 'SEKRETARIAT : Ruko Sentra Menteng Blok MN 47 Bintaro Jaya Sektor 7', 8, false)
-  y -= 11
-  txtC(W / 2, y, 'Tangerang Selatan - Banten 15224', 8, false)
-  y -= 20
+  txtC(W / 2, y, 'Sekretariat : Ruko Sentra Menteng, Bintaro Jaya, Sektor VII Blok MN 47', 7.5, false)
+  y -= 10
+  txtC(W / 2, y, 'Pd. Jaya, Kec. Pd. Aren, Kota Tangerang Selatan, Banten 15227', 7.5, false)
+  y -= 10
+  txtC(W / 2, y, 'Email: asosialis.allin@gmail.com  |  Telp: +62 813-5954-5500', 7.5, false)
+  y -= 18
 
   // ── Title ──
-  rg(0, 0, 0, true); line(ML, ML + CW, y, 1.2)
-  y -= 22
+  rg(0, 0, 0, true); line(ML, ML + CW, y, 1.0)
+  y -= 20
   rg(0, 0, 0)
-  txtC(W / 2, y, 'FORMULIR KEANGGOTAAN', 14, true)
-  y -= 6
-  rg(80, 80, 80)
-  txtC(W / 2, y, 'Dengan ini saya bermaksud mendaftar sebagai anggota ALLIN dengan data sebagai berikut:', 8.5, false)
-  y -= 22
+  txtC(W / 2, y, 'FORMULIR KEANGGOTAAN', 13, true)
+  y -= 16
+
+  // ── Intro text ──
+  rg(40, 40, 40)
+  txt(ML, y, 'Dengan ini saya bermaksud mendaftar sebagai anggota ALLIN', 9.5, false)
+  y -= 13
+  txt(ML, y, 'dengan data sebagai berikut :', 9.5, false)
+  y -= 20
 
   // ── Fields ──
-  rg(0, 0, 0)
+  // Calculate colon position based on longest label
   const fields: [string, string][] = [
     ['Nama', data.fullName],
     ['Jabatan', data.position || '-'],
@@ -123,30 +134,49 @@ export async function generateRegistrationPdf(data: RegistrationData): Promise<v
   ]
   if (data.reason) fields.push(['Alasan Bergabung', data.reason])
 
-  const colonX = ML + 115
-  const valX = ML + 125
+  // Colon aligns after the longest label "Nama Perusahaan" = 15 chars
+  const numW = 25       // "7.  " width
+  const colonX = ML + numW + 80  // fixed colon position
+  const valX = colonX + 10       // value starts after colon + gap
+  const lineEndX = ML + CW       // underline end
 
   for (let i = 0; i < fields.length; i++) {
     const [label, value] = fields[i]
-    txt(ML, y, `${i + 1}.  ${label}`, 10, false)
+    const numStr = `${i + 1}.`
+    rg(0, 0, 0)
+
+    // Number
+    txt(ML, y, numStr, 10, false)
+    // Label
+    txt(ML + numW, y, label, 10, false)
+    // Colon
     txt(colonX, y, ':', 10, false)
-    const maxValW = ML + CW - valX
+    // Value
+    const maxValW = lineEndX - valX
     const vLines = wrapText(value, 10, maxValW)
     txt(valX, y, vLines[0], 10, false)
-    y -= 18
+
+    // Underline for single-line fields (looks like a proper form)
+    if (vLines.length <= 1) {
+      rg(180, 180, 180, true); line(valX, lineEndX, y - 4, 0.3)
+    }
+
+    y -= 22
+
+    // Multi-line values
     for (let li = 1; li < vLines.length; li++) {
       txt(valX, y, vLines[li], 10, false)
-      y -= 14
+      y -= 15
     }
   }
 
-  y -= 8
+  y -= 10
 
-  // ── Peraturan ──
+  // ── Peraturan section ──
   rg(0, 0, 0, true); line(ML, ML + CW, y, 0.8)
-  y -= 16
+  y -= 18
   rg(0, 0, 0)
-  txt(ML, y, 'Dengan ini menyatakan bahwa kami :', 10, true)
+  txt(ML, y, 'Dengan menandatangani formulir ini, saya menyatakan bahwa :', 9.5, true)
   y -= 18
 
   const rules = [
@@ -156,42 +186,46 @@ export async function generateRegistrationPdf(data: RegistrationData): Promise<v
   ]
 
   for (let i = 0; i < rules.length; i++) {
-    const rLines = wrapText(rules[i], 9, CW - 20)
+    const rLines = wrapText(rules[i], 9, CW - 25)
     txt(ML, y, `${i + 1}.  ${rLines[0]}`, 9, false)
-    y -= 13
+    y -= 14
     for (let li = 1; li < rLines.length; li++) {
-      txt(ML + 18, y, rLines[li], 9, false)
-      y -= 13
+      txt(ML + 20, y, rLines[li], 9, false)
+      y -= 14
     }
-    y -= 5
+    y -= 6
   }
 
-  y -= 6
+  y -= 10
 
-  // ── Signature ──
-  const sigX = ML + CW - 170
+  // ── Signature section ──
+  const sigW = 200  // signature block width
+  const sigX = ML + CW - sigW
   const sigEndX = ML + CW
+
   const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
   rg(0, 0, 0)
-  txt(sigX, y, `Tangerang Selatan, ${today}`, 10, false)
-  y -= 20
-  txt(sigX, y, data.position || '(Jabatan)', 10, false)
-  y -= 30
+  txt(sigX, y, `Tangerang Selatan, ${today}`, 9.5, false)
+  y -= 22
+  txt(sigX, y, data.position || '(Jabatan)', 9.5, false)
+  y -= 45  // space for signature
 
   // Signature line
-  rg(0, 0, 0, true); line(sigX, sigEndX, y, 0.5)
-  y -= 5
+  rg(0, 0, 0, true); line(sigX, sigEndX, y, 0.6)
+  y -= 16
 
+  // Company name below line
   if (data.companyName) {
-    txt(sigX, y, data.companyName, 10, false)
+    txt(sigX, y, data.companyName, 9.5, false)
     y -= 16
   }
+  // Name in parentheses
   txt(sigX, y, `(${data.fullName})`, 9, false)
 
-  // ── Footer ──
-  const footY = 70
+  // ── Footer notes ──
+  const footY = 55
   rg(120, 120, 120)
-  txtC(W / 2, footY + 11, '*Pilih salah satu dengan melingkari', 7, false)
+  txtC(W / 2, footY + 12, '*Pilih salah satu dengan melingkari', 7, false)
   txtC(W / 2, footY, '**Jika mendaftar sebagai perusahaan, jika sebagai perorangan cukup mengisi kolom nama', 7, false)
 
   // ── Build PDF binary ──
