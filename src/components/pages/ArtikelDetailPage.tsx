@@ -16,6 +16,8 @@ import {
   Share2,
   MessageCircle,
   Newspaper,
+  FileText,
+  Download,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
@@ -32,6 +34,7 @@ interface Article {
   author: { name: string; id: string } | null
   createdAt: string
   publishedAt: string | null
+  pdfName?: string | null
 }
 
 export default function ArtikelDetailPage() {
@@ -226,6 +229,23 @@ export default function ArtikelDetailPage() {
               </p>
             )}
           </div>
+
+          {/* PDF Download */}
+          {article.pdfName && (
+            <a
+              href={`/api/articles/${article.id}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 mt-6 px-5 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium transition-colors shadow-sm"
+            >
+              <FileText className="h-5 w-5" />
+              <div className="text-left">
+                <p className="text-sm font-semibold">Unduh PDF</p>
+                <p className="text-xs opacity-80 truncate max-w-[250px]">{article.pdfName}</p>
+              </div>
+              <Download className="h-4 w-4 ml-1" />
+            </a>
+          )}
 
           {/* Share */}
           <div className="mt-10 pt-8 border-t">

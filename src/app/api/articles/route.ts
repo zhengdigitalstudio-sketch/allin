@@ -96,6 +96,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       articles: articles.map((a) => ({
         ...a,
+        pdfData: undefined, // jangan kirim base64 PDF di list
         createdAt: a.createdAt.toISOString(),
         updatedAt: a.updatedAt.toISOString(),
         publishedAt: a.publishedAt?.toISOString() || null,
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, content, excerpt, coverImage, category, status, isMemberOnly, metaTitle, metaDescription } = body
+    const { title, content, excerpt, coverImage, category, status, isMemberOnly, metaTitle, metaDescription, pdfName, pdfData } = body
 
     if (!title) {
       return NextResponse.json({ error: 'Judul wajib diisi' }, { status: 400 })
@@ -154,6 +155,8 @@ export async function POST(request: NextRequest) {
         isMemberOnly: isMemberOnly || false,
         metaTitle: metaTitle || null,
         metaDescription: metaDescription || null,
+        pdfName: pdfName || null,
+        pdfData: pdfData || null,
         authorId: session.id,
         publishedAt: status === 'PUBLISHED' ? new Date() : null,
       },
@@ -185,7 +188,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { id, title, content, excerpt, coverImage, category, status, isMemberOnly, metaTitle, metaDescription } = body
+    const { id, title, content, excerpt, coverImage, category, status, isMemberOnly, metaTitle, metaDescription, pdfName, pdfData } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID artikel wajib diisi' }, { status: 400 })
@@ -221,6 +224,8 @@ export async function PUT(request: NextRequest) {
     if (isMemberOnly !== undefined) updateData.isMemberOnly = isMemberOnly
     if (metaTitle !== undefined) updateData.metaTitle = metaTitle
     if (metaDescription !== undefined) updateData.metaDescription = metaDescription
+    if (pdfName !== undefined) updateData.pdfName = pdfName
+    if (pdfData !== undefined) updateData.pdfData = pdfData
 
     // Ensure slug uniqueness if title changed
     if (updateData.slug) {

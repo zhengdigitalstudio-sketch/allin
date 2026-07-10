@@ -40,6 +40,8 @@ model Article {
   viewCount     Int      @default(0)
   metaTitle     String?
   metaDescription String?
+  pdfName       String?
+  pdfData       String?   @db.Text
   authorId      String
   author        User     @relation(fields: [authorId], references: [id])
   createdAt     DateTime @default(now())

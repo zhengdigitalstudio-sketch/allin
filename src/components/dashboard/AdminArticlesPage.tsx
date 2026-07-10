@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Search, Plus, Pencil, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Maximize2, Minimize2, Upload, X, ImageIcon, CheckCircle2, Loader2 } from 'lucide-react'
+import { Search, Plus, Pencil, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Maximize2, Minimize2, Upload, X, ImageIcon, CheckCircle2, Loader2, FileText } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
@@ -40,6 +40,7 @@ interface Article {
   metaTitle?: string
   metaDescription?: string
   isMemberOnly?: boolean
+  pdfName?: string | null
 }
 
 const ITEMS_PER_PAGE = 10
@@ -54,6 +55,8 @@ const emptyForm = {
   metaTitle: '',
   metaDescription: '',
   isMemberOnly: false,
+  pdfName: '',
+  pdfData: '',
 }
 
 type ArticleForm = typeof emptyForm
@@ -82,7 +85,9 @@ export function AdminArticlesPage() {
   const [submitting, setSubmitting] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [pdfUploading, setPdfUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const pdfInputRef = useRef<HTMLInputElement>(null)
 
   const fetchArticles = useCallback(async () => {
     setLoading(true)
@@ -127,6 +132,8 @@ export function AdminArticlesPage() {
       metaTitle: article.metaTitle || '',
       metaDescription: article.metaDescription || '',
       isMemberOnly: article.isMemberOnly || false,
+      pdfName: (article as any).pdfName || '',
+      pdfData: '',
     })
     setDialogOpen(true)
   }
@@ -162,6 +169,36 @@ export function AdminArticlesPage() {
     setForm((prev) => ({ ...prev, coverImage: '' }))
   }
 
+  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.type !== 'application/pdf') {
+      toast.error('Hanya file PDF yang diperbolehkan')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Ukuran PDF maksimal 10MB')
+      return
+    }
+    setPdfUploading(true)
+    const reader = new FileReader()
+    reader.onload = () => {
+      setForm((prev) => ({ ...prev, pdfName: file.name, pdfData: reader.result as string }))
+      toast.success(`PDF "${file.name}" berhasil dipilih`)
+      setPdfUploading(false)
+    }
+    reader.onerror = () => {
+      toast.error('Gagal memproses PDF')
+      setPdfUploading(false)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removePdf = () => {
+    setForm((prev) => ({ ...prev, pdfName: '', pdfData: '' }))
+    if (pdfInputRef.current) pdfInputRef.current.value = ''
+  }
+
   const handleSubmit = async (submitStatus: 'DRAFT' | 'PUBLISHED') => {
     if (!form.title.trim()) {
       toast.error('Judul artikel wajib diisi')
@@ -171,7 +208,10 @@ export function AdminArticlesPage() {
     try {
       const url = editingId ? `/api/articles/${editingId}` : '/api/articles'
       const method = editingId ? 'PUT' : 'POST'
-      const body = { ...form, status: submitStatus }
+      const body: any = { ...form, status: submitStatus }
+      // Hanya kirim pdfData jika ada file baru, pdfName selalu kirim
+      if (!body.pdfData && !editingId) body.pdfData = ''
+      if (!body.pdfData && editingId) delete body.pdfData
       // For PUT, include the article id
       if (editingId) {
         Object.assign(body, { id: editingId })
@@ -558,6 +598,57 @@ export function AdminArticlesPage() {
                   </Button>
                 )}
               </div>
+            </div>
+            {/* Upload PDF / Lampiran */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Lampiran PDF</Label>
+              {form.pdfName ? (
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-green-500/50 bg-green-50 dark:bg-green-950/20 p-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100">
+                      <FileText className="h-4.5 w-4.5 text-red-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{form.pdfName}</p>
+                      <p className="text-xs text-muted-foreground">PDF terupload</p>
+                    </div>
+                  </div>
+                  <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0" onClick={removePdf}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg border-2 border-dashed p-4 cursor-pointer transition-colors',
+                    pdfUploading
+                      ? 'border-allin-green/50 bg-allin-green/5 pointer-events-none'
+                      : 'border-muted-foreground/25 hover:border-red-400/50 hover:bg-muted/50'
+                  )}
+                  onClick={() => !pdfUploading && pdfInputRef.current?.click()}
+                >
+                  {pdfUploading ? (
+                    <Loader2 className="h-6 w-6 text-allin-green animate-spin shrink-0" />
+                  ) : (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      {pdfUploading ? 'Memproses PDF...' : 'Ketuk untuk upload PDF'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Maks. 10MB — khusus file .pdf</p>
+                  </div>
+                </div>
+              )}
+              <input
+                ref={pdfInputRef}
+                type="file"
+                accept="application/pdf"
+                className="absolute w-px h-px p-0 -m-px overflow-hidden clip-[rect(0,0,0,0)] whitespace-nowrap border-0"
+                onChange={handlePdfUpload}
+              />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">

@@ -1,0 +1,666 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useCallback, useRef } from 'react'
+     4→import { Search, Plus, Pencil, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Maximize2, Minimize2, Upload, X, ImageIcon, CheckCircle2, Loader2 } from 'lucide-react'
+     5→import { motion, AnimatePresence } from 'framer-motion'
+     6→import { cn } from '@/lib/utils'
+     7→import { Card, CardContent } from '@/components/ui/card'
+     8→import { Button } from '@/components/ui/button'
+     9→import { Badge } from '@/components/ui/badge'
+    10→import { Input } from '@/components/ui/input'
+    11→import { Label } from '@/components/ui/label'
+    12→import { Skeleton } from '@/components/ui/skeleton'
+    13→import { Textarea } from '@/components/ui/textarea'
+    14→import { Checkbox } from '@/components/ui/checkbox'
+    15→import {
+    16→  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+    17→} from '@/components/ui/table'
+    18→import {
+    19→  Dialog, DialogContent, DialogHeader, DialogTitle,
+    20→} from '@/components/ui/dialog'
+    21→import {
+    22→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    23→} from '@/components/ui/select'
+    24→import { ARTICLE_CATEGORIES } from '@/lib/store'
+    25→import { toast } from 'sonner'
+    26→
+    27→interface Article {
+    28→  id: string
+    29→  title: string
+    30→  category: string
+    31→  author: string | { name: string }
+    32→  authorId: string
+    33→  status: string
+    34→  viewCount: number
+    35→  createdAt: string
+    36→  updatedAt: string
+    37→  excerpt?: string
+    38→  content?: string
+    39→  coverImage?: string
+    40→  metaTitle?: string
+    41→  metaDescription?: string
+    42→  isMemberOnly?: boolean
+    43→}
+    44→
+    45→const ITEMS_PER_PAGE = 10
+    46→
+    47→const emptyForm = {
+    48→  title: '',
+    49→  category: 'Berita',
+    50→  status: 'DRAFT',
+    51→  excerpt: '',
+    52→  content: '',
+    53→  coverImage: '',
+    54→  metaTitle: '',
+    55→  metaDescription: '',
+    56→  isMemberOnly: false,
+    57→}
+    58→
+    59→type ArticleForm = typeof emptyForm
+    60→
+    61→function getStatusBadge(status: string) {
+    62→  switch (status) {
+    63→    case 'PUBLISHED':
+    64→      return <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100">Dipublikasi</Badge>
+    65→    case 'DRAFT':
+    66→      return <Badge className="bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-100">Draft</Badge>
+    67→    default:
+    68→      return <Badge variant="secondary">{status}</Badge>
+    69→  }
+    70→}
+    71→
+    72→export function AdminArticlesPage() {
+    73→  const [articles, setArticles] = useState<Article[]>([])
+    74→  const [loading, setLoading] = useState(true)
+    75→  const [search, setSearch] = useState('')
+    76→  const [categoryFilter, setCategoryFilter] = useState<string>('SEMUA')
+    77→  const [statusFilter, setStatusFilter] = useState<string>('SEMUA')
+    78→  const [page, setPage] = useState(1)
+    79→  const [dialogOpen, setDialogOpen] = useState(false)
+    80→  const [editingId, setEditingId] = useState<string | null>(null)
+    81→  const [form, setForm] = useState<ArticleForm>(emptyForm)
+    82→  const [submitting, setSubmitting] = useState(false)
+    83→  const [isFullscreen, setIsFullscreen] = useState(false)
+    84→  const [uploading, setUploading] = useState(false)
+    85→  const fileInputRef = useRef<HTMLInputElement>(null)
+    86→
+    87→  const fetchArticles = useCallback(async () => {
+    88→    setLoading(true)
+    89→    try {
+    90→      const params = new URLSearchParams()
+    91→      if (statusFilter !== 'SEMUA') params.set('status', statusFilter)
+    92→      if (categoryFilter !== 'SEMUA') params.set('category', categoryFilter)
+    93→      if (search) params.set('search', search)
+    94→      params.set('page', String(page))
+    95→      params.set('limit', String(ITEMS_PER_PAGE))
+    96→      const res = await fetch(`/api/articles?${params}`)
+    97→      if (res.ok) {
+    98→        const data = await res.json()
+    99→        setArticles(Array.isArray(data) ? data : data.data || data.articles || [])
+   100→      }
+   101→    } catch {
+   102→      setArticles([])
+   103→    } finally {
+   104→      setLoading(false)
+   105→    }
+   106→  }, [search, categoryFilter, statusFilter, page])
+   107→
+   108→  useEffect(() => {
+   109→    fetchArticles()
+   110→  }, [fetchArticles])
+   111→
+   112→  const openCreateDialog = () => {
+   113→    setEditingId(null)
+   114→    setForm(emptyForm)
+   115→    setDialogOpen(true)
+   116→  }
+   117→
+   118→  const openEditDialog = (article: Article) => {
+   119→    setEditingId(article.id)
+   120→    setForm({
+   121→      title: article.title,
+   122→      category: article.category,
+   123→      status: article.status || 'DRAFT',
+   124→      excerpt: article.excerpt || '',
+   125→      content: article.content || '',
+   126→      coverImage: article.coverImage || '',
+   127→      metaTitle: article.metaTitle || '',
+   128→      metaDescription: article.metaDescription || '',
+   129→      isMemberOnly: article.isMemberOnly || false,
+   130→    })
+   131→    setDialogOpen(true)
+   132→  }
+   133→
+   134→  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+   135→    const file = e.target.files?.[0]
+   136→    if (!file) return
+   137→
+   138→    if (!file.type.startsWith('image/')) {
+   139→      toast.error('Hanya file gambar yang diperbolehkan')
+   140→      return
+   141→    }
+   142→    if (file.size > 5 * 1024 * 1024) {
+   143→      toast.error('Ukuran file maksimal 5MB')
+   144→      return
+   145→    }
+   146→
+   147→    setUploading(true)
+   148→    const reader = new FileReader()
+   149→    reader.onload = () => {
+   150→      setForm((prev) => ({ ...prev, coverImage: reader.result as string }))
+   151→      toast.success('Gambar berhasil dipilih')
+   152→      setUploading(false)
+   153→    }
+   154→    reader.onerror = () => {
+   155→      toast.error('Gagal memproses gambar')
+   156→      setUploading(false)
+   157→    }
+   158→    reader.readAsDataURL(file)
+   159→  }
+   160→
+   161→  const removeImage = () => {
+   162→    setForm((prev) => ({ ...prev, coverImage: '' }))
+   163→  }
+   164→
+   165→  const handleSubmit = async (submitStatus: 'DRAFT' | 'PUBLISHED') => {
+   166→    if (!form.title.trim()) {
+   167→      toast.error('Judul artikel wajib diisi')
+   168→      return
+   169→    }
+   170→    setSubmitting(true)
+   171→    try {
+   172→      const url = editingId ? `/api/articles/${editingId}` : '/api/articles'
+   173→      const method = editingId ? 'PUT' : 'POST'
+   174→      const body = { ...form, status: submitStatus }
+   175→      // For PUT, include the article id
+   176→      if (editingId) {
+   177→        Object.assign(body, { id: editingId })
+   178→      }
+   179→      const res = await fetch(url, {
+   180→        method,
+   181→        headers: { 'Content-Type': 'application/json' },
+   182→        body: JSON.stringify(body),
+   183→      })
+   184→      if (res.ok) {
+   185→        if (submitStatus === 'PUBLISHED') {
+   186→          toast.success(editingId ? 'Artikel berhasil dipublikasi' : 'Artikel berhasil dipublikasi')
+   187→        } else {
+   188→          toast.success(editingId ? 'Artikel disimpan sebagai draft' : 'Artikel disimpan sebagai draft')
+   189→        }
+   190→        setDialogOpen(false)
+   191→        setIsFullscreen(false)
+   192→        fetchArticles()
+   193→      } else {
+   194→        toast.error('Gagal menyimpan artikel')
+   195→      }
+   196→    } catch {
+   197→      toast.error('Gagal menyimpan artikel')
+   198→    } finally {
+   199→      setSubmitting(false)
+   200→    }
+   201→  }
+   202→
+   203→  const handleDelete = async (id: string) => {
+   204→    try {
+   205→      const res = await fetch(`/api/articles/${id}`, { method: 'DELETE' })
+   206→      if (res.ok) {
+   207→        toast.success('Artikel berhasil dihapus')
+   208→        fetchArticles()
+   209→      }
+   210→    } catch {
+   211→      toast.error('Gagal menghapus artikel')
+   212→    }
+   213→  }
+   214→
+   215→  const handleTogglePublish = async (article: Article) => {
+   216→    const newStatus = article.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED'
+   217→    try {
+   218→      const res = await fetch(`/api/articles/${article.id}`, {
+   219→        method: 'PUT',
+   220→        headers: { 'Content-Type': 'application/json' },
+   221→        body: JSON.stringify({ status: newStatus }),
+   222→      })
+   223→      if (res.ok) {
+   224→        toast.success(newStatus === 'PUBLISHED' ? 'Artikel dipublikasi' : 'Artikel dijadikan draft')
+   225→        fetchArticles()
+   226→      }
+   227→    } catch {
+   228→      toast.error('Gagal mengubah status artikel')
+   229→    }
+   230→  }
+   231→
+   232→  return (
+   233→    <div className="space-y-6">
+   234→      {/* Header */}
+   235→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   236→        <div>
+   237→          <h2 className="text-2xl font-bold">Manajemen Artikel</h2>
+   238→          <p className="text-sm text-muted-foreground">Kelola konten artikel organisasi.</p>
+   239→        </div>
+   240→        <Button className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold w-fit" onClick={openCreateDialog}>
+   241→          <Plus className="h-4 w-4 mr-2" />
+   242→          Buat Artikel Baru
+   243→        </Button>
+   244→      </div>
+   245→
+   246→      {/* Filters */}
+   247→      <Card className="border-0 shadow-sm">
+   248→        <CardContent className="p-4">
+   249→          <div className="flex flex-col sm:flex-row gap-3">
+   250→            <div className="relative flex-1">
+   251→              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+   252→              <Input
+   253→                placeholder="Cari judul atau penulis..."
+   254→                className="pl-9"
+   255→                value={search}
+   256→                onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+   257→              />
+   258→            </div>
+   259→            <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); setPage(1) }}>
+   260→              <SelectTrigger className="w-full sm:w-[180px]">
+   261→                <SelectValue placeholder="Kategori" />
+   262→              </SelectTrigger>
+   263→              <SelectContent>
+   264→                <SelectItem value="SEMUA">Semua Kategori</SelectItem>
+   265→                {ARTICLE_CATEGORIES.map((c) => (
+   266→                  <SelectItem key={c} value={c}>{c}</SelectItem>
+   267→                ))}
+   268→              </SelectContent>
+   269→            </Select>
+   270→            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1) }}>
+   271→              <SelectTrigger className="w-full sm:w-[160px]">
+   272→                <SelectValue placeholder="Status" />
+   273→              </SelectTrigger>
+   274→              <SelectContent>
+   275→                <SelectItem value="SEMUA">Semua Status</SelectItem>
+   276→                <SelectItem value="DRAFT">Draft</SelectItem>
+   277→                <SelectItem value="PUBLISHED">Dipublikasi</SelectItem>
+   278→              </SelectContent>
+   279→            </Select>
+   280→          </div>
+   281→        </CardContent>
+   282→      </Card>
+   283→
+   284→      {/* Mobile Card List */}
+   285→      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+   286→        <div className="md:hidden space-y-3">
+   287→          {loading ? (
+   288→            Array.from({ length: 3 }).map((_, i) => (
+   289→              <Card key={i} className="border-0 shadow-sm"><CardContent className="p-4 space-y-3">
+   290→                <Skeleton className="h-5 w-3/4" />
+   291→                <div className="flex gap-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-5 w-12" /></div>
+   292→                <Skeleton className="h-8 w-full" />
+   293→              </CardContent></Card>
+   294→            ))
+   295→          ) : articles.length === 0 ? (
+   296→            <Card className="border-0 shadow-sm"><CardContent className="p-12 text-center text-muted-foreground">
+   297→              Tidak ada artikel ditemukan.
+   298→            </CardContent></Card>
+   299→          ) : (
+   300→            articles.map((article) => (
+   301→              <Card key={article.id} className="border-0 shadow-sm">
+   302→                <CardContent className="p-4 space-y-3">
+   303→                  <div className="flex items-start justify-between gap-2">
+   304→                    <p className="text-sm font-medium leading-snug flex-1">{article.title}</p>
+   305→                    {getStatusBadge(article.status)}
+   306→                  </div>
+   307→                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+   308→                    <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
+   309→                    <span>{new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+   310→                    <span>{article.viewCount ?? 0} views</span>
+   311→                  </div>
+   312→                  <div className="flex items-center gap-2 pt-1 border-t">
+   313→                    <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5" onClick={() => openEditDialog(article)}>
+   314→                      <Pencil className="h-3.5 w-3.5" /> Edit
+   315→                    </Button>
+   316→                    <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5" onClick={() => handleTogglePublish(article)}>
+   317→                      {article.status === 'PUBLISHED' ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+   318→                      {article.status === 'PUBLISHED' ? 'Draft' : 'Publikasi'}
+   319→                    </Button>
+   320→                    <Button size="sm" variant="outline" className="h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200 gap-1.5" onClick={() => handleDelete(article.id)}>
+   321→                      <Trash2 className="h-3.5 w-3.5" /> Hapus
+   322→                    </Button>
+   323→                  </div>
+   324→                </CardContent>
+   325→              </Card>
+   326→            ))
+   327→          )}
+   328→          {/* Mobile Pagination */}
+   329→          {!loading && articles.length > 0 && (
+   330→            <div className="flex items-center justify-between pt-2">
+   331→              <p className="text-xs text-muted-foreground">
+   332→                {articles.length} artikel
+   333→              </p>
+   334→              <div className="flex items-center gap-1">
+   335→                <Button size="icon" variant="outline" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+   336→                  <ChevronLeft className="h-4 w-4" />
+   337→                </Button>
+   338→                <span className="px-3 text-sm font-medium">{page}</span>
+   339→                <Button size="icon" variant="outline" className="h-8 w-8" disabled={articles.length < ITEMS_PER_PAGE} onClick={() => setPage(page + 1)}>
+   340→                  <ChevronRight className="h-4 w-4" />
+   341→                </Button>
+   342→              </div>
+   343→            </div>
+   344→          )}
+   345→        </div>
+   346→
+   347→        {/* Desktop Table */}
+   348→        <Card className="border-0 shadow-sm overflow-hidden hidden md:block">
+   349→          <Table>
+   350→            <TableHeader>
+   351→              <TableRow className="bg-muted/50">
+   352→                <TableHead className="text-xs w-10">No</TableHead>
+   353→                <TableHead className="text-xs">Judul</TableHead>
+   354→                <TableHead className="text-xs">Kategori</TableHead>
+   355→                <TableHead className="text-xs">Penulis</TableHead>
+   356→                <TableHead className="text-xs">Status</TableHead>
+   357→                <TableHead className="text-xs">Views</TableHead>
+   358→                <TableHead className="text-xs">Tanggal</TableHead>
+   359→                <TableHead className="text-xs text-right">Aksi</TableHead>
+   360→              </TableRow>
+   361→            </TableHeader>
+   362→            <TableBody>
+   363→              {loading ? (
+   364→                Array.from({ length: 5 }).map((_, i) => (
+   365→                  <TableRow key={i}>
+   366→                    {Array.from({ length: 8 }).map((_, j) => (
+   367→                      <TableCell key={j}><Skeleton className="h-5 w-full" /></TableCell>
+   368→                    ))}
+   369→                  </TableRow>
+   370→                ))
+   371→              ) : articles.length === 0 ? (
+   372→                <TableRow>
+   373→                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+   374→                    Tidak ada artikel ditemukan.
+   375→                  </TableCell>
+   376→                </TableRow>
+   377→              ) : (
+   378→                articles.map((article, idx) => (
+   379→                  <TableRow key={article.id} className="hover:bg-muted/30">
+   380→                    <TableCell className="text-xs text-muted-foreground">{(page - 1) * ITEMS_PER_PAGE + idx + 1}</TableCell>
+   381→                    <TableCell className="text-sm font-medium max-w-[250px] truncate">{article.title}</TableCell>
+   382→                    <TableCell className="text-xs">
+   383→                      <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
+   384→                    </TableCell>
+   385→                    <TableCell className="text-xs text-muted-foreground">{typeof article.author === 'string' ? article.author : article.author?.name || '-'}</TableCell>
+   386→                    <TableCell>{getStatusBadge(article.status)}</TableCell>
+   387→                    <TableCell className="text-xs text-muted-foreground">{article.viewCount ?? 0}</TableCell>
+   388→                    <TableCell className="text-xs text-muted-foreground">
+   389→                      {new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+   390→                    </TableCell>
+   391→                    <TableCell className="text-right">
+   392→                      <div className="flex items-center justify-end gap-1">
+   393→                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEditDialog(article)} title="Edit">
+   394→                          <Pencil className="h-4 w-4" />
+   395→                        </Button>
+   396→                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleTogglePublish(article)} title={article.status === 'PUBLISHED' ? 'Jadikan Draft' : 'Publikasi'}>
+   397→                          {article.status === 'PUBLISHED' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+   398→                        </Button>
+   399→                        <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(article.id)} title="Hapus">
+   400→                          <Trash2 className="h-4 w-4" />
+   401→                        </Button>
+   402→                      </div>
+   403→                    </TableCell>
+   404→                  </TableRow>
+   405→                ))
+   406→              )}
+   407→            </TableBody>
+   408→          </Table>
+   409→          {/* Desktop Pagination */}
+   410→          {!loading && articles.length > 0 && (
+   411→            <div className="flex items-center justify-between p-4 border-t">
+   412→              <p className="text-xs text-muted-foreground">
+   413→                Menampilkan {(page - 1) * ITEMS_PER_PAGE + 1} - {Math.min(page * ITEMS_PER_PAGE, articles.length)} dari {articles.length}
+   414→              </p>
+   415→              <div className="flex items-center gap-1">
+   416→                <Button size="icon" variant="outline" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+   417→                  <ChevronLeft className="h-4 w-4" />
+   418→                </Button>
+   419→                <span className="px-3 text-sm font-medium">{page}</span>
+   420→                <Button size="icon" variant="outline" className="h-8 w-8" disabled={articles.length < ITEMS_PER_PAGE} onClick={() => setPage(page + 1)}>
+   421→                  <ChevronRight className="h-4 w-4" />
+   422→                </Button>
+   423→              </div>
+   424→            </div>
+   425→          )}
+   426→        </Card>
+   427→      </motion.div>
+   428→
+   429→      {/* Create/Edit Dialog */}
+   430→      <Dialog open={dialogOpen && !isFullscreen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setIsFullscreen(false) }}>
+   431→        <DialogContent
+   432→          className="max-w-2xl max-h-[85vh] overflow-y-auto"
+   433→          onInteractOutside={(e) => { if (isFullscreen) e.preventDefault() }}
+   434→          onEscapeKeyDown={(e) => { if (isFullscreen) e.preventDefault() }}
+   435→        >
+   436→          <DialogHeader>
+   437→            <DialogTitle>{editingId ? 'Edit Artikel' : 'Buat Artikel Baru'}</DialogTitle>
+   438→          </DialogHeader>
+   439→          <div className="space-y-4 pt-2">
+   440→            <div className="space-y-2">
+   441→              <Label className="text-sm font-medium">Judul</Label>
+   442→              <Input
+   443→                placeholder="Masukkan judul artikel"
+   444→                value={form.title}
+   445→                onChange={(e) => setForm({ ...form, title: e.target.value })}
+   446→              />
+   447→            </div>
+   448→            <div className="space-y-2">
+   449→              <Label className="text-sm font-medium">Kategori</Label>
+   450→              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+   451→                <SelectTrigger>
+   452→                  <SelectValue />
+   453→                </SelectTrigger>
+   454→                <SelectContent>
+   455→                  {ARTICLE_CATEGORIES.map((c) => (
+   456→                    <SelectItem key={c} value={c}>{c}</SelectItem>
+   457→                  ))}
+   458→                </SelectContent>
+   459→              </Select>
+   460→            </div>
+   461→            {/* Status selector removed — use the Publikasikan / Simpan Draft buttons below */}
+   462→            <div className="space-y-2">
+   463→              <Label className="text-sm font-medium">Ringkasan</Label>
+   464→              <Textarea
+   465→                placeholder="Tulis ringkasan singkat artikel..."
+   466→                rows={3}
+   467→                value={form.excerpt}
+   468→                onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+   469→              />
+   470→            </div>
+   471→            <div className="space-y-2">
+   472→              <div className="flex items-center justify-between">
+   473→                <Label className="text-sm font-medium">Konten</Label>
+   474→                <Button
+   475→                  type="button"
+   476→                  variant="ghost"
+   477→                  size="sm"
+   478→                  className="h-7 text-xs gap-1.5 text-muted-foreground"
+   479→                  onClick={(e) => { e.stopPropagation(); setIsFullscreen(true) }}
+   480→                >
+   481→                  <Maximize2 className="h-3.5 w-3.5" />
+   482→                  Fullscreen
+   483→                </Button>
+   484→              </div>
+   485→              <Textarea
+   486→                placeholder="Tulis konten lengkap artikel..."
+   487→                rows={8}
+   488→                value={form.content}
+   489→                onChange={(e) => setForm({ ...form, content: e.target.value })}
+   490→                className="resize-y min-h-[200px]"
+   491→              />
+   492→            </div>
+   493→            <div className="space-y-2">
+   494→              <Label className="text-sm font-medium">Gambar Cover</Label>
+   495→              <div className="space-y-3">
+   496→                {form.coverImage ? (
+   497→                  <div className="relative rounded-lg overflow-hidden border-2 border-green-500/50 bg-green-50 dark:bg-green-950/20">
+   498→                    <img
+   499→                      src={form.coverImage}
+   500→                      alt="Cover preview"
+   501→                      className="w-full h-40 object-cover"
+   502→                    />
+   503→                    <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-green-600 text-white text-xs font-medium px-2.5 py-1 rounded-full shadow-md">
+   504→                      <CheckCircle2 className="h-3.5 w-3.5" />
+   505→                      Gambar terupload
+   506→                    </div>
+   507→                    <Button
+   508→                      type="button"
+   509→                      variant="destructive"
+   510→                      size="icon"
+   511→                      className="absolute top-2 right-2 h-7 w-7 rounded-full shadow-md"
+   512→                      onClick={removeImage}
+   513→                    >
+   514→                      <X className="h-3.5 w-3.5" />
+   515→                    </Button>
+   516→                  </div>
+   517→                ) : (
+   518→                  <div
+   519→                    className={cn(
+   520→                      'flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 cursor-pointer transition-colors',
+   521→                      uploading
+   522→                        ? 'border-allin-green/50 bg-allin-green/5 pointer-events-none'
+   523→                        : 'border-muted-foreground/25 hover:border-allin-green/50 hover:bg-muted/50'
+   524→                    )}
+   525→                    onClick={() => !uploading && fileInputRef.current?.click()}
+   526→                  >
+   527→                    {uploading ? (
+   528→                      <Loader2 className="h-8 w-8 text-allin-green animate-spin" />
+   529→                    ) : (
+   530→                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+   531→                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
+   532→                      </div>
+   533→                    )}
+   534→                    <p className="text-sm text-muted-foreground">
+   535→                      {uploading ? 'Mengupload...' : 'Ketuk untuk upload gambar'}
+   536→                    </p>
+   537→                    <p className="text-xs font-medium text-muted-foreground">Maks. 5MB — JPG, PNG, GIF, WebP</p>
+   538→                  </div>
+   539→                )}
+   540→                <input
+   541→                  ref={fileInputRef}
+   542→                  type="file"
+   543→                  accept="image/jpeg,image/png,image/gif,image/webp"
+   544→                  className="absolute w-px h-px p-0 -m-px overflow-hidden clip-[rect(0,0,0,0)] whitespace-nowrap border-0"
+   545→                  onChange={handleImageUpload}
+   546→                />
+   547→                {form.coverImage && (
+   548→                  <Button
+   549→                    type="button"
+   550→                    variant="outline"
+   551→                    size="sm"
+   552→                    className="w-full text-xs gap-1.5"
+   553→                    onClick={() => fileInputRef.current?.click()}
+   554→                    disabled={uploading}
+   555→                  >
+   556→                    <Upload className="h-3.5 w-3.5" />
+   557→                    Ganti Gambar
+   558→                  </Button>
+   559→                )}
+   560→              </div>
+   561→            </div>
+   562→            <div className="grid sm:grid-cols-2 gap-4">
+   563→              <div className="space-y-2">
+   564→                <Label className="text-sm font-medium">Meta Title (SEO)</Label>
+   565→                <Input
+   566→                  placeholder="Meta title untuk SEO"
+   567→                  value={form.metaTitle}
+   568→                  onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
+   569→                />
+   570→              </div>
+   571→              <div className="space-y-2">
+   572→                <Label className="text-sm font-medium">Meta Description (SEO)</Label>
+   573→                <Input
+   574→                  placeholder="Meta description untuk SEO"
+   575→                  value={form.metaDescription}
+   576→                  onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
+   577→                />
+   578→              </div>
+   579→            </div>
+   580→            <div className="flex items-center gap-2">
+   581→              <Checkbox
+   582→                id="memberOnly"
+   583→                checked={form.isMemberOnly}
+   584→                onCheckedChange={(checked) => setForm({ ...form, isMemberOnly: !!checked })}
+   585→              />
+   586→              <Label htmlFor="memberOnly" className="text-sm font-medium cursor-pointer">
+   587→                Khusus Anggota
+   588→              </Label>
+   589→            </div>
+   590→            <div className="flex justify-end gap-2 pt-2 border-t">
+   591→              <Button variant="outline" onClick={() => { setDialogOpen(false); setIsFullscreen(false) }}>Batal</Button>
+   592→              <Button
+   593→                variant="outline"
+   594→                className="border-gray-300 text-gray-600 hover:bg-gray-100"
+   595→                onClick={() => handleSubmit('DRAFT')}
+   596→                disabled={submitting || !form.title.trim()}
+   597→              >
+   598→                {submitting ? 'Menyimpan...' : 'Simpan Draft'}
+   599→              </Button>
+   600→              <Button
+   601→                className="bg-green-700 hover:bg-green-800 text-white font-semibold"
+   602→                onClick={() => handleSubmit('PUBLISHED')}
+   603→                disabled={submitting || !form.title.trim()}
+   604→              >
+   605→                {submitting ? 'Mempublikasi...' : <><Eye className="h-4 w-4 mr-1.5" /> Publikasikan</>}
+   606→              </Button>
+   607→            </div>
+   608→          </div>
+   609→        </DialogContent>
+   610→      </Dialog>
+   611→
+   612→      {/* Fullscreen Content Editor Overlay */}
+   613→      <AnimatePresence>
+   614→        {isFullscreen && (
+   615→          <motion.div
+   616→            initial={{ opacity: 0 }}
+   617→            animate={{ opacity: 1 }}
+   618→            exit={{ opacity: 0 }}
+   619→            transition={{ duration: 0.2 }}
+   620→            className="fixed inset-0 z-[100] bg-background flex flex-col"
+   621→          >
+   622→            {/* Fullscreen Header */}
+   623→            <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
+   624→              <div className="flex items-center gap-2 min-w-0">
+   625→                <button
+   626→                  type="button"
+   627→                  className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted transition-colors shrink-0"
+   628→                  onClick={(e) => { e.stopPropagation(); setIsFullscreen(false) }}
+   629→                >
+   630→                  <Minimize2 className="h-4 w-4" />
+   631→                </button>
+   632→                <h3 className="text-sm font-semibold truncate">Edit Konten</h3>
+   633→                <Badge variant="outline" className="text-[10px] shrink-0 hidden sm:inline-flex">{form.title || 'Tanpa judul'}</Badge>
+   634→              </div>
+   635→            </div>
+   636→            {/* Fullscreen Textarea */}
+   637→            <div className="flex-1 p-3 sm:p-4 overflow-hidden">
+   638→              <textarea
+   639→                value={form.content}
+   640→                onChange={(e) => setForm({ ...form, content: e.target.value })}
+   641→                placeholder="Tulis konten lengkap artikel di sini..."
+   642→                className="h-full w-full resize-none text-base sm:text-lg leading-relaxed rounded-lg border-0 outline-none bg-transparent p-0"
+   643→                autoFocus
+   644→                onClick={(e) => e.stopPropagation()}
+   645→                onPointerDown={(e) => e.stopPropagation()}
+   646→              />
+   647→            </div>
+   648→            {/* Fullscreen Footer */}
+   649→            <div className="flex items-center justify-between px-4 py-3 border-t shrink-0 bg-muted/30">
+   650→              <p className="text-xs text-muted-foreground">
+   651→                {form.content.length} karakter
+   652→              </p>
+   653→              <Button
+   654→                className="bg-green-700 hover:bg-green-800 text-white h-9 text-sm"
+   655→                onClick={(e) => { e.stopPropagation(); setIsFullscreen(false) }}
+   656→              >
+   657→                <Minimize2 className="h-3.5 w-3.5 mr-1.5" />
+   658→                Selesai
+   659→              </Button>
+   660→            </div>
+   661→          </motion.div>
+   662→        )}
+   663→      </AnimatePresence>
+   664→    </div>
+   665→  )
+   666→}
