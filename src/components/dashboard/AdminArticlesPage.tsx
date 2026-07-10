@@ -601,7 +601,19 @@ export function AdminArticlesPage() {
             </div>
             {/* Upload PDF / Lampiran */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Lampiran PDF</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Lampiran PDF</Label>
+                {form.category === 'Regulasi' && (
+                  <Badge className="bg-red-100 text-red-700 border-red-200 text-[10px]">
+                    Direkomendasikan untuk Regulasi
+                  </Badge>
+                )}
+              </div>
+              {form.category === 'Regulasi' && !form.pdfName && (
+                <p className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-md px-3 py-2">
+                  💡 Untuk kategori <strong>Regulasi</strong>, sangat disarankan upload file PDF dokumen regulasi resmi agar bisa diunduh oleh pembaca.
+                </p>
+              )}
               {form.pdfName ? (
                 <div className="flex items-center justify-between gap-3 rounded-lg border border-green-500/50 bg-green-50 dark:bg-green-950/20 p-3">
                   <div className="flex items-center gap-2.5 min-w-0">

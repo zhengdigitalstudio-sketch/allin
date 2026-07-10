@@ -83,6 +83,58 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getSession(request)
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const userRole = session?.role || ''
+    if (!PENGURUS_ROLES.includes(userRole)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID galeri wajib diisi' }, { status: 400 })
+    }
+
+    const existing = await db.gallery.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ error: 'Galeri tidak ditemukan' }, { status: 404 })
+    }
+
+    const body = await request.json()
+    const { title, description, imageUrl, category } = body
+
+    if (!title || !imageUrl) {
+      return NextResponse.json({ error: 'Judul dan URL gambar wajib diisi' }, { status: 400 })
+    }
+
+    const gallery = await db.gallery.update({
+      where: { id },
+      data: {
+        title,
+        description: description || null,
+        imageUrl,
+        category: category || null,
+      },
+    })
+
+    return NextResponse.json({
+      gallery: {
+        ...gallery,
+        createdAt: gallery.createdAt.toISOString(),
+      },
+    })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Gagal memperbarui galeri' }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const session = await getSession(request)

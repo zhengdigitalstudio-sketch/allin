@@ -17,6 +17,7 @@ import {
   MapPin,
   Send,
   CheckCircle2,
+  MessageCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -24,11 +25,12 @@ interface RecipientOption {
   key: string
   label: string
   email: string
+  phone: string
 }
 
 export default function KontakPage() {
   const { navigate } = useAppStore()
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '', recipientKey: '' })
+  const [form, setForm] = useState({ name: '', phone: '', subject: '', message: '', recipientKey: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState(false)
   const [recipients, setRecipients] = useState<RecipientOption[]>([])
@@ -47,8 +49,8 @@ export default function KontakPage() {
   const validate = () => {
     const e: Record<string, string> = {}
     if (!form.name.trim()) e.name = 'Nama wajib diisi'
-    if (!form.email.trim()) e.email = 'Email wajib diisi'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Format email tidak valid'
+    if (!form.phone.trim()) e.phone = 'No. WhatsApp wajib diisi'
+    else if (!/^[0-9+\-\s]{8,20}$/.test(form.phone.trim())) e.phone = 'Format nomor tidak valid'
     if (!form.message.trim()) e.message = 'Pesan wajib diisi'
     if (recipients.length > 0 && !form.recipientKey) e.recipientKey = 'Pilih tujuan pesan'
     setErrors(e)
@@ -59,35 +61,35 @@ export default function KontakPage() {
     if (!validate()) return
 
     const recipient = recipients.find((r) => r.key === form.recipientKey)
-    const toEmail = recipient?.email || ''
+    // Use recipient's WhatsApp number if available, otherwise fall back to main ALLIN number
+    const waNumber = recipient?.phone || '6281359545500'
 
-    // Build email body
-    const bodyLines = [
-      `Dari: ${form.name} (${form.email})`,
-      '',
+    // Build WhatsApp message body
+    const messageLines = [
+      `*Pesan dari Website ALLIN*`,
+      ``,
+      recipient ? `*Tujuan:* ${recipient.label}` : '',
+      `*Nama:* ${form.name}`,
+      `*WhatsApp:* ${form.phone}`,
+      form.subject ? `*Subjek:* ${form.subject}` : '',
+      ``,
+      `*Pesan:*`,
       form.message,
-    ]
-    const bodyText = bodyLines.join('\n')
+    ].filter(Boolean)
 
-    // Build subject
-    const subjectText = form.subject
-      ? `[ALLIN] ${form.subject}`
-      : '[ALLIN] Pesan dari Website'
+    const messageText = messageLines.join('\n')
 
-    // Build mailto: URL
-    const params = new URLSearchParams()
-    params.set('subject', subjectText)
-    params.set('body', bodyText)
-    const mailtoUrl = `mailto:${toEmail}?${params.toString()}`
+    // Build wa.me URL
+    const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(messageText)}`
 
-    // Open email client
-    window.location.href = mailtoUrl
+    // Open WhatsApp
+    window.open(waUrl, '_blank')
 
     setSuccess(true)
   }
 
   const contactInfo = [
-    { icon: Phone, label: 'Telepon', value: '+62 813-5954-5500', href: 'tel:+6281359545500' },
+    { icon: Phone, label: 'Telepon / WhatsApp', value: '+62 813-5954-5500', href: 'https://wa.me/6281359545500' },
     { icon: MapPin, label: 'Alamat', value: 'Ruko Sentra Menteng, Bintaro Jaya, Sektor VII Blok MN 47, Pd. Jaya, Kec. Pd. Aren, Kota Tangerang Selatan, Banten 15227', href: null },
   ]
 
@@ -115,7 +117,7 @@ export default function KontakPage() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="text-white/70 text-lg max-w-2xl"
           >
-            Pilih pengurus yang ingin dihubungi, lalu kirim pesan langsung melalui email Anda.
+            Pilih pengurus yang ingin dihubungi, lalu kirim pesan langsung melalui WhatsApp.
           </motion.p>
         </div>
       </section>
@@ -130,17 +132,17 @@ export default function KontakPage() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="bg-allin-green/5 border border-allin-green/20 rounded-2xl p-8 text-center"
+                  className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-2xl p-8 text-center"
                 >
-                  <CheckCircle2 className="w-12 h-12 text-allin-green mx-auto mb-4" />
-                  <h3 className="text-xl font-bold mb-2">Email App Terbuka!</h3>
+                  <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold mb-2">WhatsApp Terbuka!</h3>
                   <p className="text-muted-foreground mb-6">
-                    Pesan sudah otomatis terisi di email Anda. Tinggal klik <strong>Kirim</strong> di aplikasi email untuk mengirim.
+                    Pesan sudah otomatis terisi di WhatsApp Anda. Tinggal klik <strong>Kirim</strong> di aplikasi WhatsApp untuk mengirim ke pengurus ALLIN.
                   </p>
                   <Button
                     onClick={() => {
                       setSuccess(false)
-                      setForm({ name: '', email: '', subject: '', message: '', recipientKey: '' })
+                      setForm({ name: '', phone: '', subject: '', message: '', recipientKey: '' })
                     }}
                     variant="outline"
                     className="border-allin-green text-allin-green"
@@ -150,7 +152,10 @@ export default function KontakPage() {
                 </motion.div>
               ) : (
                 <div className="bg-background border shadow-sm rounded-2xl p-6 md:p-8">
-                  <h2 className="text-xl font-bold mb-6">Kirim Pesan</h2>
+                  <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5 text-allin-green" />
+                    Kirim Pesan via WhatsApp
+                  </h2>
                   <div className="space-y-4">
                     {/* Recipient Selector */}
                     {recipients.length > 0 && (
@@ -186,16 +191,16 @@ export default function KontakPage() {
                       {errors.name && <p className="text-xs text-destructive mt-1">{errors.name}</p>}
                     </div>
                     <div>
-                      <Label htmlFor="email">Email Anda *</Label>
+                      <Label htmlFor="phone">No. WhatsApp Anda *</Label>
                       <Input
-                        id="email"
-                        type="email"
-                        value={form.email}
-                        onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                        placeholder="email@domain.com"
-                        className={cn(errors.email && 'border-destructive')}
+                        id="phone"
+                        type="tel"
+                        value={form.phone}
+                        onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                        placeholder="08xxxxxxxxxx"
+                        className={cn(errors.phone && 'border-destructive')}
                       />
-                      {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
+                      {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
                     </div>
                     <div>
                       <Label htmlFor="subject">Subjek</Label>
@@ -220,13 +225,13 @@ export default function KontakPage() {
                     </div>
                     <Button
                       onClick={handleSubmit}
-                      className="w-full bg-allin-green hover:bg-allin-green-dark text-white font-bold"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-bold"
                     >
                       <Send className="w-4 h-4 mr-2" />
-                      Kirim Pesan
+                      Kirim via WhatsApp
                     </Button>
                     <p className="text-xs text-muted-foreground text-center">
-                      Klik &quot;Kirim Pesan&quot; akan membuka aplikasi email Anda dengan pesan yang sudah terisi.
+                      Klik &quot;Kirim via WhatsApp&quot; akan membuka aplikasi WhatsApp dengan pesan yang sudah terisi otomatis.
                     </p>
                   </div>
                 </div>
@@ -243,11 +248,11 @@ export default function KontakPage() {
                   transition={{ duration: 0.4, delay: i * 0.1 }}
                 >
                   {info.href ? (
-                    <a href={info.href}>
+                    <a href={info.href} target="_blank" rel="noopener noreferrer">
                       <Card className="hover:shadow-md transition-shadow border-0 shadow-sm">
                         <CardContent className="p-5 flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-allin-green/10 flex items-center justify-center flex-shrink-0">
-                            <info.icon className="w-5 h-5 text-allin-green" />
+                          <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                            <info.icon className="w-5 h-5 text-green-600" />
                           </div>
                           <div>
                             <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{info.label}</p>
@@ -272,13 +277,33 @@ export default function KontakPage() {
                 </motion.div>
               ))}
 
+              {/* WhatsApp CTA Card */}
+              <Card className="border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/20">
+                <CardContent className="p-5 text-center">
+                  <MessageCircle className="w-10 h-10 text-green-600 mx-auto mb-3" />
+                  <h3 className="font-bold text-sm mb-1">Chat Langsung di WhatsApp</h3>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Butuh respons cepat? Hubungi kami langsung di nomor resmi ALLIN.
+                  </p>
+                  <a
+                    href="https://wa.me/6281359545500"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    +62 813-5954-5500
+                  </a>
+                </CardContent>
+              </Card>
+
               {/* Map Placeholder */}
               <Card className="border-0 shadow-sm overflow-hidden">
                 <div className="h-48 gradient-green relative flex items-center justify-center">
                   <div className="text-center text-white/60">
                     <MapPin className="w-8 h-8 mx-auto mb-2" />
                     <p className="text-sm">Peta Lokasi</p>
-                    <p className="text-xs">Jakarta, Indonesia</p>
+                    <p className="text-xs">Tangerang Selatan, Indonesia</p>
                   </div>
                 </div>
               </Card>
