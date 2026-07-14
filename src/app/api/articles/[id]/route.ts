@@ -4,6 +4,9 @@ import { db } from '@/lib/db'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+// Allow large payloads so cover images (max 5MB) and PDFs (max 10MB) encoded
+// as base64 (~33% overhead) don't hit the default 4MB App Router body limit.
+export const bodySizeLimit = '20mb'
 
 function generateSlug(title: string): string {
   return title
@@ -95,7 +98,7 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
-    const { title, content, excerpt, coverImage, category, status, isMemberOnly, metaTitle, metaDescription } = body
+    const { title, content, excerpt, coverImage, category, status, isMemberOnly, metaTitle, metaDescription, pdfName, pdfData } = body
 
     const existing = await db.article.findUnique({ where: { id } })
     if (!existing) {
@@ -127,6 +130,9 @@ export async function PUT(
     if (isMemberOnly !== undefined) updateData.isMemberOnly = isMemberOnly
     if (metaTitle !== undefined) updateData.metaTitle = metaTitle
     if (metaDescription !== undefined) updateData.metaDescription = metaDescription
+    // PDF support: pdfName always updatable, pdfData only when a new file is uploaded
+    if (pdfName !== undefined) updateData.pdfName = pdfName
+    if (pdfData !== undefined) updateData.pdfData = pdfData
 
     // Ensure slug uniqueness if title changed
     if (updateData.slug) {

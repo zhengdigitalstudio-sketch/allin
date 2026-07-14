@@ -2,6 +2,10 @@ import { getSession, PENGURUS_ROLES, APPROVER_ROLES, hashPassword } from '@/lib/
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+// Allow large base64-encoded photos/logos/documents (~5MB each)
+export const bodySizeLimit = '15mb'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

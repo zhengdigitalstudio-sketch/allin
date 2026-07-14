@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
+// Allow large base64-encoded cover images
+export const bodySizeLimit = '10mb'
 
 
 export async function GET(request: NextRequest) {

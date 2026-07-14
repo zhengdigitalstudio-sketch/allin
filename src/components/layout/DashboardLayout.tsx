@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
-import { Menu, Home, LogOut } from 'lucide-react'
+import { useState, useEffect, type ReactNode } from 'react'
+import { Menu, Home, LogOut, Loader2 } from 'lucide-react'
 import { useAppStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -82,11 +82,26 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { currentPage, navigate, user } = useAppStore()
+  const { currentPage, navigate, user, authLoaded } = useAppStore()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  // Jangan render dashboard sampai user session sudah load
-  if (!user) return null
+  // Show loading state while auth check is in progress
+  // This prevents the blank dashboard page on direct URL visit / refresh
+  if (!authLoaded) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-muted/30">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-allin-green" />
+          <p className="text-sm text-muted-foreground">Memuat dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // After auth check completes, if user is still null → redirect to login
+  if (!user) {
+    return <LoginRedirect />
+  }
 
   const userName = user.name
   const userRole = user.role
@@ -164,6 +179,26 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <ScrollArea className="flex-1">
           <main className="p-4 sm:p-6 lg:p-8">{children}</main>
         </ScrollArea>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Helper component that redirects to /login when auth check completed but no user.
+ * Uses an effect to push the URL change via the store's navigate() so the SPA
+ * picks it up without a full page reload.
+ */
+function LoginRedirect() {
+  const navigate = useAppStore((s) => s.navigate)
+  useEffect(() => {
+    navigate('login')
+  }, [navigate])
+  return (
+    <div className="flex h-screen w-screen items-center justify-center bg-muted/30">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-allin-green" />
+        <p className="text-sm text-muted-foreground">Mengalihkan ke halaman login...</p>
       </div>
     </div>
   )

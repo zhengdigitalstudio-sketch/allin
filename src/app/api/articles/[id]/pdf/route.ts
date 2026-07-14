@@ -9,6 +9,11 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    const { searchParams } = new URL(request.url)
+    // ?download=true → force browser to download the file (Content-Disposition: attachment)
+    // default (no param) → open inline in a new tab so user can preview before saving
+    const forceDownload = searchParams.get('download') === 'true'
+
     const article = await db.article.findUnique({
       where: { id },
       select: { id: true, title: true, pdfName: true, pdfData: true },
@@ -30,7 +35,7 @@ export async function GET(
     return new NextResponse(pdfBytes, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="${fileName}"`,
+        'Content-Disposition': `${forceDownload ? 'attachment' : 'inline'}; filename="${fileName}"`,
         'Content-Length': String(pdfBytes.length),
       },
     })

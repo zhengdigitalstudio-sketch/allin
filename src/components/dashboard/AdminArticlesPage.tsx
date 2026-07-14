@@ -209,18 +209,39 @@ export function AdminArticlesPage() {
       const url = editingId ? `/api/articles/${editingId}` : '/api/articles'
       const method = editingId ? 'PUT' : 'POST'
       const body: any = { ...form, status: submitStatus }
-      // Hanya kirim pdfData jika ada file baru, pdfName selalu kirim
-      if (!body.pdfData && !editingId) body.pdfData = ''
-      if (!body.pdfData && editingId) delete body.pdfData
-      // For PUT, include the article id
+
+      // PDF payload strategy:
+      // - Create new article without PDF: send pdfData: '' so DB stores null
+      // - Edit existing, new PDF uploaded: send pdfData (base64) to replace
+      // - Edit existing, PDF unchanged (pdfName set, pdfData empty): don't send
+      //   pdfData so existing file in DB is preserved
+      // - Edit existing, PDF removed (pdfName empty, pdfData empty): send
+      //   pdfData: null to clear the existing file from DB
+      if (!editingId) {
+        if (!body.pdfData) body.pdfData = ''
+      } else {
+        if (body.pdfData) {
+          // new PDF uploaded → send both pdfName and pdfData, both will be applied
+        } else if (body.pdfName) {
+          // existing PDF kept → don't send pdfData, preserve existing in DB
+          delete body.pdfData
+        } else {
+          // PDF removed → explicitly clear pdfData in DB
+          body.pdfData = null
+        }
+      }
+
+      // For PUT, include the article id (also goes in URL but API supports both)
       if (editingId) {
         Object.assign(body, { id: editingId })
       }
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+
       if (res.ok) {
         if (submitStatus === 'PUBLISHED') {
           toast.success(editingId ? 'Artikel berhasil dipublikasi' : 'Artikel berhasil dipublikasi')
@@ -231,10 +252,25 @@ export function AdminArticlesPage() {
         setIsFullscreen(false)
         fetchArticles()
       } else {
-        toast.error('Gagal menyimpan artikel')
+        // Try to extract the actual server-side error message
+        let serverMsg = 'Gagal menyimpan artikel'
+        try {
+          const errData = await res.json()
+          if (errData?.error) serverMsg = errData.error
+        } catch {
+          // Response body wasn't JSON — likely a framework-level error (e.g. 413 Payload Too Large)
+          if (res.status === 413) {
+            serverMsg = 'Ukuran file terlalu besar. Maksimal 5MB untuk gambar, 10MB untuk PDF.'
+          } else if (res.status === 403) {
+            serverMsg = 'Anda tidak memiliki izin untuk menyimpan artikel.'
+          } else if (res.status === 401) {
+            serverMsg = 'Sesi login berakhir. Silakan login ulang lalu coba lagi.'
+          }
+        }
+        toast.error(serverMsg)
       }
-    } catch {
-      toast.error('Gagal menyimpan artikel')
+    } catch (err) {
+      toast.error('Gagal menyimpan artikel. Periksa koneksi internet lalu coba lagi.')
     } finally {
       setSubmitting(false)
     }

@@ -116,11 +116,13 @@ interface AppState {
     role: string
     avatar?: string
   } | null
+  authLoaded: boolean
   sidebarOpen: boolean
   navigate: (page: PageKey) => void
   navigateArticle: (slug: string) => void
   setSelectedArticle: (id: string | null) => void
   setUser: (user: AppState['user']) => void
+  setAuthLoaded: (loaded: boolean) => void
   setSidebarOpen: (open: boolean) => void
 }
 
@@ -135,6 +137,7 @@ export const useAppStore = create<AppState>((set, get) => {
   return {
     ...initialState,
     user: null,
+    authLoaded: false,
     sidebarOpen: false,
     navigate: (page) => {
       syncUrl(page)
@@ -153,6 +156,7 @@ export const useAppStore = create<AppState>((set, get) => {
       // If called with ID, we ignore it for URL purposes
     },
     setUser: (user) => set({ user }),
+    setAuthLoaded: (loaded) => set({ authLoaded: loaded }),
     setSidebarOpen: (open) => set({ sidebarOpen: open }),
   }
 })

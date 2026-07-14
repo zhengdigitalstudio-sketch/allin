@@ -10,6 +10,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const setUser = useAppStore((s) => s.setUser)
+  const setAuthLoaded = useAppStore((s) => s.setAuthLoaded)
   const prevEmailRef = useRef<string | null>(null)
   const router = useRouter()
 
@@ -37,8 +38,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     } catch {
       // Silent fail
+    } finally {
+      // Always mark auth as loaded so dashboards can render or redirect
+      setAuthLoaded(true)
     }
-  }, [setUser])
+  }, [setUser, setAuthLoaded])
 
   useEffect(() => {
     fetchSession()

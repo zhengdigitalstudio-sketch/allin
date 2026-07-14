@@ -266,7 +266,7 @@ export default function ArtikelDetailPage() {
                 <Share2 className="w-4 h-4 text-allin-green" />
                 Bagikan:
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {shareLinks.map((link) => (
                   <a
                     key={link.name}
@@ -278,6 +278,20 @@ export default function ArtikelDetailPage() {
                     {link.name}
                   </a>
                 ))}
+                {/* Download PDF button — shown only when article has a PDF attached */}
+                {article.pdfName && (
+                  <a
+                    href={`/api/articles/${article.id}/pdf?download=true`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={article.pdfName || undefined}
+                    className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+                    title={`Unduh ${article.pdfName}`}
+                  >
+                    <Download className="w-4 h-4" />
+                    Unduh PDF
+                  </a>
+                )}
               </div>
             </div>
           </div>
