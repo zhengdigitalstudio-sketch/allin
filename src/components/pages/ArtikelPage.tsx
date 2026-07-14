@@ -17,6 +17,7 @@ import {
   ArrowLeft,
   ArrowRight,
   X,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -32,6 +33,7 @@ interface Article {
   viewCount: number
   author: { name: string } | null
   createdAt: string
+  pdfName?: string | null
 }
 
 interface CategoryCount {
@@ -238,9 +240,17 @@ export default function ArtikelPage() {
                             </div>
                             {/* Content */}
                             <CardContent className="p-4 sm:p-5 flex-1 min-w-0">
-                              <h3 className="font-bold text-base mb-1.5 line-clamp-2 group-hover:text-allin-green transition-colors">
-                                {article.title}
-                              </h3>
+                              <div className="flex items-start gap-2 mb-1.5">
+                                <h3 className="font-bold text-base line-clamp-2 group-hover:text-allin-green transition-colors flex-1">
+                                  {article.title}
+                                </h3>
+                                {article.pdfName && (
+                                  <Badge className="bg-red-100 text-red-700 border-red-200 text-[10px] font-semibold shrink-0 flex items-center gap-1">
+                                    <FileText className="w-3 h-3" />
+                                    PDF
+                                  </Badge>
+                                )}
+                              </div>
                               <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
                                 {article.excerpt || 'Artikel terbaru dari ALLIN mengenai perkembangan industri ketenagalistrikan nasional.'}
                               </p>
@@ -252,10 +262,25 @@ export default function ArtikelPage() {
                                   </span>
                                   <span>{format(new Date(article.createdAt), 'dd MMM yyyy', { locale: localeId })}</span>
                                 </div>
-                                <span className="flex items-center gap-1">
-                                  <Eye className="w-3 h-3" />
-                                  {article.viewCount}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  {article.pdfName && (
+                                    <a
+                                      href={`/api/articles/${article.id}/pdf`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:underline font-medium"
+                                      title={`Unduh ${article.pdfName}`}
+                                    >
+                                      <FileText className="w-3 h-3" />
+                                      Unduh PDF
+                                    </a>
+                                  )}
+                                  <span className="flex items-center gap-1">
+                                    <Eye className="w-3 h-3" />
+                                    {article.viewCount}
+                                  </span>
+                                </div>
                               </div>
                             </CardContent>
                           </div>

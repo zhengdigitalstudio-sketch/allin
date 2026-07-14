@@ -61,6 +61,9 @@ export async function PUT(
         return NextResponse.json({ error: 'Hanya Ketua atau Wakil Ketua yang dapat menyetujui pendaftaran' }, { status: 403 })
       }
 
+      // Default password for new approved members
+      const DEFAULT_MEMBER_PASSWORD = 'member123'
+
       // Check if user account already exists for this member
       if (existing.userId) {
         // Just activate the existing user
@@ -68,7 +71,8 @@ export async function PUT(
         updateData.status = 'DISETUJUI'
       } else {
         // Create a new User account so they can login
-        const pw = memberPassword || `allin${Date.now().toString(36)}`
+        // Default password is 'member123' (admin can override via memberPassword field)
+        const pw = memberPassword || DEFAULT_MEMBER_PASSWORD
         const hashedPw = await hashPassword(pw)
 
         const newUser = await db.user.create({
@@ -87,7 +91,7 @@ export async function PUT(
         updateData.status = 'DISETUJUI'
         updateData.userId = newUser.id
 
-        // Return the generated password so Ketua can share it with the member
+        // Return the password so admin can share it with the member
         const updated = await db.member.update({ where: { id }, data: updateData })
         return NextResponse.json({
           member: {
@@ -95,10 +99,10 @@ export async function PUT(
             createdAt: updated.createdAt.toISOString(),
             updatedAt: updated.updatedAt.toISOString(),
           },
-          generatedPassword: memberPassword ? undefined : pw,
+          generatedPassword: pw,
           message: memberPassword
-            ? 'Anggota disetujui dan akun dibuat'
-            : 'Anggota disetujui. Akun dibuat dengan password sementara. Berikan password ini kepada anggota.',
+            ? 'Anggota disetujui dan akun dibuat dengan password custom'
+            : `Anggota disetujui. Akun dibuat dengan password default "${DEFAULT_MEMBER_PASSWORD}". Berikan info ini kepada anggota dan sarankan untuk segera mengganti password setelah login pertama.`,
         })
       }
     }
@@ -124,10 +128,18 @@ export async function PUT(
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
       // Whitelist allowed fields
-      const allowedFields = ['fullName', 'email', 'phone', 'companyName', 'memberType', 'position', 'address']
+      const allowedFields = ['fullName', 'email', 'phone', 'companyName', 'memberType', 'position', 'address', 'city', 'province', 'reason']
       for (const key of Object.keys(otherFields)) {
         if (allowedFields.includes(key)) {
           (updateData as any)[key] = (otherFields as any)[key]
+        }
+      }
+
+      // Admin only: allow editing registration date (createdAt)
+      if (otherFields.createdAt && PENGURUS_ROLES.includes(userRole)) {
+        const newDate = new Date(otherFields.createdAt)
+        if (!isNaN(newDate.getTime())) {
+          (updateData as any).createdAt = newDate
         }
       }
     }

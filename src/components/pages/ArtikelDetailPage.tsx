@@ -232,19 +232,31 @@ export default function ArtikelDetailPage() {
 
           {/* PDF Download */}
           {article.pdfName && (
-            <a
-              href={`/api/articles/${article.id}/pdf`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 mt-6 px-5 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium transition-colors shadow-sm"
-            >
-              <FileText className="h-5 w-5" />
-              <div className="text-left">
-                <p className="text-sm font-semibold">Unduh PDF</p>
-                <p className="text-xs opacity-80 truncate max-w-[250px]">{article.pdfName}</p>
+            <div className="mt-6 p-5 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-900 rounded-xl">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900">
+                  <FileText className="h-7 w-7 text-red-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-base text-red-900 dark:text-red-100">
+                    {article.category === 'Regulasi' ? 'Dokumen Regulasi Tersedia' : 'Lampiran PDF Tersedia'}
+                  </h3>
+                  <p className="text-sm text-red-700 dark:text-red-300 truncate">{article.pdfName}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                    Klik tombol di samping untuk mengunduh atau membuka file PDF di tab baru.
+                  </p>
+                </div>
+                <a
+                  href={`/api/articles/${article.id}/pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors shadow-sm shrink-0"
+                >
+                  <Download className="h-5 w-5" />
+                  Unduh PDF
+                </a>
               </div>
-              <Download className="h-4 w-4 ml-1" />
-            </a>
+            </div>
           )}
 
           {/* Share */}
