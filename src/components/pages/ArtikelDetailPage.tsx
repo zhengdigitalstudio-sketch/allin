@@ -216,47 +216,102 @@ export default function ArtikelDetailPage() {
             </div>
           )}
 
-          {/* Article body */}
-          <div className="prose prose-lg max-w-none [&_img]:max-w-full [&_img]:h-auto [&_iframe]:max-w-full [&_video]:max-w-full [&_a]:break-all [&_pre]:overflow-x-auto">
-            {article.content ? (
-              <div
-                className="text-muted-foreground leading-relaxed space-y-4 break-words overflow-wrap-anywhere"
-                dangerouslySetInnerHTML={{ __html: article.content }}
-              />
-            ) : (
-              <p className="text-muted-foreground">
-                {article.excerpt || 'Konten artikel sedang dalam proses penulisan.'}
-              </p>
-            )}
-          </div>
-
-          {/* PDF Download */}
-          {article.pdfName && (
-            <div className="mt-6 p-5 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-900 rounded-xl">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900">
-                  <FileText className="h-7 w-7 text-red-600" />
+          {/* ====== REGULASI: tampilkan box download PDF sebagai konten utama ====== */}
+          {article.category === 'Regulasi' ? (
+            <div className="rounded-2xl border-2 border-allin-green/30 bg-gradient-to-br from-allin-green/5 to-allin-yellow-light/30 p-6 md:p-10">
+              <div className="flex flex-col items-center text-center gap-6">
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-allin-green shadow-md">
+                  <FileText className="h-10 w-10 text-white" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-base text-red-900 dark:text-red-100">
-                    {article.category === 'Regulasi' ? 'Dokumen Regulasi Tersedia' : 'Lampiran PDF Tersedia'}
-                  </h3>
-                  <p className="text-sm text-red-700 dark:text-red-300 truncate">{article.pdfName}</p>
-                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                    Klik tombol di samping untuk mengunduh atau membuka file PDF di tab baru.
+                <div className="space-y-2">
+                  <h2 className="text-2xl md:text-3xl font-bold text-allin-green-dark">
+                    Silakan Unduh PDF di Sini
+                  </h2>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    Dokumen regulasi lengkap tersedia dalam format PDF. Klik tombol di bawah untuk mengunduh atau membaca langsung di browser Anda.
                   </p>
                 </div>
-                <a
-                  href={`/api/articles/${article.id}/pdf`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors shadow-sm shrink-0"
-                >
-                  <Download className="h-5 w-5" />
-                  Unduh PDF
-                </a>
+
+                {article.pdfName ? (
+                  <>
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/60 dark:bg-white/5 border border-allin-green/20 text-sm text-muted-foreground max-w-full">
+                      <FileText className="h-4 w-4 shrink-0 text-red-600" />
+                      <span className="truncate font-medium">{article.pdfName}</span>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                      <a
+                        href={`/api/articles/${article.id}/pdf?download=true`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={article.pdfName || undefined}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-allin-green hover:bg-allin-green-dark text-white font-semibold transition-colors shadow-md"
+                      >
+                        <Download className="h-5 w-5" />
+                        Unduh PDF
+                      </a>
+                      <a
+                        href={`/api/articles/${article.id}/pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 text-allin-green border border-allin-green/30 font-semibold transition-colors"
+                      >
+                        <FileText className="h-5 w-5" />
+                        Buka di Tab Baru
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <div className="px-4 py-3 rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 text-sm text-yellow-800 dark:text-yellow-200">
+                    Dokumen PDF belum diunggah oleh admin. Silakan hubungi pengurus untuk informasi lebih lanjut.
+                  </div>
+                )}
               </div>
             </div>
+          ) : (
+            <>
+              {/* ====== NON-REGULASI: tampilkan body artikel seperti biasa ====== */}
+              <div className="prose prose-lg max-w-none [&_img]:max-w-full [&_img]:h-auto [&_iframe]:max-w-full [&_video]:max-w-full [&_a]:break-all [&_pre]:overflow-x-auto">
+                {article.content ? (
+                  <div
+                    className="text-muted-foreground leading-relaxed space-y-4 break-words overflow-wrap-anywhere"
+                    dangerouslySetInnerHTML={{ __html: article.content }}
+                  />
+                ) : (
+                  <p className="text-muted-foreground">
+                    {article.excerpt || 'Konten artikel sedang dalam proses penulisan.'}
+                  </p>
+                )}
+              </div>
+
+              {/* PDF Download — for non-Regulasi articles with attached PDF */}
+              {article.pdfName && (
+                <div className="mt-6 p-5 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-900 rounded-xl">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900">
+                      <FileText className="h-7 w-7 text-red-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-base text-red-900 dark:text-red-100">
+                        Lampiran PDF Tersedia
+                      </h3>
+                      <p className="text-sm text-red-700 dark:text-red-300 truncate">{article.pdfName}</p>
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                        Klik tombol di samping untuk mengunduh atau membuka file PDF di tab baru.
+                      </p>
+                    </div>
+                    <a
+                      href={`/api/articles/${article.id}/pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors shadow-sm shrink-0"
+                    >
+                      <Download className="h-5 w-5" />
+                      Unduh PDF
+                    </a>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Share */}
@@ -278,8 +333,9 @@ export default function ArtikelDetailPage() {
                     {link.name}
                   </a>
                 ))}
-                {/* Download PDF button — shown only when article has a PDF attached */}
-                {article.pdfName && (
+                {/* Download PDF button — shown for non-Regulasi articles with PDF attached.
+                    Regulasi already has the prominent download area above. */}
+                {article.pdfName && article.category !== 'Regulasi' && (
                   <a
                     href={`/api/articles/${article.id}/pdf?download=true`}
                     target="_blank"

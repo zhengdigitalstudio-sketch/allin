@@ -546,7 +546,14 @@ export function AdminArticlesPage() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Konten</Label>
+                <Label className="text-sm font-medium">
+                  Konten
+                  {form.category === 'Regulasi' && (
+                    <span className="ml-2 text-xs font-normal text-amber-600">
+                      (Opsional untuk Regulasi — cukup upload PDF di bawah)
+                    </span>
+                  )}
+                </Label>
                 <Button
                   type="button"
                   variant="ghost"
@@ -559,11 +566,13 @@ export function AdminArticlesPage() {
                 </Button>
               </div>
               <Textarea
-                placeholder="Tulis konten lengkap artikel..."
-                rows={8}
+                placeholder={form.category === 'Regulasi'
+                  ? 'Opsional untuk Regulasi — biarkan kosong jika hanya ingin menampilkan tombol download PDF...'
+                  : 'Tulis konten lengkap artikel...'}
+                rows={form.category === 'Regulasi' ? 4 : 8}
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
-                className="resize-y min-h-[200px]"
+                className={cn('resize-y min-h-[120px]', form.category === 'Regulasi' && 'min-h-[100px]')}
               />
             </div>
             <div className="space-y-2">

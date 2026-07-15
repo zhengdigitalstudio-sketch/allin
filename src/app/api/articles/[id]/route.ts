@@ -6,7 +6,8 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 // Allow large payloads so cover images (max 5MB) and PDFs (max 10MB) encoded
 // as base64 (~33% overhead) don't hit the default 4MB App Router body limit.
-export const bodySizeLimit = '20mb'
+// Bumped to 50mb to safely handle combined cover + PDF + base64 expansion.
+export const bodySizeLimit = '50mb'
 
 function generateSlug(title: string): string {
   return title
