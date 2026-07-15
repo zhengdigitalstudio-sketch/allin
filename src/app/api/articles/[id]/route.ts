@@ -162,6 +162,7 @@ export async function PUT(
       },
     })
   } catch (error: any) {
+    console.error('[articles/[id] PUT] error:', error)
     return NextResponse.json({ error: error.message || 'Gagal memperbarui artikel' }, { status: 500 })
   }
 }

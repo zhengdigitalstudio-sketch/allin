@@ -208,27 +208,29 @@ export function AdminArticlesPage() {
     try {
       const url = editingId ? `/api/articles/${editingId}` : '/api/articles'
       const method = editingId ? 'PUT' : 'POST'
-      const body: any = { ...form, status: submitStatus }
 
-      // PDF payload strategy:
-      // - Create new article without PDF: send pdfData: '' so DB stores null
-      // - Edit existing, new PDF uploaded: send pdfData (base64) to replace
-      // - Edit existing, PDF unchanged (pdfName set, pdfData empty): don't send
-      //   pdfData so existing file in DB is preserved
-      // - Edit existing, PDF removed (pdfName empty, pdfData empty): send
-      //   pdfData: null to clear the existing file from DB
-      if (!editingId) {
-        if (!body.pdfData) body.pdfData = ''
-      } else {
-        if (body.pdfData) {
-          // new PDF uploaded → send both pdfName and pdfData, both will be applied
-        } else if (body.pdfName) {
-          // existing PDF kept → don't send pdfData, preserve existing in DB
-          delete body.pdfData
-        } else {
-          // PDF removed → explicitly clear pdfData in DB
-          body.pdfData = null
-        }
+      // PDF is now uploaded via a separate multipart endpoint after the article
+      // is saved. This avoids JSON bodySizeLimit issues when the PDF is large.
+      // We track whether a new PDF was selected (form.pdfData non-empty) and
+      // whether the user removed an existing PDF (pdfName empty + no new upload).
+      const hasNewPdf = !!form.pdfData
+      const pdfWasRemoved = editingId && !form.pdfName && !form.pdfData
+
+      // Build the JSON body WITHOUT pdfData (keep pdfName for reference).
+      const body: any = {
+        title: form.title,
+        category: form.category,
+        status: submitStatus,
+        excerpt: form.excerpt,
+        content: form.content,
+        coverImage: form.coverImage,
+        metaTitle: form.metaTitle,
+        metaDescription: form.metaDescription,
+        isMemberOnly: form.isMemberOnly,
+        // pdfName: keep current value so list view can show indicator.
+        // If pdfWasRemoved, send null to clear it now (the actual pdfData
+        // will be cleared via the DELETE endpoint below).
+        pdfName: pdfWasRemoved ? null : (form.pdfName || null),
       }
 
       // For PUT, include the article id (also goes in URL but API supports both)
@@ -242,25 +244,15 @@ export function AdminArticlesPage() {
         body: JSON.stringify(body),
       })
 
-      if (res.ok) {
-        if (submitStatus === 'PUBLISHED') {
-          toast.success(editingId ? 'Artikel berhasil dipublikasi' : 'Artikel berhasil dipublikasi')
-        } else {
-          toast.success(editingId ? 'Artikel disimpan sebagai draft' : 'Artikel disimpan sebagai draft')
-        }
-        setDialogOpen(false)
-        setIsFullscreen(false)
-        fetchArticles()
-      } else {
+      if (!res.ok) {
         // Try to extract the actual server-side error message
         let serverMsg = 'Gagal menyimpan artikel'
         try {
           const errData = await res.json()
           if (errData?.error) serverMsg = errData.error
         } catch {
-          // Response body wasn't JSON — likely a framework-level error (e.g. 413 Payload Too Large)
           if (res.status === 413) {
-            serverMsg = 'Ukuran file terlalu besar. Maksimal 5MB untuk gambar, 10MB untuk PDF.'
+            serverMsg = 'Ukuran file terlalu besar. Maksimal 5MB untuk gambar cover.'
           } else if (res.status === 403) {
             serverMsg = 'Anda tidak memiliki izin untuk menyimpan artikel.'
           } else if (res.status === 401) {
@@ -268,8 +260,58 @@ export function AdminArticlesPage() {
           }
         }
         toast.error(serverMsg)
+        return
       }
+
+      const data = await res.json()
+      const savedArticleId: string = editingId || data?.article?.id
+
+      // ====== Step 2: handle PDF upload / removal via separate endpoint ======
+      if (savedArticleId) {
+        try {
+          if (hasNewPdf) {
+            // Upload new PDF via multipart (bypasses JSON bodySizeLimit)
+            const formData = new FormData()
+            // form.pdfData is a data URL: data:application/pdf;base64,XXXX
+            // Convert back to a File object
+            const dataUrlMatch = form.pdfData.match(/^data:application\/pdf;base64,(.+)$/)
+            if (dataUrlMatch) {
+              const byteString = atob(dataUrlMatch[1])
+              const bytes = new Uint8Array(byteString.length)
+              for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i)
+              const file = new File([bytes], form.pdfName || 'document.pdf', { type: 'application/pdf' })
+              formData.append('file', file)
+
+              const pdfRes = await fetch(`/api/articles/${savedArticleId}/pdf`, {
+                method: 'POST',
+                body: formData,
+              })
+              if (!pdfRes.ok) {
+                const errPdf = await pdfRes.json().catch(() => ({}))
+                toast.error(`Artikel tersimpan, tapi PDF gagal diunggah: ${errPdf.error || pdfRes.statusText}`)
+                // Still consider the article save successful — don't return
+              }
+            }
+          } else if (pdfWasRemoved) {
+            // Delete existing PDF
+            await fetch(`/api/articles/${savedArticleId}/pdf`, { method: 'DELETE' })
+          }
+        } catch (pdfErr) {
+          console.error('PDF upload error:', pdfErr)
+          toast.error('Artikel tersimpan, tapi PDF gagal diunggah. Coba edit lagi untuk upload PDF.')
+        }
+      }
+
+      if (submitStatus === 'PUBLISHED') {
+        toast.success(editingId ? 'Artikel berhasil dipublikasi' : 'Artikel berhasil dipublikasi')
+      } else {
+        toast.success(editingId ? 'Artikel disimpan sebagai draft' : 'Artikel disimpan sebagai draft')
+      }
+      setDialogOpen(false)
+      setIsFullscreen(false)
+      fetchArticles()
     } catch (err) {
+      console.error('Submit error:', err)
       toast.error('Gagal menyimpan artikel. Periksa koneksi internet lalu coba lagi.')
     } finally {
       setSubmitting(false)

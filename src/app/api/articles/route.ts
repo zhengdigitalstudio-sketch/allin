@@ -135,6 +135,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { title, content, excerpt, coverImage, category, status, isMemberOnly, metaTitle, metaDescription, pdfName, pdfData } = body
 
+    console.log('[articles POST] creating article:', {
+      title,
+      category,
+      status,
+      hasCover: !!coverImage,
+      hasPdf: !!pdfData,
+      pdfName,
+      contentLength: content?.length || 0,
+      userId: session.id,
+    })
+
     if (!title) {
       return NextResponse.json({ error: 'Judul wajib diisi' }, { status: 400 })
     }
@@ -180,6 +191,7 @@ export async function POST(request: NextRequest) {
       },
     }, { status: 201 })
   } catch (error: any) {
+    console.error('[articles POST] error:', error)
     return NextResponse.json({ error: error.message || 'Gagal membuat artikel' }, { status: 500 })
   }
 }
@@ -258,6 +270,7 @@ export async function PUT(request: NextRequest) {
       },
     })
   } catch (error: any) {
+    console.error('[articles PUT] error:', error)
     return NextResponse.json({ error: error.message || 'Gagal memperbarui artikel' }, { status: 500 })
   }
 }
