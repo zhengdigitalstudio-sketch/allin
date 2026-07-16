@@ -10,7 +10,16 @@ export const JWT_EXPIRES_IN = '30d'
 export const PENGURUS_ROLES = [
   'SUPER_ADMIN', 'KETUA', 'WAKIL_KETUA',
   'SEKRETARIS', 'WAKIL_SEKRETARIS', 'BENDAHARA',
-]
+] as const
+
+// Role that can perform destructive operations (seed, backup, etc.)
+export const SUPER_ADMIN_ONLY = ['SUPER_ADMIN'] as const
+
+// Email validation helper
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
 
 export const APPROVER_ROLES = [
   'SUPER_ADMIN', 'KETUA', 'WAKIL_KETUA',
@@ -45,7 +54,14 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 
 // ─── JWT helpers ──────────────────────────────────────────────────────────────
 function getSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET || 'allin-default-secret-change-me'
+  const secret = process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET
+  if (!secret) {
+    console.error('[AUTH] CRITICAL: NEXTAUTH_SECRET or JWT_SECRET environment variable is required')
+    throw new Error('Server configuration error: Missing JWT secret. Please set NEXTAUTH_SECRET or JWT_SECRET environment variable.')
+  }
+  if (secret === 'allin-default-secret-change-me' || secret.length < 32) {
+    console.warn('[AUTH] WARNING: JWT secret is too weak or using default value. Please use a strong random secret (min 32 characters).')
+  }
   return new TextEncoder().encode(secret)
 }
 
@@ -110,9 +126,13 @@ export async function getSession(request?: NextRequest): Promise<SessionUser | n
 // ─── Cookie helpers ───────────────────────────────────────────────────────────
 export function createSessionCookie(token: string): string {
   const maxAge = 30 * 24 * 60 * 60 // 30 days in seconds
-  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`
+  const isSecure = process.env.NODE_ENV === 'production'
+  const secureFlag = isSecure ? '; Secure' : ''
+  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly${secureFlag}; SameSite=Strict; Max-Age=${maxAge}`
 }
 
 export function createLogoutCookie(): string {
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`
+  const isSecure = process.env.NODE_ENV === 'production'
+  const secureFlag = isSecure ? '; Secure' : ''
+  return `${COOKIE_NAME}=; Path=/; HttpOnly${secureFlag}; SameSite=Strict; Max-Age=0`
 }

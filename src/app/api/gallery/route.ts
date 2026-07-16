@@ -114,18 +114,21 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const { title, description, imageUrl, category } = body
 
-    if (!title || !imageUrl) {
-      return NextResponse.json({ error: 'Judul dan URL gambar wajib diisi' }, { status: 400 })
+    // For PUT (update), only require at least one field to be updated
+    // This allows partial updates - e.g., updating just the title without re-uploading image
+    if (title === undefined && description === undefined && imageUrl === undefined && category === undefined) {
+      return NextResponse.json({ error: 'Minimal satu field harus diisi untuk update' }, { status: 400 })
     }
+
+    const updateData: any = {}
+    if (title !== undefined) updateData.title = title
+    if (description !== undefined) updateData.description = description || null
+    if (imageUrl !== undefined) updateData.imageUrl = imageUrl
+    if (category !== undefined) updateData.category = category || null
 
     const gallery = await db.gallery.update({
       where: { id },
-      data: {
-        title,
-        description: description || null,
-        imageUrl,
-        category: category || null,
-      },
+      data: updateData,
     })
 
     return NextResponse.json({
@@ -134,8 +137,9 @@ export async function PUT(request: NextRequest) {
         createdAt: gallery.createdAt.toISOString(),
       },
     })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Gagal memperbarui galeri' }, { status: 500 })
+  } catch (error: unknown) {
+    console.error('[Gallery PUT] Error:', error)
+    return NextResponse.json({ error: 'Gagal memperbarui galeri' }, { status: 500 })
   }
 }
 

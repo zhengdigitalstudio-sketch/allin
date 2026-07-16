@@ -54,13 +54,26 @@ export async function GET(
     }
 
     // Increment view count (check cookie to prevent duplicates)
+    const MAX_VIEWED_IDS = 100 // Limit cookie size to prevent unbounded growth
     let viewedIds: string[] = []
     const cookieHeader = request.headers.get('cookie') || ''
     const viewedCookie = cookieHeader.split(';').map(c => c.trim()).find(c => c.startsWith('viewed='))
     if (viewedCookie) {
-      viewedIds = decodeURIComponent(viewedCookie.split('=')[1]).split(',')
+      try {
+        viewedIds = decodeURIComponent(viewedCookie.split('=')[1]).split(',')
+      } catch {
+        viewedIds = [] // Invalid cookie, reset
+      }
     }
-    const newViewedIds = viewedIds.includes(id) ? viewedIds : [...viewedIds, id]
+    
+    // Only add if not already viewed
+    let newViewedIds = viewedIds.includes(id) ? viewedIds : [...viewedIds, id]
+    
+    // Trim to last MAX_VIEWED_IDS to prevent cookie overflow
+    if (newViewedIds.length > MAX_VIEWED_IDS) {
+      newViewedIds = newViewedIds.slice(-MAX_VIEWED_IDS)
+    }
+    
     const shouldIncrement = !viewedIds.includes(id)
 
     if (shouldIncrement) {
@@ -82,8 +95,9 @@ export async function GET(
         'Set-Cookie': `viewed=${encodeURIComponent(newViewedIds.join(','))}; Path=/; Max-Age=${60 * 60 * 24}; SameSite=Lax`,
       },
     })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Gagal mengambil artikel' }, { status: 500 })
+  } catch (error: unknown) {
+    console.error('[Article Detail API] Error:', error)
+    return NextResponse.json({ error: 'Gagal mengambil artikel' }, { status: 500 })
   }
 }
 
@@ -161,9 +175,9 @@ export async function PUT(
         publishedAt: article.publishedAt?.toISOString() || null,
       },
     })
-  } catch (error: any) {
-    console.error('[articles/[id] PUT] error:', error)
-    return NextResponse.json({ error: error.message || 'Gagal memperbarui artikel' }, { status: 500 })
+  } catch (error: unknown) {
+    console.error('[articles/[id] PUT] Error:', error)
+    return NextResponse.json({ error: 'Gagal memperbarui artikel' }, { status: 500 })
   }
 }
 
@@ -194,7 +208,8 @@ export async function DELETE(
     await db.article.delete({ where: { id } })
 
     return NextResponse.json({ message: 'Artikel berhasil dihapus' })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Gagal menghapus artikel' }, { status: 500 })
+  } catch (error: unknown) {
+    console.error('[articles/[id] DELETE] Error:', error)
+    return NextResponse.json({ error: 'Gagal menghapus artikel' }, { status: 500 })
   }
 }

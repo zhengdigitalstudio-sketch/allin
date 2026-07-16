@@ -77,6 +77,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Judul dan tanggal wajib diisi' }, { status: 400 })
     }
 
+    // Validate date format
+    const parsedDate = new Date(date)
+    if (isNaN(parsedDate.getTime())) {
+      return NextResponse.json({ error: 'Format tanggal tidak valid. Gunakan format ISO 8601 (YYYY-MM-DD)' }, { status: 400 })
+    }
+
     const agenda = await db.agenda.create({
       data: {
         title,
@@ -97,8 +103,9 @@ export async function POST(request: NextRequest) {
         updatedAt: agenda.updatedAt.toISOString(),
       },
     }, { status: 201 })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Gagal membuat agenda' }, { status: 500 })
+  } catch (error: unknown) {
+    console.error('[Agenda POST] Error:', error)
+    return NextResponse.json({ error: 'Gagal membuat agenda' }, { status: 500 })
   }
 }
 

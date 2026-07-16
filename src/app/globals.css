@@ -240,3 +240,94 @@
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.55 0.12 150);
 }
+
+/* Mobile-Responsive Improvements */
+@media (max-width: 640px) {
+  /* Prevent horizontal overflow on mobile */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Ensure tables scroll horizontally on mobile */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  /* Fix text truncation in cards */
+  .line-clamp-1,
+  .line-clamp-2,
+  .line-clamp-3 {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Ensure buttons don't overflow on mobile */
+  button, a, .btn {
+    max-width: 100%;
+    word-break: break-word;
+  }
+
+  /* Fix dialog/modal width on mobile */
+  [role="dialog"] {
+    max-width: calc(100vw - 2rem) !important;
+    margin: 0.5rem !important;
+  }
+
+  /* Dashboard-specific mobile fixes */
+  .space-y-6 > * {
+    min-width: 0; /* Prevent flex items from overflowing */
+  }
+
+  /* Chart container responsive fix */
+  .recharts-wrapper,
+  .recharts-responsive-container {
+    min-width: 0 !important;
+  }
+
+  /* Badge text wrapping on mobile */
+  .badge, [class*="Badge"] {
+    max-width: 100%;
+    word-break: break-word;
+    hyphens: auto;
+  }
+}
+
+/* PDF Download Section - Mobile Friendly */
+.pdf-download-section {
+  @apply rounded-2xl border-2 border-allin-green/30 bg-gradient-to-br from-allin-green/5 to-allin-yellow-light/30 p-4 sm:p-6 md:p-10;
+}
+
+@media (max-width: 640px) {
+  .pdf-download-section {
+    @apply p-4;
+  }
+  
+  .pdf-download-section .flex-col {
+    @apply gap-4;
+  }
+  
+  .pdf-download-buttons {
+    @apply flex-col w-full;
+  }
+}
+
+/* Prose content - Mobile readable */
+.prose {
+  @apply text-sm sm:text-base;
+}
+
+@media (max-width: 640px) {
+  .prose h1 { @apply text-2xl; }
+  .prose h2 { @apply text-xl; }
+  .prose h3 { @apply text-lg; }
+  .prose img {
+    @apply h-auto w-full rounded-xl;
+  }
+  .prose iframe {
+    @apply w-full;
+    aspect-ratio: 16/9;
+  }
+}

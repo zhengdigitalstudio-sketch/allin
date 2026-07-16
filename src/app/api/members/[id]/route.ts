@@ -23,6 +23,15 @@ export async function GET(
       return NextResponse.json({ error: 'Anggota tidak ditemukan' }, { status: 404 })
     }
 
+    // Authorization check: only SUPER_ADMIN, own data owner, or the member's linked user can view
+    const userRole = session?.role || ''
+    const isOwner = member.userId === session.id
+    const isPengurus = PENGURUS_ROLES.includes(userRole)
+    
+    if (!isPengurus && !isOwner) {
+      return NextResponse.json({ error: 'Forbidden — Anda tidak memiliki akses ke data ini' }, { status: 403 })
+    }
+
     return NextResponse.json({
       member: {
         ...member,
@@ -30,8 +39,9 @@ export async function GET(
         updatedAt: member.updatedAt.toISOString(),
       },
     })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Gagal mengambil data anggota' }, { status: 500 })
+  } catch (error: unknown) {
+    console.error('[Member Detail API] Error:', error)
+    return NextResponse.json({ error: 'Gagal mengambil data anggota' }, { status: 500 })
   }
 }
 

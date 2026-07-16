@@ -115,8 +115,9 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Gagal mengambil artikel' }, { status: 500 })
+  } catch (error: unknown) {
+    console.error('[articles GET] Error:', error)
+    return NextResponse.json({ error: 'Gagal mengambil artikel' }, { status: 500 })
   }
 }
 
@@ -152,10 +153,13 @@ export async function POST(request: NextRequest) {
 
     let slug = generateSlug(title)
 
-    // Ensure slug uniqueness
-    const existing = await db.article.findUnique({ where: { slug } })
-    if (existing) {
-      slug = `${slug}-${Date.now()}`
+    // Ensure slug uniqueness with retry logic for race condition safety
+    const MAX_SLUG_RETRIES = 3
+    for (let attempt = 0; attempt < MAX_SLUG_RETRIES; attempt++) {
+      const existing = await db.article.findUnique({ where: { slug } })
+      if (!existing) break
+      // Append unique suffix on collision
+      slug = `${slug}-${crypto.randomUUID().slice(0, 8)}`
     }
 
     const article = await db.article.create({
@@ -190,9 +194,13 @@ export async function POST(request: NextRequest) {
         publishedAt: article.publishedAt?.toISOString() || null,
       },
     }, { status: 201 })
-  } catch (error: any) {
-    console.error('[articles POST] error:', error)
-    return NextResponse.json({ error: error.message || 'Gagal membuat artikel' }, { status: 500 })
+  } catch (error: unknown) {
+    console.error('[articles POST] Error:', error)
+    // Handle unique constraint violation for slug
+    if (error && typeof error === 'object' && 'code' in error && (error as any).code === 'P2002') {
+      return NextResponse.json({ error: 'Gagal membuat artikel: slug sudah digunakan. Coba ubah judul sedikit.' }, { status: 409 })
+    }
+    return NextResponse.json({ error: 'Gagal membuat artikel' }, { status: 500 })
   }
 }
 

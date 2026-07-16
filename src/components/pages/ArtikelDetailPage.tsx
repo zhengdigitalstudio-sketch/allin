@@ -218,55 +218,102 @@ export default function ArtikelDetailPage() {
 
           {/* ====== REGULASI: tampilkan box download PDF sebagai konten utama ====== */}
           {article.category === 'Regulasi' ? (
-            <div className="rounded-2xl border-2 border-allin-green/30 bg-gradient-to-br from-allin-green/5 to-allin-yellow-light/30 p-6 md:p-10">
-              <div className="flex flex-col items-center text-center gap-6">
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-allin-green shadow-md">
-                  <FileText className="h-10 w-10 text-white" />
-                </div>
-                <div className="space-y-2">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="pdf-download-section"
+            >
+              <div className="flex flex-col items-center text-center gap-4 sm:gap-6">
+                {/* Animated PDF Icon */}
+                <motion.div 
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-allin-green to-allin-green-dark shadow-lg shadow-allin-green/30"
+                >
+                  <FileText className="h-12 w-12 text-white" />
+                </motion.div>
+                <div className="space-y-3">
                   <h2 className="text-2xl md:text-3xl font-bold text-allin-green-dark">
-                    Silakan Unduh PDF di Sini
+                    📄 Dokumen Regulasi Tersedia
                   </h2>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    Dokumen regulasi lengkap tersedia dalam format PDF. Klik tombol di bawah untuk mengunduh atau membaca langsung di browser Anda.
+                  <p className="text-muted-foreground max-w-lg mx-auto">
+                    Dokumen regulasi resmi dalam format PDF. Unduh untuk dibaca offline atau buka langsung di browser Anda.
                   </p>
                 </div>
 
                 {article.pdfName ? (
                   <>
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/60 dark:bg-white/5 border border-allin-green/20 text-sm text-muted-foreground max-w-full">
-                      <FileText className="h-4 w-4 shrink-0 text-red-600" />
-                      <span className="truncate font-medium">{article.pdfName}</span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                      <a
+                    {/* File Info Card */}
+                    <motion.div 
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="w-full max-w-md p-4 rounded-xl bg-white/80 dark:bg-white/5 border border-allin-green/20 shadow-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-100">
+                          <FileText className="h-5 w-5 text-red-600" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-foreground truncate">
+                            {article.pdfName}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            File PDF • Dokumen Resmi
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Download Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto pdf-download-buttons">
+                      <motion.a
                         href={`/api/articles/${article.id}/pdf?download=true`}
                         target="_blank"
                         rel="noopener noreferrer"
                         download={article.pdfName || undefined}
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-allin-green hover:bg-allin-green-dark text-white font-semibold transition-colors shadow-md"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-allin-green hover:bg-allin-green-dark text-white font-bold text-lg transition-all shadow-lg shadow-allin-green/30 hover:shadow-xl hover:shadow-allin-green/40"
                       >
-                        <Download className="h-5 w-5" />
-                        Unduh PDF
-                      </a>
-                      <a
+                        <Download className="h-6 w-6" />
+                        Unduh PDF Sekarang
+                      </motion.a>
+                      <motion.a
                         href={`/api/articles/${article.id}/pdf`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 text-allin-green border border-allin-green/30 font-semibold transition-colors"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="inline-flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-white dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 text-allin-green border-2 border-allin-green/30 font-bold transition-all"
                       >
                         <FileText className="h-5 w-5" />
-                        Buka di Tab Baru
-                      </a>
+                        Buka di Browser
+                      </motion.a>
                     </div>
+
+                    {/* Helper Text */}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      💡 Klik "Unduh PDF Sekarang" untuk menyimpan file ke perangkat Anda
+                    </p>
                   </>
                 ) : (
-                  <div className="px-4 py-3 rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 text-sm text-yellow-800 dark:text-yellow-200">
-                    Dokumen PDF belum diunggah oleh admin. Silakan hubungi pengurus untuk informasi lebih lanjut.
-                  </div>
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="px-5 py-4 rounded-xl bg-yellow-50 dark:bg-yellow-950/20 border-2 border-yellow-200 dark:border-yellow-900 max-w-md"
+                  >
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
+                      ⏳ Dokumen PDF belum diunggah
+                    </p>
+                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                      Silakan hubungi pengurus untuk informasi lebih lanjut mengenai dokumen regulasi ini.
+                    </p>
+                  </motion.div>
                 )}
               </div>
-            </div>
+            </motion.div>
           ) : (
             <>
               {/* ====== NON-REGULASI: tampilkan body artikel seperti biasa ====== */}
@@ -285,31 +332,56 @@ export default function ArtikelDetailPage() {
 
               {/* PDF Download — for non-Regulasi articles with attached PDF */}
               {article.pdfName && (
-                <div className="mt-6 p-5 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-900 rounded-xl">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900">
-                      <FileText className="h-7 w-7 text-red-600" />
-                    </div>
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                  className="mt-8 p-6 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30 border-2 border-red-200 dark:border-red-900 rounded-2xl shadow-lg"
+                >
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                    <motion.div 
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                      className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-red-600 shadow-md"
+                    >
+                      <FileText className="h-8 w-8 text-white" />
+                    </motion.div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-base text-red-900 dark:text-red-100">
-                        Lampiran PDF Tersedia
+                      <h3 className="font-bold text-lg text-red-900 dark:text-red-100 mb-1">
+                        📎 Lampiran PDF Tersedia
                       </h3>
-                      <p className="text-sm text-red-700 dark:text-red-300 truncate">{article.pdfName}</p>
-                      <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                        Klik tombol di samping untuk mengunduh atau membuka file PDF di tab baru.
+                      <p className="text-sm font-medium text-red-700 dark:text-red-300 truncate mb-2">
+                        {article.pdfName}
+                      </p>
+                      <p className="text-xs text-red-600 dark:text-red-400">
+                        Dokumen terkait artikel ini. Klik tombol untuk mengunduh atau membuka di browser.
                       </p>
                     </div>
-                    <a
-                      href={`/api/articles/${article.id}/pdf`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors shadow-sm shrink-0"
-                    >
-                      <Download className="h-5 w-5" />
-                      Unduh PDF
-                    </a>
+                    <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto">
+                      <motion.a
+                        href={`/api/articles/${article.id}/pdf?download=true`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={article.pdfName || undefined}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-all shadow-md hover:shadow-lg"
+                      >
+                        <Download className="h-5 w-5" />
+                        Unduh PDF
+                      </motion.a>
+                      <a
+                        href={`/api/articles/${article.id}/pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white dark:bg-white/10 text-red-600 border border-red-300 dark:border-red-700 font-medium text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Buka
+                      </a>
+                    </div>
                   </div>
-                </div>
+                </motion.div>
               )}
             </>
           )}
@@ -336,17 +408,19 @@ export default function ArtikelDetailPage() {
                 {/* Download PDF button — shown for non-Regulasi articles with PDF attached.
                     Regulasi already has the prominent download area above. */}
                 {article.pdfName && article.category !== 'Regulasi' && (
-                  <a
+                  <motion.a
                     href={`/api/articles/${article.id}/pdf?download=true`}
                     target="_blank"
                     rel="noopener noreferrer"
                     download={article.pdfName || undefined}
-                    className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm px-5 py-2.5 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
                     title={`Unduh ${article.pdfName}`}
                   >
                     <Download className="w-4 h-4" />
                     Unduh PDF
-                  </a>
+                  </motion.a>
                 )}
               </div>
             </div>

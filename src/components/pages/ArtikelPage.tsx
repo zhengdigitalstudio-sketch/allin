@@ -18,6 +18,7 @@ import {
   ArrowRight,
   X,
   FileText,
+  Download,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -245,7 +246,7 @@ export default function ArtikelPage() {
                                   {article.title}
                                 </h3>
                                 {article.pdfName && (
-                                  <Badge className="bg-red-100 text-red-700 border-red-200 text-[10px] font-semibold shrink-0 flex items-center gap-1">
+                                  <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white border-red-300 text-[10px] font-bold shrink-0 flex items-center gap-1 shadow-sm">
                                     <FileText className="w-3 h-3" />
                                     PDF
                                   </Badge>
@@ -265,14 +266,14 @@ export default function ArtikelPage() {
                                 <div className="flex items-center gap-2">
                                   {article.pdfName && (
                                     <a
-                                      href={`/api/articles/${article.id}/pdf`}
+                                      href={`/api/articles/${article.id}/pdf?download=true`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
-                                      className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:underline font-medium"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs transition-all shadow-sm hover:shadow-md"
                                       title={`Unduh ${article.pdfName}`}
                                     >
-                                      <FileText className="w-3 h-3" />
+                                      <Download className="w-3.5 h-3.5" />
                                       Unduh PDF
                                     </a>
                                   )}

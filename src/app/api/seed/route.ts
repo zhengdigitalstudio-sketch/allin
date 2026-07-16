@@ -1,4 +1,4 @@
-import { getSession, PENGURUS_ROLES, APPROVER_ROLES, ARTICLE_CREATE_ROLES, hashPassword } from '@/lib/auth'
+import { getSession, SUPER_ADMIN_ONLY, APPROVER_ROLES, ARTICLE_CREATE_ROLES, hashPassword } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
@@ -13,14 +13,14 @@ function generateSlug(title: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    // Auth check — only SUPER_ADMIN can seed
+    // Auth check — only SUPER_ADMIN can seed (destructive operation!)
     const session = await getSession(request)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const userRole = session?.role || ''
-    if (!PENGURUS_ROLES.includes(userRole)) {
-      return NextResponse.json({ error: 'Forbidden — hanya SUPER_ADMIN' }, { status: 403 })
+    if (!SUPER_ADMIN_ONLY.includes(userRole as any)) {
+      return NextResponse.json({ error: 'Forbidden — hanya SUPER_ADMIN yang dapat melakukan seeding database' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -50,8 +50,9 @@ export async function POST(request: NextRequest) {
       await db.user.deleteMany()
     }
 
-    // Create SUPER_ADMIN
-    const adminPw = 'admin123'
+    // Create SUPER_ADMIN with strong random password
+    const crypto = await import('crypto')
+    const adminPw = crypto.randomBytes(16).toString('hex')
     const admin = await db.user.upsert({
       where: { email: 'sadmin@allin.web.id' },
       update: { password: await hashPassword(adminPw) },
@@ -66,12 +67,11 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Create Pengurus users
+    // Create Pengurus users with strong random passwords
     const pengurusData = [
       {
         name: 'Koespraptini Ria',
         email: 'sampitaria@gmail.com',
-        password: 'pengurus123',
         role: 'KETUA',
         position: 'Ketua Umum',
         company: 'PT PLN (Persero)',
@@ -79,7 +79,6 @@ export async function POST(request: NextRequest) {
       {
         name: 'Mekkadinah',
         email: 'mekkadinah@gmail.com',
-        password: 'pengurus123',
         role: 'WAKIL_KETUA',
         position: 'Wakil Ketua Umum',
         company: 'PT PLN (Persero)',
@@ -87,7 +86,6 @@ export async function POST(request: NextRequest) {
       {
         name: 'Alibeta Sembiring',
         email: 'alelbiwi@gmail.com',
-        password: 'pengurus123',
         role: 'SEKRETARIS',
         position: 'Sekretaris Umum',
         company: 'PT PLN (Persero)',
@@ -95,7 +93,6 @@ export async function POST(request: NextRequest) {
       {
         name: 'Jaswadi',
         email: 'anjas0875@gmail.com',
-        password: 'pengurus123',
         role: 'WAKIL_SEKRETARIS',
         position: 'Wakil Sekretaris',
         company: 'PT PLN (Persero)',
@@ -103,7 +100,6 @@ export async function POST(request: NextRequest) {
       {
         name: 'Viviane Tazaq',
         email: 'vtanzaq@gmail.com',
-        password: 'pengurus123',
         role: 'BENDAHARA',
         position: 'Bendahara',
         company: 'PT PLN (Persero)',
@@ -112,7 +108,9 @@ export async function POST(request: NextRequest) {
 
     const pengurus: any[] = []
     for (const p of pengurusData) {
-      const hashedPw = await hashPassword(p.password)
+      // Generate strong random password for each pengurus
+      const pw = crypto.randomBytes(16).toString('hex')
+      const hashedPw = await hashPassword(pw)
       const user = await db.user.upsert({
         where: { email: p.email },
         update: { password: hashedPw },
@@ -368,9 +366,8 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({
-      message: 'Database berhasil di-seed dengan data awal!',
-      data: {
-        users: 7, // 2 super admin + 5 pengurus
+      message: 'Database berhasil di-seed dengan data awal!',n      data: {
+        users: 7, // 1 super admin + 5 pengurus
         articles: 5,
         agenda: 3,
         gallery: 3,
@@ -378,6 +375,7 @@ export async function POST(request: NextRequest) {
         announcements: 3,
         seoSettings: 1,
       },
+      securityNote: 'Passwords telah digenerate secara acak dan tidak ditampilkan di response. Gunakan fitur reset password jika perlu.',
     })
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Gagal melakukan seeding database' }, { status: 500 })

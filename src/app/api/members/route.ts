@@ -1,4 +1,4 @@
-import { getSession, PENGURUS_ROLES, APPROVER_ROLES, ARTICLE_CREATE_ROLES } from '@/lib/auth'
+import { getSession, PENGURUS_ROLES, APPROVER_ROLES, ARTICLE_CREATE_ROLES, isValidEmail } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const where: any = {}
 
     if (PENGURUS_ROLES.includes(userRole)) {
-      // All pengurus see all
+      // All pengurus see all members
       if (status) where.status = status
       if (search) {
         where.OR = [
@@ -36,21 +36,14 @@ export async function GET(request: NextRequest) {
           { email: { contains: search, mode: 'insensitive' } },
         ]
       }
-    } else if (PENGURUS_ROLES.includes(userRole)) {
-      // Pengurus sees approved only
-      where.status = 'DISETUJUI'
-      if (search) {
-        where.OR = [
-          { fullName: { contains: search, mode: 'insensitive' } },
-          { companyName: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-        ]
-      }
     } else {
-      // Regular member sees own only
+      // Regular member sees own data + approved members
       const member = await db.member.findUnique({ where: { userId } })
       if (member) {
-        where.id = member.id
+        where.OR = [
+          { id: member.id },
+          { status: 'DISETUJUI' }
+        ]
       } else {
         return NextResponse.json({ members: [], pagination: { page, limit, total: 0, totalPages: 0 } })
       }
@@ -81,8 +74,10 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Gagal mengambil data anggota' }, { status: 500 })
+  } catch (error: unknown) {
+    console.error('[Members API] Error:', error)
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: 'Gagal mengambil data anggota' }, { status: 500 })
   }
 }
 
@@ -91,8 +86,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { fullName, email, phone, companyName, institution, position, address, city, province, memberType, logo, photo, document, reason } = body
 
-    if (!fullName || !email) {
-      return NextResponse.json({ error: 'Nama dan email wajib diisi' }, { status: 400 })
+    if (!fullName || !email || !isValidEmail(email)) {
+      return NextResponse.json({ error: 'Nama wajib diisi dan format email tidak valid' }, { status: 400 })
     }
 
     // Check if email already registered
@@ -128,11 +123,12 @@ export async function POST(request: NextRequest) {
         updatedAt: member.updatedAt.toISOString(),
       },
     }, { status: 201 })
-  } catch (error: any) {
-    if (error.code === 'P2002') {
+  } catch (error: unknown) {
+    console.error('[Members POST] Error:', error)
+    if (error && typeof error === 'object' && 'code' in error && (error as any).code === 'P2002') {
       return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 409 })
     }
-    return NextResponse.json({ error: error.message || 'Gagal mendaftar anggota' }, { status: 500 })
+    return NextResponse.json({ error: 'Gagal mendaftar anggota' }, { status: 500 })
   }
 }
 

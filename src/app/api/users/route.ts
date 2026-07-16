@@ -163,8 +163,17 @@ export async function PUT(request: NextRequest) {
 
     const updateData: any = {}
     if (name !== undefined) updateData.name = name
-    if (email !== undefined) updateData.email = email
-    if (password !== undefined) updateData.password = await hashPassword(password)
+    if (email !== undefined) {
+      // Validate email format if provided
+      if (email && !isValidEmail(email)) {
+        return NextResponse.json({ error: 'Format email tidak valid' }, { status: 400 })
+      }
+      updateData.email = email
+    }
+    // Only hash password if it's a non-empty string (prevent locking users with empty passwords)
+    if (password !== undefined && password && password.trim()) {
+      updateData.password = await hashPassword(password)
+    }
     if (role !== undefined) updateData.role = role
     if (avatar !== undefined) updateData.avatar = avatar
     if (phone !== undefined) updateData.phone = phone
@@ -194,11 +203,12 @@ export async function PUT(request: NextRequest) {
         updatedAt: user.updatedAt.toISOString(),
       },
     })
-  } catch (error: any) {
-    if (error.code === 'P2002') {
+  } catch (error: unknown) {
+    console.error('[Users PUT] Error:', error)
+    if (error && typeof error === 'object' && 'code' in error && (error as any).code === 'P2002') {
       return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 409 })
     }
-    return NextResponse.json({ error: error.message || 'Gagal memperbarui pengguna' }, { status: 500 })
+    return NextResponse.json({ error: 'Gagal memperbarui pengguna' }, { status: 500 })
   }
 }
 

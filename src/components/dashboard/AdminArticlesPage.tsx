@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Search, Plus, Pencil, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Maximize2, Minimize2, Upload, X, ImageIcon, CheckCircle2, Loader2, FileText } from 'lucide-react'
+import { Search, Plus, Pencil, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Maximize2, Minimize2, Upload, X, ImageIcon, CheckCircle2, Loader2, FileText, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
@@ -204,6 +204,15 @@ export function AdminArticlesPage() {
       toast.error('Judul artikel wajib diisi')
       return
     }
+
+    console.log('[handleSubmit] Starting...', {
+      submitStatus,
+      editingId,
+      title: form.title,
+      category: form.category,
+      hasPdf: !!form.pdfData
+    })
+
     setSubmitting(true)
     try {
       const url = editingId ? `/api/articles/${editingId}` : '/api/articles'
@@ -244,6 +253,8 @@ export function AdminArticlesPage() {
         body: JSON.stringify(body),
       })
 
+      console.log('[handleSubmit] Response received:', { status: res.status, ok: res.ok })
+
       if (!res.ok) {
         // Try to extract the actual server-side error message
         let serverMsg = 'Gagal menyimpan artikel'
@@ -257,9 +268,14 @@ export function AdminArticlesPage() {
             serverMsg = 'Anda tidak memiliki izin untuk menyimpan artikel.'
           } else if (res.status === 401) {
             serverMsg = 'Sesi login berakhir. Silakan login ulang lalu coba lagi.'
+          } else if (res.status === 400) {
+            serverMsg = 'Data artikel tidak valid. Periksa kembali input Anda.'
           }
         }
+        console.error('[Submit Error]', { status: res.status, message: serverMsg })
         toast.error(serverMsg)
+        // FIX: Reset submitting state so button can be clicked again!
+        setSubmitting(false)
         return
       }
 
@@ -496,7 +512,17 @@ export function AdminArticlesPage() {
                 articles.map((article, idx) => (
                   <TableRow key={article.id} className="hover:bg-muted/30">
                     <TableCell className="text-xs text-muted-foreground">{(page - 1) * ITEMS_PER_PAGE + idx + 1}</TableCell>
-                    <TableCell className="text-sm font-medium max-w-[250px] truncate">{article.title}</TableCell>
+                    <TableCell className="text-sm font-medium max-w-[250px] truncate">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate">{article.title}</span>
+                        {(article as any).pdfName && (
+                          <Badge className="bg-red-100 text-red-700 border-red-200 text-[9px] font-bold shrink-0 flex items-center gap-1">
+                            <FileText className="w-3 h-3" />
+                            PDF
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-xs">
                       <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
                     </TableCell>
@@ -517,6 +543,18 @@ export function AdminArticlesPage() {
                         <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(article.id)} title="Hapus">
                           <Trash2 className="h-4 w-4" />
                         </Button>
+                        {(article as any).pdfName && (
+                          <a
+                            href={`/api/articles/${article.id}/pdf?download=true`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={`Unduh ${(article as any).pdfName}`}
+                            className="inline-flex items-center justify-center h-8 w-8 rounded-md text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Download className="h-4 w-4" />
+                          </a>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -688,11 +726,11 @@ export function AdminArticlesPage() {
             </div>
             {/* Upload PDF / Lampiran */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <Label className="text-sm font-medium">Lampiran PDF</Label>
                 {form.category === 'Regulasi' && (
-                  <Badge className="bg-red-100 text-red-700 border-red-200 text-[10px]">
-                    Direkomendasikan untuk Regulasi
+                  <Badge className="bg-red-100 text-red-700 border-red-200 text-[10px] self-start sm:self-auto whitespace-normal break-words max-w-full sm:max-w-[200px]">
+                    ✨ Rekomendasi: Upload PDF Regulasi
                   </Badge>
                 )}
               </div>

@@ -298,14 +298,16 @@ export function AdminDashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
+              className="min-w-0"
             >
               <Card className="border-0 shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-semibold">Statistik Artikel per Kategori</CardTitle>
+                <CardHeader className="pb-2 px-4 sm:px-6">
+                  <CardTitle className="text-sm sm:text-base font-semibold">Statistik Artikel per Kategori</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={280}>
-                    <BarChart data={categoryChartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                <CardContent className="px-4 sm:px-6">
+                  <div className="w-full overflow-hidden">
+                    <ResponsiveContainer width="100%" height={220} minHeight={180}>
+                      <BarChart data={categoryChartData} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                       <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                       <YAxis tick={{ fontSize: 12 }} />
@@ -320,6 +322,7 @@ export function AdminDashboardPage() {
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
+                </div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -330,14 +333,16 @@ export function AdminDashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
+              className="min-w-0"
             >
               <Card className="border-0 shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-semibold">Pendaftaran Anggota</CardTitle>
+                <CardHeader className="pb-2 px-4 sm:px-6">
+                  <CardTitle className="text-sm sm:text-base font-semibold">Pendaftaran Anggota</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={280}>
-                    <AreaChart data={registrationChartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                <CardContent className="px-4 sm:px-6">
+                  <div className="w-full overflow-hidden">
+                    <ResponsiveContainer width="100%" height={220} minHeight={180}>
+                      <AreaChart data={registrationChartData} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
                       <defs>
                         <linearGradient id="colorPendaftar" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#15803d" stopOpacity={0.3} />
@@ -360,6 +365,7 @@ export function AdminDashboardPage() {
                       />
                     </AreaChart>
                   </ResponsiveContainer>
+                </div>
                 </CardContent>
               </Card>
             </motion.div>

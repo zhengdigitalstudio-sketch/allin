@@ -46,6 +46,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     fetchSession()
+    // Refresh session every 5 minutes to detect token expiration
+    const interval = setInterval(fetchSession, 5 * 60 * 1000)
+    
+    // Also refresh when tab becomes visible (user returns to the app)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchSession()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [fetchSession])
 
   // Expose logout globally via window for components that need it

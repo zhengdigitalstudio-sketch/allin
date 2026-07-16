@@ -118,7 +118,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Mobile Sidebar Sheet */}
       <div className="lg:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetContent side="left" className="w-72 p-0">
+          <SheetContent side="left" className="w-64 sm:w-72 p-0">
             <SheetTitle className="sr-only">Menu Dashboard</SheetTitle>
             <div className="h-full">
               <DashboardSidebar role={userRole} userName={userName} userRole={userRole} />

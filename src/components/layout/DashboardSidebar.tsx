@@ -160,18 +160,18 @@ export function DashboardSidebar({ role, userName, userRole }: DashboardSidebarP
                 className={cn(
                   'group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer',
                   active
-                    ? 'bg-allin-green/8 text-allin-green'
+                    ? 'bg-allin-green text-white font-semibold shadow-sm shadow-allin-green/30'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
                 {/* Active left border indicator */}
                 {active && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-allin-green" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-white/60" />
                 )}
                 <item.icon
                   className={cn(
                     'h-4.5 w-4.5 shrink-0 transition-colors',
-                    active ? 'text-allin-green' : 'text-muted-foreground group-hover:text-foreground'
+                    active ? 'text-white' : 'text-muted-foreground group-hover:text-foreground'
                   )}
                 />
                 <span>{item.label}</span>
