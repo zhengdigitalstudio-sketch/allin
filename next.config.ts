@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
-  serverExternalPackages: ["bcryptjs"],
+  // output removed - Vercel handles its own build output
+  serverExternalPackages: ["bcryptjs", "prisma", "@prisma/client"],
   typescript: {
     ignoreBuildErrors: true,
   },
