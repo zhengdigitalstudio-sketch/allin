@@ -83,6 +83,7 @@ export function AdminArticlesPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<ArticleForm>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null) // NEW: Visual error feedback
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [pdfUploading, setPdfUploading] = useState(false)
@@ -117,6 +118,7 @@ export function AdminArticlesPage() {
   const openCreateDialog = () => {
     setEditingId(null)
     setForm(emptyForm)
+    setSubmitError(null) // Reset error when opening dialog
     setDialogOpen(true)
   }
 
@@ -135,6 +137,7 @@ export function AdminArticlesPage() {
       pdfName: (article as any).pdfName || '',
       pdfData: '',
     })
+    setSubmitError(null) // Reset error when opening dialog
     setDialogOpen(true)
   }
 
@@ -214,6 +217,7 @@ export function AdminArticlesPage() {
     })
 
     setSubmitting(true)
+    setSubmitError(null) // Clear previous error
     try {
       const url = editingId ? `/api/articles/${editingId}` : '/api/articles'
       const method = editingId ? 'PUT' : 'POST'
@@ -274,6 +278,7 @@ export function AdminArticlesPage() {
         }
         console.error('[Submit Error]', { status: res.status, message: serverMsg })
         toast.error(serverMsg)
+        setSubmitError(serverMsg) // NEW: Set visual error
         // FIX: Reset submitting state so button can be clicked again!
         setSubmitting(false)
         return
@@ -328,7 +333,9 @@ export function AdminArticlesPage() {
       fetchArticles()
     } catch (err) {
       console.error('Submit error:', err)
-      toast.error('Gagal menyimpan artikel. Periksa koneksi internet lalu coba lagi.')
+      const errMsg = err instanceof Error ? err.message : 'Gagal menyimpan artikel. Periksa koneksi internet lalu coba lagi.'
+      toast.error(errMsg)
+      setSubmitError(errMsg) // NEW: Set visual error
     } finally {
       setSubmitting(false)
     }
@@ -815,6 +822,21 @@ export function AdminArticlesPage() {
                 Khusus Anggota
               </Label>
             </div>
+            {/* Visual Error Display - shows when submit fails */}
+            {submitError && (
+              <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700 font-medium flex items-start gap-2">
+                  <span>❌</span>
+                  <span>{submitError}</span>
+                </p>
+                <button
+                  onClick={() => setSubmitError(null)}
+                  className="text-xs text-red-500 hover:text-red-700 mt-1 underline"
+                >
+                  Tutup pesan error
+                </button>
+              </div>
+            )}
             <div className="flex justify-end gap-2 pt-2 border-t">
               <Button variant="outline" onClick={() => { setDialogOpen(false); setIsFullscreen(false) }}>Batal</Button>
               <Button
