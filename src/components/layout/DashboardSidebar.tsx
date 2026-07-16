@@ -18,6 +18,7 @@ import {
   UserCircle,
   FileStack,
   Inbox,
+  FileDown,
   type LucideIcon,
 } from 'lucide-react'
 import { useAppStore, type PageKey } from '@/lib/store'
@@ -33,11 +34,12 @@ interface SidebarItem {
   icon: LucideIcon
 }
 
-// Full admin menu - 11 items for SUPER_ADMIN & all pengurus
+// Full admin menu - 12 items for SUPER_ADMIN & all pengurus
 const ADMIN_MENU: SidebarItem[] = [
   { label: 'Dashboard', page: 'admin-dashboard', icon: LayoutDashboard },
   { label: 'Manajemen User', page: 'admin-users', icon: Users },
   { label: 'Manajemen Artikel', page: 'admin-articles', icon: FileText },
+  { label: 'Regulasi (PDF)', page: 'admin-regulasi', icon: FileDown },
   { label: 'Manajemen Member', page: 'admin-members', icon: UserCheck },
   { label: 'Manajemen Agenda', page: 'admin-agenda', icon: CalendarDays },
   { label: 'Manajemen Galeri', page: 'admin-gallery', icon: Image },

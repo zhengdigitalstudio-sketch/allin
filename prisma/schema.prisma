@@ -169,3 +169,19 @@ model Inbox {
   isRead        Boolean  @default(false)
   createdAt     DateTime @default(now())
 }
+
+model Regulasi {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  fileName      String
+  fileSize      Int?
+  pdfData       Bytes?   // PDF binary data stored in DB (max ~10MB)
+  category      String   @default("Umum") // Umum, PLN, Ketenagalistrikan, Lingkungan, dll
+  publishDate   DateTime?
+  status        String   @default("DRAFT") // DRAFT or PUBLISHED
+  downloadCount Int      @default(0)
+  uploadedBy    String   // User ID who uploaded
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

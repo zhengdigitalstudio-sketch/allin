@@ -35,6 +35,7 @@ import FAQPage from '@/components/pages/FAQPage'
 import PrivacyPolicyPage from '@/components/pages/PrivacyPolicyPage'
 import SitemapPage from '@/components/pages/SitemapPage'
 import LoginPage from '@/components/pages/LoginPage'
+import RegulasiPage from '@/components/pages/RegulasiPage'
 
 const dyn = (importFn: () => Promise<{ [key: string]: React.ComponentType }>) =>
   dynamic(importFn, { ssr: false, loading: () => <PageLoading /> })
@@ -72,6 +73,9 @@ const AdminActivityPage = dyn(
 const AdminBackupPage = dyn(
   () => import('@/components/dashboard/AdminBackupPage').then((m) => ({ default: m.AdminBackupPage })),
 )
+const AdminRegulasiPage = dyn(
+  () => import('@/components/dashboard/AdminRegulasiPage').then((m) => ({ default: m.AdminRegulasiPage })),
+)
 const MemberDashboardPage = dyn(
   () => import('@/components/dashboard/MemberDashboardPage').then((m) => ({ default: m.MemberDashboardPage })),
 )
@@ -107,6 +111,7 @@ const pageComponents: Record<PageKey, React.ComponentType> = {
   'privacy-policy': PrivacyPolicyPage,
   sitemap: SitemapPage,
   login: LoginPage,
+  regulasi: RegulasiPage,
   'admin-dashboard': AdminDashboardPage,
   'admin-members': AdminMembersPage,
   'admin-articles': AdminArticlesPage,
@@ -118,6 +123,7 @@ const pageComponents: Record<PageKey, React.ComponentType> = {
   'admin-seo': AdminSeoPage,
   'admin-activity': AdminActivityPage,
   'admin-backup': AdminBackupPage,
+  'admin-regulasi': AdminRegulasiPage,
   'member-dashboard': MemberDashboardPage,
   'member-profile': MemberProfilePage,
   'member-documents': MemberDocumentsPage,
