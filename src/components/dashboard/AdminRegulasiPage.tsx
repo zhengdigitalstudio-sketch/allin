@@ -515,11 +515,11 @@ export function AdminRegulasiPage() {
                 disabled={submitting || !form.title.trim()}
               >
                 {submitting ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Menyimpan...</>
+                  <span><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Menyimpan...</span>
                 ) : editingId ? (
-                  <>Simpan Perubahan</>
+                  <span>Simpan Perubahan</span>
                 ) : (
-                  <><Upload className="h-4 w-4 mr-2" /> Upload Regulasi</>
+                  <span><Upload className="h-4 w-4 mr-2" /> Upload Regulasi</span>
                 )}
               </Button>
             </div>
