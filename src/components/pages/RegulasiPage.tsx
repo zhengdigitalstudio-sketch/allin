@@ -33,7 +33,7 @@ function formatFileSize(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
-export function RegulasiPage() {
+export default function RegulasiPage() {
   const [regulasiList, setRegulasiList] = useState<Regulasi[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')

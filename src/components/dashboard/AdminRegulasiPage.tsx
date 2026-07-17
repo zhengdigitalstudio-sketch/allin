@@ -515,9 +515,9 @@ export function AdminRegulasiPage() {
                 disabled={submitting || !form.title.trim()}
               >
                 {submitting ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin /> Menyimpan...</>
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Menyimpan...</>
                 ) : editingId ? (
-                  'Simpan Perubahan'
+                  <>Simpan Perubahan</>
                 ) : (
                   <><Upload className="h-4 w-4 mr-2" /> Upload Regulasi</>
                 )}
