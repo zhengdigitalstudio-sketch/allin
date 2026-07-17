@@ -50,7 +50,7 @@ export function RegulasiPage() {
       const res = await fetch('/api/regulasi?status=PUBLISHED')
       if (res.ok) {
         const data = await res.json()
-        setRegulasiArray.isArray(data) ? data : data.regulasi || [])
+        setRegulasiList(Array.isArray(data) ? data : data.regulasi || [])
       }
     } catch {
       setRegulasiList([])
