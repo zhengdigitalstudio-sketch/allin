@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Search, Plus, Pencil, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Maximize2, Minimize2, Upload, X, ImageIcon, CheckCircle2, Loader2, FileText, Download } from 'lucide-react'
+import { Search, Plus, Pencil, Trash2, Eye, EyeOff, ChevronLeft, ChevronRight, Maximize2, Minimize2, Upload, X, ImageIcon, Loader2, FileText } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
@@ -40,7 +40,6 @@ interface Article {
   metaTitle?: string
   metaDescription?: string
   isMemberOnly?: boolean
-  pdfName?: string | null
 }
 
 const ITEMS_PER_PAGE = 10
@@ -55,8 +54,6 @@ const emptyForm = {
   metaTitle: '',
   metaDescription: '',
   isMemberOnly: false,
-  pdfName: '',
-  pdfData: '',
 }
 
 type ArticleForm = typeof emptyForm
@@ -83,12 +80,10 @@ export function AdminArticlesPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<ArticleForm>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null) // NEW: Visual error feedback
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [pdfUploading, setPdfUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const pdfInputRef = useRef<HTMLInputElement>(null)
 
   const fetchArticles = useCallback(async () => {
     setLoading(true)
@@ -118,7 +113,7 @@ export function AdminArticlesPage() {
   const openCreateDialog = () => {
     setEditingId(null)
     setForm(emptyForm)
-    setSubmitError(null) // Reset error when opening dialog
+    setSubmitError(null)
     setDialogOpen(true)
   }
 
@@ -134,10 +129,8 @@ export function AdminArticlesPage() {
       metaTitle: article.metaTitle || '',
       metaDescription: article.metaDescription || '',
       isMemberOnly: article.isMemberOnly || false,
-      pdfName: (article as any).pdfName || '',
-      pdfData: '',
     })
-    setSubmitError(null) // Reset error when opening dialog
+    setSubmitError(null)
     setDialogOpen(true)
   }
 
@@ -172,36 +165,6 @@ export function AdminArticlesPage() {
     setForm((prev) => ({ ...prev, coverImage: '' }))
   }
 
-  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.type !== 'application/pdf') {
-      toast.error('Hanya file PDF yang diperbolehkan')
-      return
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Ukuran PDF maksimal 10MB')
-      return
-    }
-    setPdfUploading(true)
-    const reader = new FileReader()
-    reader.onload = () => {
-      setForm((prev) => ({ ...prev, pdfName: file.name, pdfData: reader.result as string }))
-      toast.success(`PDF "${file.name}" berhasil dipilih`)
-      setPdfUploading(false)
-    }
-    reader.onerror = () => {
-      toast.error('Gagal memproses PDF')
-      setPdfUploading(false)
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const removePdf = () => {
-    setForm((prev) => ({ ...prev, pdfName: '', pdfData: '' }))
-    if (pdfInputRef.current) pdfInputRef.current.value = ''
-  }
-
   const handleSubmit = async (submitStatus: 'DRAFT' | 'PUBLISHED') => {
     if (!form.title.trim()) {
       toast.error('Judul artikel wajib diisi')
@@ -213,23 +176,14 @@ export function AdminArticlesPage() {
       editingId,
       title: form.title,
       category: form.category,
-      hasPdf: !!form.pdfData
     })
 
     setSubmitting(true)
-    setSubmitError(null) // Clear previous error
+    setSubmitError(null)
     try {
       const url = editingId ? `/api/articles/${editingId}` : '/api/articles'
       const method = editingId ? 'PUT' : 'POST'
 
-      // PDF is now uploaded via a separate multipart endpoint after the article
-      // is saved. This avoids JSON bodySizeLimit issues when the PDF is large.
-      // We track whether a new PDF was selected (form.pdfData non-empty) and
-      // whether the user removed an existing PDF (pdfName empty + no new upload).
-      const hasNewPdf = !!form.pdfData
-      const pdfWasRemoved = editingId && !form.pdfName && !form.pdfData
-
-      // Build the JSON body WITHOUT pdfData (keep pdfName for reference).
       const body: any = {
         title: form.title,
         category: form.category,
@@ -240,13 +194,8 @@ export function AdminArticlesPage() {
         metaTitle: form.metaTitle,
         metaDescription: form.metaDescription,
         isMemberOnly: form.isMemberOnly,
-        // pdfName: keep current value so list view can show indicator.
-        // If pdfWasRemoved, send null to clear it now (the actual pdfData
-        // will be cleared via the DELETE endpoint below).
-        pdfName: pdfWasRemoved ? null : (form.pdfName || null),
       }
 
-      // For PUT, include the article id (also goes in URL but API supports both)
       if (editingId) {
         Object.assign(body, { id: editingId })
       }
@@ -260,7 +209,6 @@ export function AdminArticlesPage() {
       console.log('[handleSubmit] Response received:', { status: res.status, ok: res.ok })
 
       if (!res.ok) {
-        // Try to extract the actual server-side error message
         let serverMsg = 'Gagal menyimpan artikel'
         try {
           const errData = await res.json()
@@ -278,50 +226,12 @@ export function AdminArticlesPage() {
         }
         console.error('[Submit Error]', { status: res.status, message: serverMsg })
         toast.error(serverMsg)
-        setSubmitError(serverMsg) // NEW: Set visual error
-        // FIX: Reset submitting state so button can be clicked again!
+        setSubmitError(serverMsg)
         setSubmitting(false)
         return
       }
 
       const data = await res.json()
-      const savedArticleId: string = editingId || data?.article?.id
-
-      // ====== Step 2: handle PDF upload / removal via separate endpoint ======
-      if (savedArticleId) {
-        try {
-          if (hasNewPdf) {
-            // Upload new PDF via multipart (bypasses JSON bodySizeLimit)
-            const formData = new FormData()
-            // form.pdfData is a data URL: data:application/pdf;base64,XXXX
-            // Convert back to a File object
-            const dataUrlMatch = form.pdfData.match(/^data:application\/pdf;base64,(.+)$/)
-            if (dataUrlMatch) {
-              const byteString = atob(dataUrlMatch[1])
-              const bytes = new Uint8Array(byteString.length)
-              for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i)
-              const file = new File([bytes], form.pdfName || 'document.pdf', { type: 'application/pdf' })
-              formData.append('file', file)
-
-              const pdfRes = await fetch(`/api/articles/${savedArticleId}/pdf`, {
-                method: 'POST',
-                body: formData,
-              })
-              if (!pdfRes.ok) {
-                const errPdf = await pdfRes.json().catch(() => ({}))
-                toast.error(`Artikel tersimpan, tapi PDF gagal diunggah: ${errPdf.error || pdfRes.statusText}`)
-                // Still consider the article save successful — don't return
-              }
-            }
-          } else if (pdfWasRemoved) {
-            // Delete existing PDF
-            await fetch(`/api/articles/${savedArticleId}/pdf`, { method: 'DELETE' })
-          }
-        } catch (pdfErr) {
-          console.error('PDF upload error:', pdfErr)
-          toast.error('Artikel tersimpan, tapi PDF gagal diunggah. Coba edit lagi untuk upload PDF.')
-        }
-      }
 
       if (submitStatus === 'PUBLISHED') {
         toast.success(editingId ? 'Artikel berhasil dipublikasi' : 'Artikel berhasil dipublikasi')
@@ -335,18 +245,23 @@ export function AdminArticlesPage() {
       console.error('Submit error:', err)
       const errMsg = err instanceof Error ? err.message : 'Gagal menyimpan artikel. Periksa koneksi internet lalu coba lagi.'
       toast.error(errMsg)
-      setSubmitError(errMsg) // NEW: Set visual error
+      setSubmitError(errMsg)
     } finally {
       setSubmitting(false)
     }
   }
 
   const handleDelete = async (id: string) => {
+    if (!confirm('Yakin ingin menghapus artikel ini?')) return
+    
     try {
       const res = await fetch(`/api/articles/${id}`, { method: 'DELETE' })
       if (res.ok) {
         toast.success('Artikel berhasil dihapus')
         fetchArticles()
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        toast.error(errData.error || 'Gagal menghapus artikel')
       }
     } catch {
       toast.error('Gagal menghapus artikel')
@@ -364,11 +279,20 @@ export function AdminArticlesPage() {
       if (res.ok) {
         toast.success(newStatus === 'PUBLISHED' ? 'Artikel dipublikasi' : 'Artikel dijadikan draft')
         fetchArticles()
+      } else {
+        toast.error('Gagal mengubah status artikel')
       }
     } catch {
       toast.error('Gagal mengubah status artikel')
     }
   }
+
+  // Pagination
+  const totalPages = Math.ceil(articles.length / ITEMS_PER_PAGE) || 1
+  const paginatedArticles = articles.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
+  )
 
   return (
     <div className="space-y-6">
@@ -409,420 +333,262 @@ export function AdminArticlesPage() {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1) }}>
-              <SelectTrigger className="w-full sm:w-[160px]">
+              <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="SEMUA">Semua Status</SelectItem>
-                <SelectItem value="DRAFT">Draft</SelectItem>
                 <SelectItem value="PUBLISHED">Dipublikasi</SelectItem>
+                <SelectItem value="DRAFT">Draft</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Mobile Card List */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-        <div className="md:hidden space-y-3">
+      {/* Articles Table */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-0">
           {loading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <Card key={i} className="border-0 shadow-sm"><CardContent className="p-4 space-y-3">
-                <Skeleton className="h-5 w-3/4" />
-                <div className="flex gap-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-5 w-12" /></div>
-                <Skeleton className="h-8 w-full" />
-              </CardContent></Card>
-            ))
+            <div className="space-y-3 p-4">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-lg" />
+              ))}
+            </div>
           ) : articles.length === 0 ? (
-            <Card className="border-0 shadow-sm"><CardContent className="p-12 text-center text-muted-foreground">
-              Tidak ada artikel ditemukan.
-            </CardContent></Card>
+            <div className="text-center py-12 text-muted-foreground">
+              <FileText className="h-12 w-12 mx-auto mb-3 opacity-30" />
+              <p>Tidak ada artikel ditemukan.</p>
+            </div>
           ) : (
-            articles.map((article) => (
-              <Card key={article.id} className="border-0 shadow-sm">
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium leading-snug flex-1">{article.title}</p>
-                    {getStatusBadge(article.status)}
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
-                    <span>{new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                    <span>{article.viewCount ?? 0} views</span>
-                  </div>
-                  <div className="flex items-center gap-2 pt-1 border-t">
-                    <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5" onClick={() => openEditDialog(article)}>
-                      <Pencil className="h-3.5 w-3.5" /> Edit
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1.5" onClick={() => handleTogglePublish(article)}>
-                      {article.status === 'PUBLISHED' ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                      {article.status === 'PUBLISHED' ? 'Draft' : 'Publikasi'}
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200 gap-1.5" onClick={() => handleDelete(article.id)}>
-                      <Trash2 className="h-3.5 w-3.5" /> Hapus
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-          {/* Mobile Pagination */}
-          {!loading && articles.length > 0 && (
-            <div className="flex items-center justify-between pt-2">
-              <p className="text-xs text-muted-foreground">
-                {articles.length} artikel
-              </p>
-              <div className="flex items-center gap-1">
-                <Button size="icon" variant="outline" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="px-3 text-sm font-medium">{page}</span>
-                <Button size="icon" variant="outline" className="h-8 w-8" disabled={articles.length < ITEMS_PER_PAGE} onClick={() => setPage(page + 1)}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>No</TableHead>
+                    <TableHead>Judul</TableHead>
+                    <TableHead>Kategori</TableHead>
+                    <TableHead>Penulis</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Views</TableHead>
+                    <TableHead>Tanggal</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedArticles.map((article, index) => (
+                    <TableRow key={article.id} className="group">
+                      <TableCell className="font-medium text-muted-foreground">
+                        {(page - 1) * ITEMS_PER_PAGE + index + 1}
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-[250px]">
+                          <p className="font-medium line-clamp-1">{article.title}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{article.category}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm">
+                          {typeof article.author === 'string' ? article.author : article.author?.name || '-'}
+                        </span>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(article.status)}</TableCell>
+                      <TableCell className="text-muted-foreground">{article.viewCount}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {new Date(article.createdAt).toLocaleDateString('id-ID')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="sm" onClick={() => handleTogglePublish(article)}>
+                            {article.status === 'PUBLISHED' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => openEditDialog(article)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600" onClick={() => handleDelete(article.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
 
-        {/* Desktop Table */}
-        <Card className="border-0 shadow-sm overflow-hidden hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="text-xs w-10">No</TableHead>
-                <TableHead className="text-xs">Judul</TableHead>
-                <TableHead className="text-xs">Kategori</TableHead>
-                <TableHead className="text-xs">Penulis</TableHead>
-                <TableHead className="text-xs">Status</TableHead>
-                <TableHead className="text-xs">Views</TableHead>
-                <TableHead className="text-xs">Tanggal</TableHead>
-                <TableHead className="text-xs text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    {Array.from({ length: 8 }).map((_, j) => (
-                      <TableCell key={j}><Skeleton className="h-5 w-full" /></TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : articles.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
-                    Tidak ada artikel ditemukan.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                articles.map((article, idx) => (
-                  <TableRow key={article.id} className="hover:bg-muted/30">
-                    <TableCell className="text-xs text-muted-foreground">{(page - 1) * ITEMS_PER_PAGE + idx + 1}</TableCell>
-                    <TableCell className="text-sm font-medium max-w-[250px] truncate">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate">{article.title}</span>
-                        {(article as any).pdfName && (
-                          <Badge className="bg-red-100 text-red-700 border-red-200 text-[9px] font-bold shrink-0 flex items-center gap-1">
-                            <FileText className="w-3 h-3" />
-                            PDF
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      <Badge variant="outline" className="text-[10px]">{article.category}</Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{typeof article.author === 'string' ? article.author : article.author?.name || '-'}</TableCell>
-                    <TableCell>{getStatusBadge(article.status)}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{article.viewCount ?? 0}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {new Date(article.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEditDialog(article)} title="Edit">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handleTogglePublish(article)} title={article.status === 'PUBLISHED' ? 'Jadikan Draft' : 'Publikasi'}>
-                          {article.status === 'PUBLISHED' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(article.id)} title="Hapus">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                        {(article as any).pdfName && (
-                          <a
-                            href={`/api/articles/${article.id}/pdf?download=true`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title={`Unduh ${(article as any).pdfName}`}
-                            className="inline-flex items-center justify-center h-8 w-8 rounded-md text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Download className="h-4 w-4" />
-                          </a>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    Menampilkan {(page - 1) * ITEMS_PER_PAGE + 1}-{Math.min(page * ITEMS_PER_PAGE, articles.length)} dari {articles.length} artikel
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm">Halaman {page} dari {totalPages}</span>
+                    <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               )}
-            </TableBody>
-          </Table>
-          {/* Desktop Pagination */}
-          {!loading && articles.length > 0 && (
-            <div className="flex items-center justify-between p-4 border-t">
-              <p className="text-xs text-muted-foreground">
-                Menampilkan {(page - 1) * ITEMS_PER_PAGE + 1} - {Math.min(page * ITEMS_PER_PAGE, articles.length)} dari {articles.length}
-              </p>
-              <div className="flex items-center gap-1">
-                <Button size="icon" variant="outline" className="h-8 w-8" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="px-3 text-sm font-medium">{page}</span>
-                <Button size="icon" variant="outline" className="h-8 w-8" disabled={articles.length < ITEMS_PER_PAGE} onClick={() => setPage(page + 1)}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+            </>
           )}
-        </Card>
-      </motion.div>
+        </CardContent>
+      </Card>
 
       {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen && !isFullscreen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setIsFullscreen(false) }}>
-        <DialogContent
-          className="max-w-2xl max-h-[85vh] overflow-y-auto"
-          onInteractOutside={(e) => { if (isFullscreen) e.preventDefault() }}
-          onEscapeKeyDown={(e) => { if (isFullscreen) e.preventDefault() }}
-        >
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setIsFullscreen(false) }}>
+        <DialogContent className={cn("max-w-2xl max-h-[90vh] overflow-y-auto", isFullscreen && "max-w-full max-h-full")}>
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Artikel' : 'Buat Artikel Baru'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-2">
+
+          <div className="space-y-4 mt-2">
+            {/* Title */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Judul</Label>
+              <Label htmlFor="title">Judul</Label>
               <Input
-                placeholder="Masukkan judul artikel"
+                id="title"
+                placeholder="Masukkan judul artikel..."
                 value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
+                disabled={submitting}
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Kategori</Label>
-              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ARTICLE_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+            {/* Category & Status Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Kategori</Label>
+                <Select value={form.category} onValueChange={(v) => setForm(prev => ({ ...prev, category: v }))} disabled={submitting}>
+                  <SelectTrigger id="category">
+                    <SelectValue placeholder="Pilih kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ARTICLE_CATEGORIES.map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Visibility</Label>
+                <div className="flex items-center space-x-6 pt-2">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <Checkbox
+                      checked={form.isMemberOnly}
+                      onCheckedChange={(checked) => setForm(prev => ({ ...prev, isMemberOnly: !!checked }))}
+                      disabled={submitting}
+                    />
+                    <span className="text-sm">Khusus Anggota</span>
+                  </label>
+                </div>
+              </div>
             </div>
-            {/* Status selector removed — use the Publikasikan / Simpan Draft buttons below */}
+
+            {/* Excerpt */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Ringkasan</Label>
+              <Label htmlFor="excerpt">Ringkasan</Label>
               <Textarea
-                placeholder="Tulis ringkasan singkat artikel..."
-                rows={3}
+                id="excerpt"
+                placeholder="Ringkasan singkat artikel..."
                 value={form.excerpt}
-                onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+                onChange={(e) => setForm(prev => ({ ...prev, excerpt: e.target.value }))}
+                rows={2}
+                disabled={submitting}
               />
             </div>
+
+            {/* Content */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">
-                  Konten
-                  {form.category === 'Regulasi' && (
-                    <span className="ml-2 text-xs font-normal text-amber-600">
-                      (Opsional untuk Regulasi — cukup upload PDF di bawah)
-                    </span>
-                  )}
-                </Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs gap-1.5 text-muted-foreground"
-                  onClick={(e) => { e.stopPropagation(); setIsFullscreen(true) }}
-                >
-                  <Maximize2 className="h-3.5 w-3.5" />
-                  Fullscreen
-                </Button>
+                <Label htmlFor="content">Konten</Label>
+                {!isFullscreen && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setIsFullscreen(true)}>
+                    <Maximize2 className="h-4 w-4 mr-1" /> Fullscreen
+                  </Button>
+                )}
               </div>
               <Textarea
-                placeholder={form.category === 'Regulasi'
-                  ? 'Opsional untuk Regulasi — biarkan kosong jika hanya ingin menampilkan tombol download PDF...'
-                  : 'Tulis konten lengkap artikel...'}
-                rows={form.category === 'Regulasi' ? 4 : 8}
+                id="content"
+                placeholder="Tulis konten artikel di sini (mendukung HTML)..."
                 value={form.content}
-                onChange={(e) => setForm({ ...form, content: e.target.value })}
-                className={cn('resize-y min-h-[120px]', form.category === 'Regulasi' && 'min-h-[100px]')}
+                onChange={(e) => setForm(prev => ({ ...prev, content: e.target.value }))}
+                rows={8}
+                disabled={submitting}
+                className={cn(isFullscreen && "min-h-[50vh]")}
               />
             </div>
+
+            {/* Cover Image Upload */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Gambar Cover</Label>
-              <div className="space-y-3">
-                {form.coverImage ? (
-                  <div className="relative rounded-lg overflow-hidden border-2 border-green-500/50 bg-green-50 dark:bg-green-950/20">
-                    <img
-                      src={form.coverImage}
-                      alt="Cover preview"
-                      className="w-full h-40 object-cover"
-                    />
-                    <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-green-600 text-white text-xs font-medium px-2.5 py-1 rounded-full shadow-md">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      Gambar terupload
-                    </div>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2 h-7 w-7 rounded-full shadow-md"
-                      onClick={removeImage}
-                    >
-                      <X className="h-3.5 w-3.5" />
+              <Label>Gambar Cover</Label>
+              {form.coverImage ? (
+                <div className="relative group rounded-lg overflow-hidden border">
+                  <img src={form.coverImage} alt="Cover" className="w-full h-48 object-cover" />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button type="button" variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
+                      Ganti
+                    </Button>
+                    <Button type="button" variant="destructive" size="sm" onClick={removeImage}>
+                      Hapus
                     </Button>
                   </div>
-                ) : (
-                  <div
-                    className={cn(
-                      'flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 cursor-pointer transition-colors',
-                      uploading
-                        ? 'border-allin-green/50 bg-allin-green/5 pointer-events-none'
-                        : 'border-muted-foreground/25 hover:border-allin-green/50 hover:bg-muted/50'
-                    )}
-                    onClick={() => !uploading && fileInputRef.current?.click()}
-                  >
-                    {uploading ? (
-                      <Loader2 className="h-8 w-8 text-allin-green animate-spin" />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                    )}
-                    <p className="text-sm text-muted-foreground">
-                      {uploading ? 'Mengupload...' : 'Ketuk untuk upload gambar'}
-                    </p>
-                    <p className="text-xs font-medium text-muted-foreground">Maks. 5MB — JPG, PNG, GIF, WebP</p>
-                  </div>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  className="absolute w-px h-px p-0 -m-px overflow-hidden clip-[rect(0,0,0,0)] whitespace-nowrap border-0"
-                  onChange={handleImageUpload}
-                />
-                {form.coverImage && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs gap-1.5"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                  >
-                    <Upload className="h-3.5 w-3.5" />
-                    Ganti Gambar
-                  </Button>
-                )}
-              </div>
-            </div>
-            {/* Upload PDF / Lampiran */}
-            <div className="space-y-2">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <Label className="text-sm font-medium">Lampiran PDF</Label>
-                {form.category === 'Regulasi' && (
-                  <Badge className="bg-red-100 text-red-700 border-red-200 text-[10px] self-start sm:self-auto whitespace-normal break-words max-w-full sm:max-w-[200px]">
-                    ✨ Rekomendasi: Upload PDF Regulasi
-                  </Badge>
-                )}
-              </div>
-              {form.category === 'Regulasi' && !form.pdfName && (
-                <p className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-md px-3 py-2">
-                  💡 Untuk kategori <strong>Regulasi</strong>, sangat disarankan upload file PDF dokumen regulasi resmi agar bisa diunduh oleh pembaca.
-                </p>
-              )}
-              {form.pdfName ? (
-                <div className="flex items-center justify-between gap-3 rounded-lg border border-green-500/50 bg-green-50 dark:bg-green-950/20 p-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-100">
-                      <FileText className="h-4.5 w-4.5 text-red-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{form.pdfName}</p>
-                      <p className="text-xs text-muted-foreground">PDF terupload</p>
-                    </div>
-                  </div>
-                  <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0" onClick={removePdf}>
-                    <X className="h-4 w-4" />
-                  </Button>
                 </div>
               ) : (
                 <div
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg border-2 border-dashed p-4 cursor-pointer transition-colors',
-                    pdfUploading
-                      ? 'border-allin-green/50 bg-allin-green/5 pointer-events-none'
-                      : 'border-muted-foreground/25 hover:border-red-400/50 hover:bg-muted/50'
-                  )}
-                  onClick={() => !pdfUploading && pdfInputRef.current?.click()}
+                  className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={() => !uploading && fileInputRef.current?.click()}
                 >
-                  {pdfUploading ? (
-                    <Loader2 className="h-6 w-6 text-allin-green animate-spin shrink-0" />
+                  {uploading ? (
+                    <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
                   ) : (
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <Upload className="h-4 w-4 text-muted-foreground" />
-                    </div>
+                    <ImageIcon className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
                   )}
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      {pdfUploading ? 'Memproses PDF...' : 'Ketuk untuk upload PDF'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Maks. 10MB — khusus file .pdf</p>
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {uploading ? 'Memproses...' : 'Ketuk untuk upload gambar'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Maks. 5MB — JPG, PNG, GIF, WebP</p>
                 </div>
               )}
               <input
-                ref={pdfInputRef}
+                ref={fileInputRef}
                 type="file"
-                accept="application/pdf"
-                className="absolute w-px h-px p-0 -m-px overflow-hidden clip-[rect(0,0,0,0)] whitespace-nowrap border-0"
-                onChange={handlePdfUpload}
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
               />
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
+
+            {/* SEO Fields */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Meta Title (SEO)</Label>
+                <Label htmlFor="metaTitle">Meta Title (SEO)</Label>
                 <Input
-                  placeholder="Meta title untuk SEO"
+                  id="metaTitle"
+                  placeholder="Meta title..."
                   value={form.metaTitle}
-                  onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
+                  onChange={(e) => setForm(prev => ({ ...prev, metaTitle: e.target.value }))}
+                  disabled={submitting}
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Meta Description (SEO)</Label>
+                <Label htmlFor="metaDesc">Meta Description (SEO)</Label>
                 <Input
-                  placeholder="Meta description untuk SEO"
+                  id="metaDesc"
+                  placeholder="Meta description..."
                   value={form.metaDescription}
-                  onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
+                  onChange={(e) => setForm(prev => ({ ...prev, metaDescription: e.target.value }))}
+                  disabled={submitting}
                 />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="memberOnly"
-                checked={form.isMemberOnly}
-                onCheckedChange={(checked) => setForm({ ...form, isMemberOnly: !!checked })}
-              />
-              <Label htmlFor="memberOnly" className="text-sm font-medium cursor-pointer">
-                Khusus Anggota
-              </Label>
-            </div>
-            {/* Visual Error Display - shows when submit fails */}
+
+            {/* Error Display */}
             {submitError && (
               <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm text-red-700 font-medium flex items-start gap-2">
@@ -837,8 +603,12 @@ export function AdminArticlesPage() {
                 </button>
               </div>
             )}
+
+            {/* Action Buttons */}
             <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button variant="outline" onClick={() => { setDialogOpen(false); setIsFullscreen(false) }}>Batal</Button>
+              <Button variant="outline" onClick={() => { setDialogOpen(false); setIsFullscreen(false) }} disabled={submitting}>
+                Batal
+              </Button>
               <Button
                 variant="outline"
                 className="border-gray-300 text-gray-600 hover:bg-gray-100"
@@ -859,7 +629,7 @@ export function AdminArticlesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Fullscreen Content Editor Overlay */}
+      {/* Fullscreen Editor Overlay */}
       <AnimatePresence>
         {isFullscreen && (
           <motion.div
@@ -869,44 +639,30 @@ export function AdminArticlesPage() {
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[100] bg-background flex flex-col"
           >
-            {/* Fullscreen Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
               <div className="flex items-center gap-2 min-w-0">
-                <button
-                  type="button"
-                  className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted transition-colors shrink-0"
-                  onClick={(e) => { e.stopPropagation(); setIsFullscreen(false) }}
-                >
+                <Button variant="ghost" size="sm" onClick={() => setIsFullscreen(false)}>
                   <Minimize2 className="h-4 w-4" />
-                </button>
-                <h3 className="text-sm font-semibold truncate">Edit Konten</h3>
-                <Badge variant="outline" className="text-[10px] shrink-0 hidden sm:inline-flex">{form.title || 'Tanpa judul'}</Badge>
+                </Button>
+                <span className="font-medium truncate">Editor Konten</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => handleSubmit('DRAFT')} disabled={submitting || !form.title.trim()}>
+                  Simpan Draft
+                </Button>
+                <Button size="sm" onClick={() => handleSubmit('PUBLISHED')} disabled={submitting || !form.title.trim()}>
+                  {submitting ? 'Mempublikasi...' : 'Publikasikan'}
+                </Button>
               </div>
             </div>
-            {/* Fullscreen Textarea */}
-            <div className="flex-1 p-3 sm:p-4 overflow-hidden">
-              <textarea
+            <div className="flex-1 p-4 overflow-auto">
+              <Textarea
+                placeholder="Tulis konten artikel di sini..."
                 value={form.content}
-                onChange={(e) => setForm({ ...form, content: e.target.value })}
-                placeholder="Tulis konten lengkap artikel di sini..."
-                className="h-full w-full resize-none text-base sm:text-lg leading-relaxed rounded-lg border-0 outline-none bg-transparent p-0"
-                autoFocus
-                onClick={(e) => e.stopPropagation()}
-                onPointerDown={(e) => e.stopPropagation()}
+                onChange={(e) => setForm(prev => ({ ...prev, content: e.target.value }))}
+                className="min-h-full resize-none border-none shadow-none focus-visible:ring-0 text-base leading-relaxed"
+                disabled={submitting}
               />
-            </div>
-            {/* Fullscreen Footer */}
-            <div className="flex items-center justify-between px-4 py-3 border-t shrink-0 bg-muted/30">
-              <p className="text-xs text-muted-foreground">
-                {form.content.length} karakter
-              </p>
-              <Button
-                className="bg-green-700 hover:bg-green-800 text-white h-9 text-sm"
-                onClick={(e) => { e.stopPropagation(); setIsFullscreen(false) }}
-              >
-                <Minimize2 className="h-3.5 w-3.5 mr-1.5" />
-                Selesai
-              </Button>
             </div>
           </motion.div>
         )}

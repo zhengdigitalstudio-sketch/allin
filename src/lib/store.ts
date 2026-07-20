@@ -19,6 +19,7 @@ export type PageKey =
   | 'admin-dashboard'
   | 'admin-members'
   | 'admin-articles'
+  | 'admin-regulasi'
   | 'admin-agenda'
   | 'admin-gallery'
   | 'admin-contacts'
@@ -55,6 +56,7 @@ const PAGE_URLS: Record<PageKey, string> = {
   'admin-dashboard': '/dashboard',
   'admin-members': '/dashboard/anggota',
   'admin-articles': '/dashboard/artikel',
+  'admin-regulasi': '/dashboard/regulasi',
   'admin-agenda': '/dashboard/agenda',
   'admin-gallery': '/dashboard/galeri',
   'admin-contacts': '/dashboard/kontak',

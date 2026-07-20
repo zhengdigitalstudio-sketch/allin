@@ -17,8 +17,6 @@ import {
   ArrowLeft,
   ArrowRight,
   X,
-  FileText,
-  Download,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -34,7 +32,6 @@ interface Article {
   viewCount: number
   author: { name: string } | null
   createdAt: string
-  pdfName?: string | null
 }
 
 interface CategoryCount {
@@ -241,17 +238,9 @@ export default function ArtikelPage() {
                             </div>
                             {/* Content */}
                             <CardContent className="p-4 sm:p-5 flex-1 min-w-0">
-                              <div className="flex items-start gap-2 mb-1.5">
-                                <h3 className="font-bold text-base line-clamp-2 group-hover:text-allin-green transition-colors flex-1">
-                                  {article.title}
-                                </h3>
-                                {article.pdfName && (
-                                  <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white border-red-300 text-[10px] font-bold shrink-0 flex items-center gap-1 shadow-sm">
-                                    <FileText className="w-3 h-3" />
-                                    PDF
-                                  </Badge>
-                                )}
-                              </div>
+                              <h3 className="font-bold text-base line-clamp-2 group-hover:text-allin-green transition-colors mb-1.5">
+                                {article.title}
+                              </h3>
                               <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
                                 {article.excerpt || 'Artikel terbaru dari ALLIN mengenai perkembangan industri ketenagalistrikan nasional.'}
                               </p>
@@ -263,25 +252,10 @@ export default function ArtikelPage() {
                                   </span>
                                   <span>{format(new Date(article.createdAt), 'dd MMM yyyy', { locale: localeId })}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  {article.pdfName && (
-                                    <a
-                                      href={`/api/articles/${article.id}/pdf?download=true`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs transition-all shadow-sm hover:shadow-md"
-                                      title={`Unduh ${article.pdfName}`}
-                                    >
-                                      <Download className="w-3.5 h-3.5" />
-                                      Unduh PDF
-                                    </a>
-                                  )}
-                                  <span className="flex items-center gap-1">
-                                    <Eye className="w-3 h-3" />
-                                    {article.viewCount}
-                                  </span>
-                                </div>
+                                <span className="flex items-center gap-1">
+                                  <Eye className="w-3 h-3" />
+                                  {article.viewCount}
+                                </span>
                               </div>
                             </CardContent>
                           </div>
