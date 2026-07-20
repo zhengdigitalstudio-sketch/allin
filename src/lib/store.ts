@@ -15,6 +15,7 @@ export type PageKey =
   | 'privacy-policy'
   | 'sitemap'
   | 'login'
+  | 'regulasi'
   | 'admin-dashboard'
   | 'admin-members'
   | 'admin-articles'
@@ -26,6 +27,7 @@ export type PageKey =
   | 'admin-seo'
   | 'admin-activity'
   | 'admin-backup'
+  | 'admin-regulasi'
   | 'member-dashboard'
   | 'member-profile'
   | 'member-documents'
@@ -49,6 +51,7 @@ const PAGE_URLS: Record<PageKey, string> = {
   'privacy-policy': '/privacy-policy',
   'sitemap': '/sitemap',
   'login': '/login',
+  'regulasi': '/regulasi',
   'admin-dashboard': '/dashboard',
   'admin-members': '/dashboard/anggota',
   'admin-articles': '/dashboard/artikel',
@@ -60,6 +63,7 @@ const PAGE_URLS: Record<PageKey, string> = {
   'admin-seo': '/dashboard/seo',
   'admin-activity': '/dashboard/aktivitas',
   'admin-backup': '/dashboard/backup',
+  'admin-regulasi': '/dashboard/regulasi',
   'member-dashboard': '/dashboard',
   'member-profile': '/dashboard/profil',
   'member-documents': '/dashboard/dokumen',

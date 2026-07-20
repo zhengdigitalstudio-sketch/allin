@@ -24,6 +24,7 @@ model User {
 
   articles      Article[]
   activityLogs  ActivityLog[]
+  regulasi      Regulasi[]
   member        Member?
 }
 
@@ -168,4 +169,22 @@ model Inbox {
   receiverId    String
   isRead        Boolean  @default(false)
   createdAt     DateTime @default(now())
+}
+
+model Regulasi {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  category      String   @default("Umum")
+  fileName      String
+  fileData      String   @db.Text
+  fileSize      Int
+  mimeType      String   @default("application/pdf")
+  status        String   @default("PUBLISHED")
+  isForMemberOnly Boolean @default(false)
+  downloadCount Int      @default(0)
+  authorId      String
+  author        User     @relation(fields: [authorId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
