@@ -1,49 +1,27 @@
-import { getSession, PENGURUS_ROLES } from '@/lib/auth'
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { PENGURUS_ROLES } from '@/lib/auth';
 
-export const dynamic = 'force-dynamic'
-// Allow large payloads for PDF uploads (base64 encoded)
-export const bodySizeLimit = '50mb'
-
-// GET - List all regulasi (public) or with filters
+// GET - List all published regulasi (public)
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const category = searchParams.get('category')
-    const search = searchParams.get('search')
-    const status = searchParams.get('status')
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search') || '';
+    const category = searchParams.get('category') || '';
 
-    // Check if user is authenticated (for member-only content)
-    const session = await getSession(request)
-    const isAuthenticated = !!session
+    const where: any = {
+      status: 'PUBLISHED',
+    };
 
-    const where: any = {}
-
-    // Filter by status
-    if (status && status !== 'ALL') {
-      where.status = status
-    } else {
-      where.status = 'PUBLISHED' // Default show only published
-    }
-
-    // Filter by category
-    if (category && category !== 'SEMUA') {
-      where.category = category
-    }
-
-    // Search filter
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
-      ]
+      ];
     }
 
-    // For non-authenticated users, hide member-only content
-    // For authenticated users, show all (both public and member-only)
-    if (!isAuthenticated) {
-      where.isForMemberOnly = false
+    if (category && category !== 'Semua') {
+      where.category = category;
     }
 
     const regulasiList = await db.regulasi.findMany({
@@ -57,115 +35,145 @@ export async function GET(request: NextRequest) {
         fileName: true,
         fileSize: true,
         mimeType: true,
-        status: true,
-        isForMemberOnly: true,
         downloadCount: true,
+        isMemberOnly: true,
         createdAt: true,
-        updatedAt: true,
         author: {
-          select: { id: true, name: true }
-        }
-      }
-    })
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
 
-    return NextResponse.json({
-      regulasi: regulasiList.map(r => ({
-        ...r,
-        createdAt: r.createdAt.toISOString(),
-        updatedAt: r.updatedAt.toISOString(),
-        // Don't send fileData in list
-        fileData: undefined
-      })),
-      isAuthenticated // Let frontend know if user can see member-only items
-    })
-  } catch (error: unknown) {
-    console.error('[regulasi GET] Error:', error)
-    return NextResponse.json({ error: 'Gagal mengambil data regulasi' }, { status: 500 })
+    return NextResponse.json(regulasiList);
+  } catch (error) {
+    console.error('Error fetching regulasi:', error);
+    return NextResponse.json(
+      { error: 'Gagal mengambil data regulasi' },
+      { status: 500 }
+    );
   }
 }
 
 // POST - Create new regulasi (admin only)
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession(request)
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Check authentication
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
-    const userRole = session?.role || ''
-    if (!PENGURUS_ROLES.includes(userRole)) {
-      return NextResponse.json({ error: 'Forbidden - Hanya admin yang bisa membuat regulasi' }, { status: 403 })
+    const token = authHeader.substring(7);
+    let user;
+    
+    try {
+      const { verifyToken } = await import('@/lib/auth');
+      user = verifyToken(token);
+    } catch {
+      return NextResponse.json(
+        { error: 'Token tidak valid' },
+        { status: 401 }
+      );
     }
 
-    const body = await request.json()
-    const { title, description, category, fileName, fileData, fileSize, mimeType, status, isForMemberOnly } = body
+    // Check role
+    if (!PENGURUS_ROLES.includes(user.role)) {
+      return NextResponse.json(
+        { error: 'Hanya pengurus yang bisa membuat regulasi' },
+        { status: 403 }
+      );
+    }
 
-    console.log('[regulasi POST] creating:', {
-      title,
-      fileName,
-      fileSize,
-      hasFileData: !!fileData,
-      fileDataLength: fileData?.length || 0,
-      isForMemberOnly,
-    })
+    // Parse form data or JSON
+    const contentType = request.headers.get('content-type') || '';
+    
+    let title, description, category, fileName, fileData, fileSize, mimeType, isMemberOnly, status;
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      title = formData.get('title') as string;
+      description = formData.get('description') as string;
+      category = formData.get('category') as string;
+      fileName = formData.get('fileName') as string;
+      fileData = formData.get('fileData') as string;
+      fileSize = parseInt(formData.get('fileSize') as string || '0');
+      mimeType = formData.get('mimeType') as string || 'application/pdf';
+      isMemberOnly = formData.get('isMemberOnly') === 'true';
+      status = formData.get('status') as string || 'PUBLISHED';
+    } else {
+      const body = await request.json();
+      title = body.title;
+      description = body.description;
+      category = body.category;
+      fileName = body.fileName;
+      fileData = body.fileData;
+      fileSize = body.fileSize;
+      mimeType = body.mimeType || 'application/pdf';
+      isMemberOnly = body.isMemberOnly || false;
+      status = body.status || 'PUBLISHED';
+    }
 
     // Validation
-    if (!title || !title.trim()) {
-      return NextResponse.json({ error: 'Judul dokumen wajib diisi' }, { status: 400 })
-    }
-    if (!fileName || !fileName.trim()) {
-      return NextResponse.json({ error: 'Nama file wajib diisi' }, { status: 400 })
-    }
-    if (!fileData || !fileData.trim()) {
-      return NextResponse.json({ error: 'File PDF wajib diupload' }, { status: 400 })
+    if (!title || !fileName || !fileData) {
+      return NextResponse.json(
+        { error: 'Title, fileName, dan fileData wajib diisi' },
+        { status: 400 }
+      );
     }
 
+    // Check file size (max 50MB for base64 encoded)
+    if (fileSize > 50 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: 'Ukuran file terlalu besar. Maksimal 50MB' },
+        { status: 400 }
+      );
+    }
+
+    // Create regulasi
     const regulasi = await db.regulasi.create({
       data: {
-        title: title.trim(),
-        description: description?.trim() || null,
+        title,
+        description: description || '',
         category: category || 'Umum',
-        fileName: fileName.trim(),
-        fileData: fileData,
-        fileSize: fileSize || 0,
-        mimeType: mimeType || 'application/pdf',
-        status: status || 'PUBLISHED',
-        isForMemberOnly: isForMemberOnly || false,
-        authorId: session.id,
+        fileName,
+        fileData,
+        fileSize,
+        mimeType,
+        isMemberOnly,
+        status,
+        authorId: user.id,
       },
-      select: {
-        id: true,
-        title: true,
-        fileName: true,
-        isForMemberOnly: true,
-        createdAt: true,
-      }
-    })
-
-    console.log('[regulasi POST] Success created:', regulasi.id)
+    });
 
     return NextResponse.json({
-      success: true,
+      message: 'Regulasi berhasil dibuat',
       regulasi: {
-        ...regulasi,
-        createdAt: regulasi.createdAt.toISOString()
-      }
-    }, { status: 201 })
-  } catch (error: unknown) {
-    console.error('[regulasi POST] Error:', error)
-    
-    let errorMessage = 'Gagal membuat regulasi'
-    if (error && typeof error === 'object') {
-      const err = error as any
-      if (err.message?.includes('too large') || err.message?.includes('size')) {
-        errorMessage = 'Ukuran file terlalu besar. Maksimal 10MB.'
-      } else if (err.code === 'P2002') {
-        errorMessage = 'Data duplikat terdeteksi'
-      } else if (err.message) {
-        errorMessage = `Gagal membuat regulasi: ${err.message}`
-      }
-    }
-    
-    return NextResponse.json({ error: errorMessage }, { status: 500 })
+        id: regulasi.id,
+        title: regulasi.title,
+        fileName: regulasi.fileName,
+      },
+    });
+  } catch (error) {
+    console.error('Error creating regulasi:', error);
+    return NextResponse.json(
+      { error: 'Gagal membuat regulasi. Silakan coba lagi.' },
+      { status: 500 }
+    );
   }
 }
+
+// Configure for larger payload (PDF uploads)
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+    responseLimit: false,
+  },
+};
