@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateSignature } from '@/lib/cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 import { getSession } from '@/lib/auth';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // POST - Get Cloudinary signature for direct upload
 export async function POST(request: NextRequest) {
@@ -14,38 +21,66 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify Cloudinary config exists
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      console.error('❌ Missing Cloudinary config:', {
+        hasCloudName: !!process.env.CLOUDINARY_CLOUD_NAME,
+        hasApiKey: !!process.env.CLOUDINARY_API_KEY,
+        hasApiSecret: !!process.env.CLOUDINARY_API_SECRET,
+      });
+      return new NextResponse(
+        JSON.stringify({ error: 'Cloudinary tidak terkonfigurasi di server' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body = await request.json();
     const { folder = 'regulasi', fileName } = body;
 
+    // Generate timestamp in SECONDS (Cloudinary requirement)
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    
     // Generate unique public_id
-    const timestamp = Date.now();
     const safeFileName = (fileName || 'file').replace(/[^a-zA-Z0-9.-]/g, '_');
-    const publicId = `${folder}/${timestamp}-${safeFileName}`;
+    const publicId = `${folder}/${Date.now()}-${safeFileName}`;
 
-    // Parameters to sign
+    // Parameters to sign - MUST include timestamp!
     const paramsToSign = {
-      folder,
+      timestamp: timestamp, // CRITICAL: Must be included in params to sign
+      folder: folder,
       public_id: publicId,
       resource_type: 'raw', // For PDF files
-      type: 'upload',
-      access_mode: 'public',
     };
 
-    // Generate signature
-    const { signature, timestamp: sigTimestamp } = generateSignature(paramsToSign);
+    console.log('📝 Generating signature with params:', {
+      ...paramsToSign,
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.substring(0, 3) + '...',
+    });
+
+    // Generate signature using Cloudinary SDK
+    const signature = cloudinary.utils.api_sign_request(
+      paramsToSign,
+      process.env.CLOUDINARY_API_SECRET || ''
+    );
+
+    console.log('✅ Signature generated successfully');
 
     return new NextResponse(
       JSON.stringify({
         signature,
-        timestamp: sigTimestamp,
+        timestamp: timestamp, // Return the SAME timestamp used for signing
         cloudName: process.env.CLOUDINARY_CLOUD_NAME,
         apiKey: process.env.CLOUDINARY_API_KEY,
-        params: paramsToSign,
+        params: {
+          folder: folder,
+          public_id: publicId,
+          resource_type: 'raw',
+        },
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error('Error generating Cloudinary signature:', error);
+    console.error('❌ Error generating Cloudinary signature:', error);
     
     return new NextResponse(
       JSON.stringify({ 
