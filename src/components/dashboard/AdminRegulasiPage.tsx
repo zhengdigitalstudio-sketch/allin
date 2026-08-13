@@ -85,6 +85,9 @@ export default function AdminRegulasiPage() {
     fileName: string;
     fileSize: number;
   } | null>(null);
+  
+  // Debug/Status message state ✅ DITAMBAHKAN!
+  const [debugInfo, setDebugInfo] = useState<string>('');
 
   // Fetch regulasi list
   const fetchRegulasi = useCallback(async () => {
@@ -129,6 +132,7 @@ export default function AdminRegulasiPage() {
     setCloudinaryData(null);
     setUploadProgress(0);
     setUploading(false);
+    setDebugInfo(''); // ✅ Reset debug info
     setEditingRegulasi(null);
   };
 
