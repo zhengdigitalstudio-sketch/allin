@@ -49,7 +49,7 @@ const AdminArticlesPage = dyn(
   () => import('@/components/dashboard/AdminArticlesPage').then((m) => ({ default: m.AdminArticlesPage })),
 )
 const AdminRegulasiPage = dyn(
-  () => import('@/components/dashboard/AdminRegulasiPage').then((m) => ({ default: m.AdminRegulasiPage })),
+  () => import('@/components/dashboard/AdminRegulasiPage'),
 )
 const AdminMembersPage = dyn(
   () => import('@/components/dashboard/AdminMembersPage').then((m) => ({ default: m.AdminMembersPage })),
