@@ -127,10 +127,10 @@ export async function PUT(request: NextRequest, context: RouteParams) {
       }
 
       // Validate file size
-      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+      const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB (increased)
       if (file.size > MAX_FILE_SIZE) {
         return new NextResponse(
-          JSON.stringify({ error: `Ukuran file terlalu besar. Maksimal 10MB` }),
+          JSON.stringify({ error: `Ukuran file terlalu besar. Maksimal 20MB` }),
           { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
       }

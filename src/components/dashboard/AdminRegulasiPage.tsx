@@ -140,9 +140,9 @@ export default function AdminRegulasiPage() {
     }
 
     // Validate file size (10MB max for Cloudinary free tier)
-    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB (increased)
     if (file.size > MAX_FILE_SIZE) {
-      toast.error(`Ukuran file terlalu besar. Maksimal 10MB (file Anda: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+      toast.error(`Ukuran file terlalu besar. Maksimal 20MB (file Anda: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
       return;
     }
 
@@ -306,7 +306,7 @@ export default function AdminRegulasiPage() {
           <div className="flex-1">
             <h3 className="font-semibold text-blue-900 text-sm">Cloudinary Storage Active</h3>
             <p className="text-xs text-blue-700 mt-1">
-              File PDF disimpan di Cloudinary CDN • Maksimal 10MB per file • Download cepat dari global CDN
+              File PDF disimpan di Cloudinary CDN • Maksimal 20MB per file • Download cepat dari global CDN
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -598,7 +598,7 @@ export default function AdminRegulasiPage() {
                           Klik untuk upload PDF
                         </p>
                         <p className="text-xs text-gray-400 mt-1">
-                          Maksimal 10MB (Cloudinary)
+                          Maksimal 20MB (Cloudinary)
                         </p>
                       </label>
                     ) : (

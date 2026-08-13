@@ -132,12 +132,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (10MB max for Cloudinary free tier)
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    // Validate file size (20MB max - optimized for Cloudinary + Vercel)
+    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB (increased from 10MB)
     if (file.size > MAX_FILE_SIZE) {
       return new NextResponse(
         JSON.stringify({ 
-          error: `Ukuran file terlalu besar. Maksimal 10MB (file Anda: ${(file.size / 1024 / 1024).toFixed(2)}MB)` 
+          error: `Ukuran file terlalu besar. Maksimal 20MB (file Anda: ${(file.size / 1024 / 1024).toFixed(2)}MB)` 
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
