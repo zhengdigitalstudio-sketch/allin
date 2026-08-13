@@ -185,32 +185,46 @@ export default function AdminRegulasiPage() {
 
     try {
       setUploading(true);
-      setUploadProgress(10);
-      setDebugInfo('📤 Mengirim file ke server...');
+      setUploadProgress(5);
+      setDebugInfo('📤 Mempersiapkan file...');
 
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      setUploadProgress(30);
-      setDebugInfo('☁️ Server upload ke Cloudinary...');
+      setUploadProgress(15);
+      setDebugInfo('☁️ Mengirim ke server...');
 
+      // Timeout 60 detik untuk seluruh proses
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000);
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-      // Progress simulation
+      // Progress simulation - lebih realistis
+      let progress = 15;
       const progressInterval = setInterval(() => {
-        setUploadProgress(prev => prev >= 85 ? prev : prev + 5);
-      }, 2000);
+        if (progress < 80) {
+          progress += Math.random() * 10; // Random increment
+          setUploadProgress(Math.min(progress, 80));
+        }
+      }, 1500);
 
+      console.log('🚀 Starting upload to /api/regulasi/upload-proxy...');
+      
+      const startTime = Date.now();
+      
       const response = await fetch('/api/regulasi/upload-proxy', {
         method: 'POST',
         body: formData,
         signal: controller.signal,
       });
 
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`⏱️ Response received in ${elapsed}s`);
+
       clearInterval(progressInterval);
       clearTimeout(timeoutId);
-      setUploadProgress(90);
+      
+      setUploadProgress(85);
+      setDebugInfo(`📥 Menerima respons (${elapsed}s)...`);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -220,24 +234,40 @@ export default function AdminRegulasiPage() {
           const errJson = JSON.parse(errorText);
           errorMsg = errJson.error || errJson.details || errorMsg;
           
-          if (errorMsg.includes('tidak terkonfigurasi')) {
-            setDebugInfo(`❌ ${errorMsg}\n\n💡 Set env vars di Vercel!`);
-            throw new Error(errorMsg);
+          // Special handling
+          if (errorMsg.includes('timeout') || response.status === 504) {
+            setDebugInfo(`⏰ Upload timeout! Cloudinary lambat.\n\n💡 Coba:\n- File lebih kecil\n- Cek koneksi\n- Coba lagi nanti`);
+            throw new Error('Upload timeout (60 detik). Cloudinary tidak merespons.');
+          }
+          
+          if (response.status === 401 || errorMsg.includes('Unknown api')) {
+            setDebugInfo(`❌ API Key Error!\n\n${errorMsg}\n\n💡 Periksa credentials Cloudinary`);
+            throw new Error(`Cloudinary API Error: ${errorMsg}`);
           }
         } catch (e) {
-          if (e instanceof Error && e.message.includes('tidak terkonfigurasi')) throw e;
+          if (e instanceof Error && e.message.includes('timeout')) throw e;
+          if (e instanceof Error && e.message.includes('API Error')) throw e;
         }
         
         setDebugInfo(`❌ ${errorMsg}`);
         throw new Error(errorMsg);
       }
 
-      const result = await response.json();
+      // Parse success response
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error('Respons server tidak valid');
+      }
+
       setUploadProgress(100);
 
-      if (!result.url) throw new Error('URL tidak diterima');
+      if (!result.url) {
+        throw new Error('URL tidak diterima dari server');
+      }
 
-      setDebugInfo('✅ Upload berhasil!');
+      setDebugInfo(`✅ Upload berhasil! (${elapsed}s)`);
       console.log('✅ Upload result:', result);
 
       return {
@@ -249,10 +279,12 @@ export default function AdminRegulasiPage() {
     } catch (error: unknown) {
       const err = error as Error;
       console.error('❌ Upload error:', err);
+      
       if (err.name === 'AbortError') {
-        setDebugInfo('❌ Upload timeout');
-        throw new Error('Upload timeout. Coba lagi.');
+        setDebugInfo('⏰ Upload dibatalkan (timeout 60 detik)');
+        throw new Error('Upload terlalu lama (>60 detik). File mungkin terlalu besar atau koneksi lambat.');
       }
+      
       setDebugInfo(prev => prev || `❌ ${err.message}`);
       throw err;
     } finally {
