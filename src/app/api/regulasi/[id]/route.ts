@@ -69,7 +69,7 @@ export async function GET(request: NextRequest, context: RouteParams) {
   }
 }
 
-// PUT - Update regulasi
+// PUT - Update regulasi (JSON body with optional new file URL)
 export async function PUT(request: NextRequest, context: RouteParams) {
   try {
     const user = await getSession(request);
@@ -88,7 +88,16 @@ export async function PUT(request: NextRequest, context: RouteParams) {
     }
 
     const { id } = await context.params;
-    const formData = await request.formData();
+    
+    let body;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Gagal membaca data. Pastikan mengirim JSON valid.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Check if regulasi exists
     const existingRegulasi = await prisma.regulasi.findUnique({ where: { id } });
@@ -100,62 +109,46 @@ export async function PUT(request: NextRequest, context: RouteParams) {
     }
 
     // Extract fields
-    const title = formData.get('title') as string;
-    const description = formData.get('description') as string;
-    const category = formData.get('category') as string;
-    const isForMemberOnly = formData.get('isForMemberOnly') === 'true';
-    const status = formData.get('status') as string;
-    const file = formData.get('file') as File | null;
+    const { 
+      title, 
+      description, 
+      category, 
+      isForMemberOnly, 
+      status: regulasiStatus,
+      fileName,
+      fileUrl,
+      publicId,
+      fileSize,
+      mimeType
+    } = body;
 
     // Build update data
     const updateData: any = {};
     
-    if (title) updateData.title = title;
+    if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description || null;
-    if (category) updateData.category = category;
+    if (category !== undefined) updateData.category = category;
     if (isForMemberOnly !== undefined) updateData.isForMemberOnly = isForMemberOnly;
-    if (status) updateData.status = status;
+    if (regulasiStatus !== undefined) updateData.status = regulasiStatus;
 
-    // If new file provided, upload to Cloudinary and delete old one
-    if (file && file.size > 0) {
-      // Validate file type
-      if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
-        return new NextResponse(
-          JSON.stringify({ error: 'Hanya file PDF yang diterima' }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Validate file size
-      const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB (increased)
-      if (file.size > MAX_FILE_SIZE) {
-        return new NextResponse(
-          JSON.stringify({ error: `Ukuran file terlalu besar. Maksimal 20MB` }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Upload new file to Cloudinary
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
-      const uploadResult = await uploadPDFToCloudinary(buffer, file.name, 'regulasi');
-
+    // If new file URL provided (file re-uploaded to Cloudinary)
+    if (fileUrl && publicId) {
       // Delete old file from Cloudinary
-      if (existingRegulasi.publicId) {
+      if (existingRegulasi.publicId && existingRegulasi.publicId !== publicId) {
         try {
           await deleteFromCloudinary(existingRegulasi.publicId);
+          console.log(`🗑️ Deleted old file from Cloudinary: ${existingRegulasi.publicId}`);
         } catch (deleteError) {
           console.error('Failed to delete old file from Cloudinary:', deleteError);
         }
       }
 
       // Update file-related fields
-      updateData.fileName = file.name;
-      updateData.fileUrl = uploadResult.url;
-      updateData.fileSize = file.size;
-      updateData.mimeType = file.type || 'application/pdf';
-      updateData.publicId = uploadResult.publicId;
+      updateData.fileName = fileName || existingRegulasi.fileName;
+      updateData.fileUrl = fileUrl;
+      updateData.fileSize = fileSize || existingRegulasi.fileSize;
+      updateData.mimeType = mimeType || existingRegulasi.mimeType;
+      updateData.publicId = publicId;
     }
 
     const updatedRegulasi = await prisma.regulasi.update({

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db as prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { PENGURUS_ROLES } from '@/lib/auth';
-import { uploadPDFToCloudinary } from '@/lib/cloudinary';
+import { deleteFromCloudinary } from '@/lib/cloudinary';
 
 // GET - List all regulasi
 export async function GET(request: NextRequest) {
@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Return with proper headers to ensure JSON response
     return new NextResponse(JSON.stringify(regulasiList), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -49,7 +48,6 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error fetching regulasi:', error);
     
-    // Return proper JSON error response
     return new NextResponse(
       JSON.stringify({ 
         error: 'Gagal mengambil data regulasi',
@@ -63,7 +61,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new regulasi with Cloudinary upload
+// POST - Create new regulasi (file already uploaded to Cloudinary)
 export async function POST(request: NextRequest) {
   try {
     console.log('📝 POST /api/regulasi - Starting...');
@@ -87,27 +85,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let formData;
+    // Parse JSON body (file already uploaded to Cloudinary)
+    let body;
     try {
-      formData = await request.formData();
-      console.log('✅ FormData parsed successfully');
-    } catch (formError) {
-      console.error('❌ Failed to parse FormData:', formError);
+      body = await request.json();
+      console.log('✅ JSON body parsed successfully');
+    } catch (jsonError) {
+      console.error('❌ Failed to parse JSON:', jsonError);
       return new NextResponse(
-        JSON.stringify({ error: 'Gagal membaca data form. Pastikan mengirim multipart/form-data.' }),
+        JSON.stringify({ error: 'Gagal membaca data. Pastikan mengirim JSON valid.' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
     
     // Extract fields
-    const title = formData.get('title') as string;
-    const description = formData.get('description') as string;
-    const category = formData.get('category') as string;
-    const isForMemberOnly = formData.get('isForMemberOnly') === 'true';
-    const status = (formData.get('status') as string) || 'PUBLISHED';
-    const file = formData.get('file') as File | null;
+    const { 
+      title, 
+      description, 
+      category, 
+      isForMemberOnly = false, 
+      status: regulasiStatus = 'PUBLISHED',
+      fileName,
+      fileUrl,
+      publicId,
+      fileSize,
+      mimeType = 'application/pdf'
+    } = body;
 
-    console.log(`📄 Form data: title=${title}, hasFile=${!!file}, fileSize=${file?.size}`);
+    console.log(`📄 Data received: title=${title}, fileUrl=${!!fileUrl}, publicId=${publicId}`);
 
     // Validation
     if (!title) {
@@ -117,52 +122,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!file || file.size === 0) {
+    if (!fileUrl || !publicId) {
       return new NextResponse(
-        JSON.stringify({ error: 'File PDF wajib diunggah' }),
+        JSON.stringify({ error: 'File URL dan Public ID wajib diisi (upload ke Cloudinary dulu)' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Validate file type
-    if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Hanya file PDF yang diterima' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Validate file size (20MB max - optimized for Cloudinary + Vercel)
-    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB (increased from 10MB)
-    if (file.size > MAX_FILE_SIZE) {
-      return new NextResponse(
-        JSON.stringify({ 
-          error: `Ukuran file terlalu besar. Maksimal 20MB (file Anda: ${(file.size / 1024 / 1024).toFixed(2)}MB)` 
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Convert file to buffer for Cloudinary upload
-    console.log('📤 Converting file to buffer...');
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Upload to Cloudinary
-    let uploadResult;
-    try {
-      console.log('☁️ Uploading to Cloudinary...');
-      uploadResult = await uploadPDFToCloudinary(buffer, file.name, 'regulasi');
-      console.log(`✅ Cloudinary upload success: ${uploadResult.url}`);
-    } catch (uploadError: any) {
-      console.error('❌ Cloudinary upload error:', uploadError);
-      return new NextResponse(
-        JSON.stringify({ 
-          error: 'Gagal mengupload file ke Cloudinary', 
-          details: uploadError?.message || 'Unknown cloudinary error',
-          tip: 'Pastikan CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, dan CLOUDINARY_API_SECRET sudah benar di environment variables'
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
@@ -173,12 +136,12 @@ export async function POST(request: NextRequest) {
         title,
         description: description || null,
         category: category || 'Umum',
-        fileName: file.name,
-        fileUrl: uploadResult.url,
-        fileSize: file.size,
-        mimeType: file.type || 'application/pdf',
-        publicId: uploadResult.publicId,
-        status,
+        fileName: fileName || 'document.pdf',
+        fileUrl, // From direct Cloudinary upload
+        fileSize: fileSize || 0,
+        mimeType,
+        publicId, // For deletion later
+        status: regulasiStatus,
         isForMemberOnly,
         authorId: user.id,
       },

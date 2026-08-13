@@ -9,35 +9,15 @@ cloudinary.config({
 
 export default cloudinary;
 
-// Upload PDF to Cloudinary
-export async function uploadPDFToCloudinary(
-  buffer: Buffer,
-  fileName: string,
-  folder: string = 'regulasi'
-): Promise<{ url: string; publicId: string }> {
-  return new Promise((resolve, reject) => {
-    const uniqueFileName = `${Date.now()}-${fileName.replace(/\s+/g, '_')}`;
-    
-    cloudinary.uploader.upload_stream(
-      {
-        resource_type: 'raw', // For PDF files
-        folder: folder,
-        public_id: uniqueFileName,
-        type: 'upload',
-        access_mode: 'public',
-      },
-      (error, result) => {
-        if (error) {
-          reject(error);
-        } else if (result) {
-          resolve({
-            url: result.secure_url,
-            publicId: result.public_id,
-          });
-        }
-      }
-    ).end(buffer);
-  });
+// Generate signature for direct client-side upload
+export function generateSignature(paramsToSign: any): { signature: string; timestamp: number } {
+  const timestamp = Math.round(new Date().getTime() / 1000);
+  const signature = cloudinary.utils.api_sign_request(
+    { ...paramsToSign, timestamp },
+    process.env.CLOUDINARY_API_SECRET || ''
+  );
+  
+  return { signature, timestamp };
 }
 
 // Delete file from Cloudinary
