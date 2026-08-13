@@ -174,7 +174,93 @@ export default function AdminRegulasiPage() {
     toast.success(`File dipilih: ${file.name} (${formatFileSize(file.size)})`);
   };
 
-  // Upload file directly to Cloudinary
+  // ✅ SERVER PROXY UPLOAD (File → Server → Cloudinary) - YANG DIPAKAI!
+  const uploadViaProxy = async (): Promise<{
+    url: string;
+    publicId: string;
+    fileName: string;
+    fileSize: number;
+  } | null> => {
+    if (!selectedFile) return null;
+
+    try {
+      setUploading(true);
+      setUploadProgress(10);
+      setDebugInfo('📤 Mengirim file ke server...');
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      setUploadProgress(30);
+      setDebugInfo('☁️ Server upload ke Cloudinary...');
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000);
+
+      // Progress simulation
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => prev >= 85 ? prev : prev + 5);
+      }, 2000);
+
+      const response = await fetch('/api/regulasi/upload-proxy', {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      });
+
+      clearInterval(progressInterval);
+      clearTimeout(timeoutId);
+      setUploadProgress(90);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMsg = `Error ${response.status}`;
+        
+        try {
+          const errJson = JSON.parse(errorText);
+          errorMsg = errJson.error || errJson.details || errorMsg;
+          
+          if (errorMsg.includes('tidak terkonfigurasi')) {
+            setDebugInfo(`❌ ${errorMsg}\n\n💡 Set env vars di Vercel!`);
+            throw new Error(errorMsg);
+          }
+        } catch (e) {
+          if (e instanceof Error && e.message.includes('tidak terkonfigurasi')) throw e;
+        }
+        
+        setDebugInfo(`❌ ${errorMsg}`);
+        throw new Error(errorMsg);
+      }
+
+      const result = await response.json();
+      setUploadProgress(100);
+
+      if (!result.url) throw new Error('URL tidak diterima');
+
+      setDebugInfo('✅ Upload berhasil!');
+      console.log('✅ Upload result:', result);
+
+      return {
+        url: result.url,
+        publicId: result.publicId || '',
+        fileName: result.fileName || selectedFile.name,
+        fileSize: result.fileSize || selectedFile.size,
+      };
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('❌ Upload error:', err);
+      if (err.name === 'AbortError') {
+        setDebugInfo('❌ Upload timeout');
+        throw new Error('Upload timeout. Coba lagi.');
+      }
+      setDebugInfo(prev => prev || `❌ ${err.message}`);
+      throw err;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Upload file directly to Cloudinary (OLD - NOT USED)
   const uploadToCloudinaryDirectly = async (): Promise<{
     url: string;
     publicId: string;
@@ -362,8 +448,8 @@ export default function AdminRegulasiPage() {
 
     // Need to upload file if not already uploaded
     if ((!editingRegulasi || selectedFile) && !finalCloudinaryData && selectedFile) {
-      toast.info('Sedang upload file ke Cloudinary...');
-      finalCloudinaryData = await uploadToCloudinaryDirectly();
+      toast.info('Sedang upload file...');
+      finalCloudinaryData = await uploadViaProxy(); // ✅ Pakai SERVER PROXY
       
       if (!finalCloudinaryData) {
         toast.error('Upload file gagal. Silakan coba lagi.');
