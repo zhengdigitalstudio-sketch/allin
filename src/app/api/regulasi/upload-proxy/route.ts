@@ -162,23 +162,39 @@ export async function POST(request: NextRequest) {
     // Handle errors
     if (!response.ok) {
       let errorMsg = `HTTP ${response.status}`;
+      let suggestion = '';
       let errorDetails = responseText.substring(0, 500);
       
       try {
         const errJson = JSON.parse(responseText);
         errorMsg = errJson.error?.message || errorMsg;
+        
+        // Add specific suggestions based on status
+        if (response.status === 401 || errorMsg.includes('api key') || errorMsg.includes('API key')) {
+          suggestion = '❌ API Key Cloudinary tidak valid! Periksa: dashboard.cloudinary.com → Settings → API Keys';
+        } else if (response.status === 400) {
+          suggestion = '⚠️ File mungkin corrupt atau format tidak didukung';
+        } else if (response.status === 403) {
+          suggestion = '🚫 Akses ditolak - cek CORS atau permission settings';
+        } else if (response.status === 413) {
+          suggestion = '📦 File terlalu besar untuk Cloudinary (max 20MB)';
+        } else if (response.status >= 500) {
+          suggestion = '☁️ Server Cloudinary sedang bermasalah. Coba beberapa saat lagi.';
+        }
       } catch {}
 
-      console.error(`❌ [PROXY] Error: ${errorMsg}`);
+      console.error(`❌ [PROXY] Error ${response.status}: ${errorMsg}`);
 
       return NextResponse.json({
-        error: 'Upload gagal',
+        error: `Upload Gagal (${response.status})`,
         details: errorMsg,
+        suggestion: suggestion || 'Cek koneksi internet dan coba lagi',
         httpStatus: response.status,
         debug: {
           cloudName: config.cloud_name,
           elapsedMs: elapsed,
           fileSize: file.size,
+          fileSizeMB: (file.size / 1024 / 1024).toFixed(2),
         }
       }, { status: 500 });
     }

@@ -233,28 +233,44 @@ export default function AdminRegulasiPage() {
       if (!response.ok) {
         const errorText = await response.text();
         let errorMsg = `Error ${response.status}`;
+        let fullErrorMsg = errorMsg;
         
         try {
           const errJson = JSON.parse(errorText);
           errorMsg = errJson.error || errJson.details || errorMsg;
           
-          // Special handling
-          if (errorMsg.includes('timeout') || response.status === 504) {
-            setDebugInfo(`⏰ Upload timeout! Cloudinary lambat.\n\n💡 Coba:\n- File lebih kecil\n- Cek koneksi\n- Coba lagi nanti`);
-            throw new Error('Upload timeout (60 detik). Cloudinary tidak merespons.');
+          // Build detailed message with suggestion
+          fullErrorMsg = errorMsg;
+          if (errJson.details && errJson.details !== errJson.error) {
+            fullErrorMsg = errJson.details;
+          }
+          if (errJson.suggestion) {
+            fullErrorMsg += `\n\n💡 ${errJson.suggestion}`;
+          }
+          if (errJson.debug) {
+            console.error('🔍 Debug info:', errJson.debug);
+            if (errJson.debug.fileSizeMB) {
+              fullErrorMsg += `\n📊 File: ${errJson.debug.fileSizeMB}MB`;
+            }
           }
           
-          if (response.status === 401 || errorMsg.includes('Unknown api')) {
-            setDebugInfo(`❌ API Key Error!\n\n${errorMsg}\n\n💡 Periksa credentials Cloudinary`);
-            throw new Error(`Cloudinary API Error: ${errorMsg}`);
+          // Special handling
+          if (errorMsg.includes('timeout') || response.status === 504) {
+            setDebugInfo(`⏰ Upload timeout! Cloudinary lambat.\n\n${fullErrorMsg}`);
+            throw new Error('Upload timeout. Cloudinary tidak merespons.');
+          }
+          
+          if (response.status === 401 || errorMsg.includes('Unknown api') || errorMsg.includes('API key')) {
+            setDebugInfo(`❌ API Key Error!\n\n${fullErrorMsg}`);
+            throw new Error(`Cloudinary API Error: ${fullErrorMsg}`);
           }
         } catch (e) {
           if (e instanceof Error && e.message.includes('timeout')) throw e;
           if (e instanceof Error && e.message.includes('API Error')) throw e;
         }
         
-        setDebugInfo(`❌ ${errorMsg}`);
-        throw new Error(errorMsg);
+        setDebugInfo(`❌ ${fullErrorMsg}`);
+        throw new Error(fullErrorMsg);
       }
 
       // Parse success response
