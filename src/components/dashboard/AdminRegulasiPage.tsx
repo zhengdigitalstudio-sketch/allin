@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   FileText, Upload, Plus, Search, Filter, Download, Trash2, Edit3,
   Globe, Lock, X, Check, ExternalLink,
-  FileDown, RefreshCw, Loader2
+  FileDown, RefreshCw, Loader2, AlertCircle, Cloud
 } from 'lucide-react';
 import { toast } from 'sonner';
 
