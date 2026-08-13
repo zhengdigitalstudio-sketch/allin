@@ -254,21 +254,43 @@ export default function AdminRegulasiPage() {
       cloudinaryFormData.append('public_id', signData.params?.public_id || '');
       cloudinaryFormData.append('resource_type', 'raw');
 
-      setUploadProgress(50);
+      // Update progress to show uploading started
+      setUploadProgress(55);
 
       // Step 3: Upload DIRECTLY to Cloudinary - use /raw/upload for PDF files
       const cloudName = signData.cloudName;
       const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`;
-      console.log('📤 Uploading to Cloudinary:', uploadUrl);
+      console.log('📤 Uploading to Cloudinary:', uploadUrl, `File size: ${formatFileSize(selectedFile.size)}`);
+
+      // Create AbortController with timeout (5 minutes for large files)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000); // 5 minute timeout
 
       let uploadResponse: Response;
       try {
+        // Simulate progress during upload (since we can't track actual progress with fetch)
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => {
+            if (prev >= 75) return prev; // Max out at 75% until actual response
+            return prev + 2; // Increment slowly
+          });
+        }, 1000);
+
         uploadResponse = await fetch(uploadUrl, {
           method: 'POST',
           body: cloudinaryFormData,
+          signal: controller.signal,
         });
-      } catch (fetchError) {
+
+        clearInterval(progressInterval);
+        clearTimeout(timeoutId);
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
         console.error('❌ Network error uploading to Cloudinary:', fetchError);
+        
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Upload timeout - file terlalu besar atau koneksi lambat. Coba lagi.');
+        }
         throw new Error('Gagal terhubung ke Cloudinary. Cek koneksi internet.');
       }
 
