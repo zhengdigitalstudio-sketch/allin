@@ -186,64 +186,126 @@ export default function AdminRegulasiPage() {
     try {
       setUploading(true);
       setUploadProgress(10);
+      
+      console.log('🚀 Starting direct upload for:', selectedFile.name, `(${formatFileSize(selectedFile.size)})`);
 
       // Step 1: Get signature from our API
-      const signResponse = await fetch('/api/regulasi/sign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          folder: 'regulasi',
-          fileName: selectedFile.name 
-        }),
-      });
-
-      if (!signResponse.ok) {
-        const errorText = await signResponse.text();
-        console.error('Sign API error:', errorText);
-        throw new Error('Gagal mendapatkan signature dari server');
+      console.log('📡 Requesting signature from /api/regulasi/sign...');
+      let signResponse: Response;
+      try {
+        signResponse = await fetch('/api/regulasi/sign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            folder: 'regulasi',
+            fileName: selectedFile.name 
+          }),
+        });
+      } catch (fetchError) {
+        console.error('❌ Network error calling sign API:', fetchError);
+        throw new Error('Tidak dapat terhubung ke server. Cek koneksi internet.');
       }
 
-      const signData = await signResponse.json();
+      console.log('📡 Sign response status:', signResponse.status);
+      
+      if (!signResponse.ok) {
+        const errorText = await signResponse.text();
+        console.error('❌ Sign API error:', signResponse.status, errorText);
+        
+        // Parse error for better message
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.error || errorJson.details || `Server error (${signResponse.status})`);
+        } catch {
+          throw new Error(`Gagal mendapatkan signature (HTTP ${signResponse.status})`);
+        }
+      }
+
+      let signData: any;
+      try {
+        signData = await signResponse.json();
+      } catch (parseError) {
+        console.error('❌ Failed to parse sign response:', parseError);
+        throw new Error('Respons server tidak valid');
+      }
+      
+      console.log('✅ Sign data received:', { 
+        hasApiKey: !!signData.apiKey, 
+        hasSignature: !!signData.signature,
+        cloudName: signData.cloudName,
+        timestamp: signData.timestamp 
+      });
+      
       setUploadProgress(30);
+
+      // Validate required fields
+      if (!signData.apiKey || !signData.signature || !signData.cloudName) {
+        console.error('❌ Missing required sign data:', signData);
+        throw new Error('Konfigurasi Cloudinary tidak lengkap di server');
+      }
 
       // Step 2: Create FormData for Cloudinary
       const cloudinaryFormData = new FormData();
       cloudinaryFormData.append('file', selectedFile);
-      cloudinaryFormData.append('api_key', signData.apiKey || '');
-      cloudinaryFormData.append('timestamp', String(signData.timestamp || ''));
-      cloudinaryFormData.append('signature', signData.signature || '');
+      cloudinaryFormData.append('api_key', signData.apiKey);
+      cloudinaryFormData.append('timestamp', String(signData.timestamp));
+      cloudinaryFormData.append('signature', signData.signature);
       cloudinaryFormData.append('folder', signData.params?.folder || 'regulasi');
       cloudinaryFormData.append('public_id', signData.params?.public_id || '');
       cloudinaryFormData.append('resource_type', 'raw');
 
       setUploadProgress(50);
 
-      // Step 3: Upload DIRECTLY to Cloudinary - use /auto/upload for automatic detection
-      const cloudName = signData.cloudName || '';
-      if (!cloudName) {
-        throw new Error('Cloud name tidak tersedia');
-      }
+      // Step 3: Upload DIRECTLY to Cloudinary - use /raw/upload for PDF files
+      const cloudName = signData.cloudName;
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`;
+      console.log('📤 Uploading to Cloudinary:', uploadUrl);
 
-      const uploadResponse = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
-        {
+      let uploadResponse: Response;
+      try {
+        uploadResponse = await fetch(uploadUrl, {
           method: 'POST',
           body: cloudinaryFormData,
-        }
-      );
+        });
+      } catch (fetchError) {
+        console.error('❌ Network error uploading to Cloudinary:', fetchError);
+        throw new Error('Gagal terhubung ke Cloudinary. Cek koneksi internet.');
+      }
 
+      console.log('📤 Upload response status:', uploadResponse.status);
       setUploadProgress(80);
 
       if (!uploadResponse.ok) {
         const errorText = await uploadResponse.text();
-        console.error('Cloudinary upload error:', errorText);
-        throw new Error(`Gagal upload ke Cloudinary (HTTP ${uploadResponse.status})`);
+        console.error('❌ Cloudinary upload error:', uploadResponse.status, errorText);
+        
+        // Try to parse Cloudinary error for better message
+        try {
+          const errorJson = JSON.parse(errorText);
+          const cloudErrorMsg = errorJson.error?.message || errorJson.error || errorText;
+          throw new Error(`Cloudinary: ${cloudErrorMsg}`);
+        } catch {
+          throw new Error(`Gagal upload ke Cloudinary (HTTP ${uploadResponse.status})`);
+        }
       }
 
-      const uploadResult = await uploadResponse.json();
+      let uploadResult: any;
+      try {
+        uploadResult = await uploadResponse.json();
+      } catch (parseError) {
+        console.error('❌ Failed to parse upload result:', parseError);
+        throw new Error('Respons Cloudinary tidak valid');
+      }
+      
+      console.log('✅ Upload successful:', { 
+        secure_url: uploadResult.secure_url,
+        public_id: uploadResult.public_id 
+      });
+      
       setUploadProgress(100);
 
       if (!uploadResult.secure_url) {
+        console.error('❌ No secure_url in response:', uploadResult);
         throw new Error('URL tidak diterima dari Cloudinary');
       }
 
