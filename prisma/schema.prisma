@@ -23,6 +23,7 @@ model User {
   updatedAt     DateTime @updatedAt
 
   articles      Article[]
+  regulasi      Regulasi[]
   activityLogs  ActivityLog[]
   member        Member?
 }
@@ -168,4 +169,23 @@ model Inbox {
   receiverId    String
   isRead        Boolean  @default(false)
   createdAt     DateTime @default(now())
+}
+
+model Regulasi {
+  id               String   @id @default(cuid())
+  title            String
+  description      String?
+  category         String   @default("Umum")
+  fileName         String
+  fileUrl          String   // Cloudinary URL (bukan base64 lagi!)
+  fileSize         Int
+  mimeType         String   @default("application/pdf")
+  publicId         String   // Cloudinary public_id untuk delete nanti
+  status           String   @default("PUBLISHED")
+  isForMemberOnly  Boolean  @default(false)
+  downloadCount    Int      @default(0)
+  authorId         String
+  author           User     @relation(fields: [authorId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
