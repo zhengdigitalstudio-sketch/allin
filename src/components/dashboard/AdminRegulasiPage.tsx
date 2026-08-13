@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   FileText, Upload, Plus, Search, Filter, Download, Trash2, Edit3,
-  Eye, EyeOff, Globe, Lock, X, Check, AlertCircle, ExternalLink,
+  Globe, Lock, X, Check, ExternalLink,
   FileDown, RefreshCw, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -15,10 +15,10 @@ interface Regulasi {
   description: string | null;
   category: string;
   fileName: string;
-  fileUrl: string; // Cloudinary URL
+  fileUrl: string;
   fileSize: number;
   mimeType: string;
-  publicId: string; // Cloudinary public_id
+  publicId: string;
   status: string;
   isForMemberOnly: boolean;
   downloadCount: number;
@@ -33,7 +33,7 @@ const CATEGORIES = ['Umum', 'Lingkungan', 'K3', 'Teknologi', 'Hukum', 'Keuangan'
 
 // Format file size
 function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (!bytes || bytes === 0) return '0 Bytes';
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -42,13 +42,18 @@ function formatFileSize(bytes: number): string {
 
 // Format date
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('id-ID', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  if (!dateString) return '';
+  try {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return dateString;
+  }
 }
 
 export default function AdminRegulasiPage() {
@@ -92,16 +97,15 @@ export default function AdminRegulasiPage() {
       const response = await fetch(`/api/regulasi?${params.toString()}`);
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Response not OK:', errorText);
         throw new Error(`HTTP ${response.status}`);
       }
       
       const data = await response.json();
-      setRegulasiList(data);
+      setRegulasiList(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching regulasi:', error);
       toast.error('Gagal memuat data regulasi');
+      setRegulasiList([]);
     } finally {
       setLoading(false);
     }
@@ -130,17 +134,17 @@ export default function AdminRegulasiPage() {
 
   // Handle create/edit dialog open
   const handleOpenDialog = (regulasi?: Regulasi) => {
-    if (regulasi) {
+    if (regulasi && typeof regulasi === 'object') {
       setEditingRegulasi(regulasi);
       setFormData({
-        title: regulasi.title,
+        title: regulasi.title || '',
         description: regulasi.description || '',
-        category: regulasi.category,
-        isForMemberOnly: regulasi.isForMemberOnly,
-        status: regulasi.status,
+        category: regulasi.category || 'Umum',
+        isForMemberOnly: !!regulasi.isForMemberOnly,
+        status: regulasi.status || 'PUBLISHED',
       });
       setSelectedFile(null);
-      setCloudinaryData(null); // Will need to re-upload if changing file
+      setCloudinaryData(null);
     } else {
       resetForm();
     }
@@ -166,11 +170,11 @@ export default function AdminRegulasiPage() {
     }
 
     setSelectedFile(file);
-    setCloudinaryData(null); // Reset previous upload
+    setCloudinaryData(null);
     toast.success(`File dipilih: ${file.name} (${formatFileSize(file.size)})`);
   };
 
-  // Upload file directly to Cloudinary (bypasses Vercel limit!)
+  // Upload file directly to Cloudinary
   const uploadToCloudinaryDirectly = async (): Promise<{
     url: string;
     publicId: string;
@@ -203,18 +207,19 @@ export default function AdminRegulasiPage() {
       // Step 2: Create FormData for Cloudinary
       const cloudinaryFormData = new FormData();
       cloudinaryFormData.append('file', selectedFile);
-      cloudinaryFormData.append('api_key', signData.apiKey);
-      cloudinaryFormData.append('timestamp', String(signData.timestamp));
-      cloudinaryFormData.append('signature', signData.signature);
-      cloudinaryFormData.append('folder', signData.params.folder);
-      cloudinaryFormData.append('public_id', signData.params.public_id);
+      cloudinaryFormData.append('api_key', signData.apiKey || '');
+      cloudinaryFormData.append('timestamp', String(signData.timestamp || ''));
+      cloudinaryFormData.append('signature', signData.signature || '');
+      cloudinaryFormData.append('folder', signData.params?.folder || 'regulasi');
+      cloudinaryFormData.append('public_id', signData.params?.public_id || '');
       cloudinaryFormData.append('resource_type', 'raw');
 
       setUploadProgress(50);
 
-      // Step 3: Upload DIRECTLY to Cloudinary (bypasses Vercel!)
+      // Step 3: Upload DIRECTLY to Cloudinary
+      const cloudName = signData.cloudName || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '';
       const uploadResponse = await fetch(
-        `https://api.cloudinary.com/v1_1/${signData.cloudName}/image/upload`,
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
         {
           method: 'POST',
           body: cloudinaryFormData,
@@ -232,17 +237,16 @@ export default function AdminRegulasiPage() {
       const uploadResult = await uploadResponse.json();
       setUploadProgress(100);
 
-      console.log('✅ Cloudinary direct upload success:', uploadResult);
-
       return {
-        url: uploadResult.secure_url,
-        publicId: uploadResult.public_id,
+        url: uploadResult.secure_url || '',
+        publicId: uploadResult.public_id || '',
         fileName: selectedFile.name,
         fileSize: selectedFile.size,
       };
-    } catch (error: any) {
-      console.error('❌ Direct upload error:', error);
-      toast.error(error.message || 'Gagal upload ke Cloudinary');
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('❌ Direct upload error:', err);
+      toast.error(err.message || 'Gagal upload ke Cloudinary');
       return null;
     } finally {
       setUploading(false);
@@ -250,21 +254,20 @@ export default function AdminRegulasiPage() {
     }
   };
 
-  // Handle submit (create/update)
+  // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validation
-    if (!formData.title.trim()) {
+    if (!formData.title || !formData.title.trim()) {
       toast.error('Title wajib diisi');
       return;
     }
 
-    // For new regulasi or when file changed, need to upload first
     let finalCloudinaryData = cloudinaryData;
 
+    // Need to upload file if not already uploaded
     if ((!editingRegulasi || selectedFile) && !finalCloudinaryData && selectedFile) {
-      // Need to upload file first
       toast.info('Sedang upload file ke Cloudinary...');
       finalCloudinaryData = await uploadToCloudinaryDirectly();
       
@@ -279,14 +282,14 @@ export default function AdminRegulasiPage() {
     // For edit without new file, keep existing data
     if (editingRegulasi && !finalCloudinaryData && !selectedFile) {
       finalCloudinaryData = {
-        url: editingRegulasi.fileUrl,
-        publicId: editingRegulasi.publicId,
-        fileName: editingRegulasi.fileName,
-        fileSize: editingRegulasi.fileSize,
+        url: editingRegulasi.fileUrl || '',
+        publicId: editingRegulasi.publicId || '',
+        fileName: editingRegulasi.fileName || '',
+        fileSize: editingRegulasi.fileSize || 0,
       };
     }
 
-    // If we still don't have cloudinary data and it's a new record, fail
+    // If still no cloudinary data for new record, fail
     if (!editingRegulasi && !finalCloudinaryData) {
       toast.error('File PDF wajib diunggah');
       return;
@@ -295,13 +298,12 @@ export default function AdminRegulasiPage() {
     setSubmitting(true);
 
     try {
-      // Send JSON with Cloudinary URL (not the file itself!)
       const jsonData = {
         title: formData.title.trim(),
-        description: formData.description,
-        category: formData.category,
-        isForMemberOnly: formData.isForMemberOnly,
-        status: formData.status,
+        description: formData.description || '',
+        category: formData.category || 'Umum',
+        isForMemberOnly: !!formData.isForMemberOnly,
+        status: formData.status || 'PUBLISHED',
         ...(finalCloudinaryData || {}),
       };
 
@@ -314,28 +316,27 @@ export default function AdminRegulasiPage() {
         body: JSON.stringify(jsonData),
       });
 
-      // Handle response
       const responseText = await response.text();
       let result;
       
       try {
         result = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Failed to parse response:', responseText);
-        throw new Error(`Server response tidak valid: ${responseText.substring(0, 100)}`);
+      } catch {
+        throw new Error(`Server response tidak valid`);
       }
 
       if (!response.ok) {
         throw new Error(result.error || 'Gagal menyimpan regulasi');
       }
 
-      toast.success(editingRegulasi ? 'Regulasi berhasil diperbarui' : 'Regulasi berhasil dibuat! ✅');
+      toast.success(editingRegulasi ? 'Regulasi berhasil diperbarui' : 'Regulasi berhasil dibuat!');
       setShowCreateDialog(false);
       resetForm();
       fetchRegulasi();
-    } catch (error: any) {
-      console.error('Submit error:', error);
-      toast.error(error.message || 'Gagal menyimpan regulasi');
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Submit error:', err);
+      toast.error(err.message || 'Gagal menyimpan regulasi');
     } finally {
       setSubmitting(false);
     }
@@ -343,7 +344,9 @@ export default function AdminRegulasiPage() {
 
   // Handle delete
   const handleDelete = async (regulasi: Regulasi) => {
-    if (!confirm(`Yakin ingin menghapus "${regulasi.title}"? File juga akan dihapus dari Cloudinary.`)) {
+    if (!regulasi || !regulasi.id) return;
+    
+    if (!confirm(`Yakin ingin menghapus "${regulasi.title}"?`)) {
       return;
     }
 
@@ -355,7 +358,7 @@ export default function AdminRegulasiPage() {
       
       try {
         result = JSON.parse(responseText);
-      } catch (e) {
+      } catch {
         throw new Error('Invalid response from server');
       }
       
@@ -363,42 +366,42 @@ export default function AdminRegulasiPage() {
       
       toast.success('Regulasi berhasil dihapus');
       fetchRegulasi();
-    } catch (error: any) {
-      console.error('Delete error:', error);
-      toast.error(error.message || 'Gagal menghapus regulasi');
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Delete error:', err);
+      toast.error(err.message || 'Gagal menghapus regulasi');
     }
   };
 
   // Handle download
-  const handleDownload = async (regulasi: Regulasi) => {
-    try {
-      window.open(regulasi.fileUrl, '_blank');
-      toast.success(`Mengunduh ${regulasi.fileName}`);
-      
-      // Update local count optimistically
-      setRegulasiList(prev => prev.map(r => 
-        r.id === regulasi.id 
-          ? { ...r, downloadCount: r.downloadCount + 1 }
-          : r
-      ));
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Gagal membuka file');
-    }
+  const handleDownload = (regulasi: Regulasi) => {
+    if (!regulasi || !regulasi.fileUrl) return;
+    
+    window.open(regulasi.fileUrl, '_blank');
+    toast.success(`Mengunduh ${regulasi.fileName}`);
+    
+    // Update local count optimistically
+    setRegulasiList(prev => prev.map(r => 
+      r.id === regulasi.id 
+        ? { ...r, downloadCount: (r.downloadCount || 0) + 1 }
+        : r
+    ));
   };
 
   // Toggle visibility
   const toggleVisibility = async (regulasi: Regulasi) => {
+    if (!regulasi || !regulasi.id) return;
+
     try {
       const response = await fetch(`/api/regulasi/${regulasi.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: regulasi.title,
+          title: regulasi.title || '',
           description: regulasi.description || '',
-          category: regulasi.category,
+          category: regulasi.category || 'Umum',
           isForMemberOnly: !regulasi.isForMemberOnly,
-          status: regulasi.status,
+          status: regulasi.status || 'PUBLISHED',
         }),
       });
 
@@ -406,9 +409,10 @@ export default function AdminRegulasiPage() {
 
       toast.success(`Visibilitas diubah menjadi ${!regulasi.isForMemberOnly ? 'Member Only' : 'Publik'}`);
       fetchRegulasi();
-    } catch (error) {
-      console.error('Toggle error:', error);
-      toast.error('Gagal mengubah visibilitas');
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Toggle error:', err);
+      toast.error(err.message || 'Gagal mengubah visibilitas');
     }
   };
 
@@ -422,7 +426,7 @@ export default function AdminRegulasiPage() {
             Kelola Regulasi
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Upload dan kelola dokumen reguasi (PDF via Cloudinary Direct Upload)
+            Upload dan kelola dokumen reguasi (PDF via Cloudinary)
           </p>
         </div>
         <button
@@ -434,21 +438,19 @@ export default function AdminRegulasiPage() {
         </button>
       </div>
 
-      {/* Info Banner - Direct Upload */}
+      {/* Info Banner */}
       <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
         <div className="flex items-start gap-3">
           <div className="bg-white p-2 rounded-lg shadow-sm">
             <Upload className="w-5 h-5 text-green-600" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-green-900 text-sm">☁️ Direct Upload Active</h3>
+            <h3 className="font-semibold text-green-900 text-sm">☁️ Cloudinary Direct Upload</h3>
             <p className="text-xs text-green-700 mt-1">
               File upload langsung ke Cloudinary • Bypass Vercel limit • Maksimal 20MB per file
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
-          </div>
+          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
         </div>
       </div>
 
@@ -492,11 +494,11 @@ export default function AdminRegulasiPage() {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
           </div>
-        ) : regulasiList.length === 0 ? (
+        ) : !regulasiList || regulasiList.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-gray-500">
             <FileText className="w-12 h-12 mb-3 opacity-30" />
             <p className="font-medium">Belum ada regulasi</p>
-            <p className="text-sm mt-1">Klik "Tambah Regulasi" untuk membuat yang pertama</p>
+            <p className="text-sm mt-1">Klik &quot;Tambah Regulasi&quot; untuk membuat yang pertama</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -535,7 +537,7 @@ export default function AdminRegulasiPage() {
                           <p className="font-medium text-gray-900 truncate">{regulasi.title}</p>
                           <p className="text-sm text-gray-500 truncate">{regulasi.fileName}</p>
                           <p className="text-xs text-gray-400 mt-0.5">
-                            oleh {regulasi.author.name} · {formatDate(regulasi.createdAt)}
+                            oleh {regulasi.author?.name || 'Unknown'} · {formatDate(regulasi.createdAt)}
                           </p>
                         </div>
                       </div>
@@ -556,23 +558,18 @@ export default function AdminRegulasiPage() {
                             ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                             : 'bg-green-100 text-green-800 hover:bg-green-200'
                         }`}
-                        title={regulasi.isForMemberOnly ? 'Ubah ke Publik' : 'Ubah ke Member Only'}
                       >
                         {regulasi.isForMemberOnly ? (
-                          <>
-                            <Lock className="w-3 h-3" /> Member Only
-                          </>
+                          <><Lock className="w-3 h-3" /> Member Only</>
                         ) : (
-                          <>
-                            <Globe className="w-3 h-3" /> Publik
-                          </>
+                          <><Globe className="w-3 h-3" /> Publik</>
                         )}
                       </button>
                     </td>
                     <td className="px-6 py-4 text-center hidden sm:table-cell">
                       <span className="inline-flex items-center gap-1 text-sm text-gray-600">
                         <Download className="w-4 h-4" />
-                        {regulasi.downloadCount}
+                        {regulasi.downloadCount || 0}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -607,8 +604,7 @@ export default function AdminRegulasiPage() {
           </div>
         )}
         
-        {/* Footer count */}
-        {!loading && regulasiList.length > 0 && (
+        {!loading && regulasiList && regulasiList.length > 0 && (
           <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
             <p className="text-sm text-gray-600">
               Menampilkan <strong>{regulasiList.length}</strong> regulasi
@@ -712,11 +708,10 @@ export default function AdminRegulasiPage() {
                   </div>
                 </div>
 
-                {/* File Upload - Direct to Cloudinary */}
+                {/* File Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     File PDF {!editingRegulasi && <span className="text-red-500">*</span>}
-                    {editingRegulasi && <span className="text-gray-400 font-normal">(kosongkan jika tidak diubah)</span>}
                   </label>
                   
                   <div className={`border-2 border-dashed rounded-lg p-4 transition-colors ${
@@ -745,7 +740,7 @@ export default function AdminRegulasiPage() {
                         </div>
                         <p className="text-xs text-green-600 mt-1">{uploadProgress}%</p>
                       </div>
-                    ) : cloudinaryData ? (
+                    ) : cloudinaryData && cloudinaryData.url ? (
                       <div className="space-y-3">
                         <div className="flex items-center gap-3 bg-green-50 p-3 rounded-lg">
                           <div className="bg-green-100 p-2 rounded-lg">
@@ -756,7 +751,7 @@ export default function AdminRegulasiPage() {
                               {cloudinaryData.fileName}
                             </p>
                             <p className="text-xs text-green-700">
-                              {formatFileSize(cloudinaryData.fileSize)} • Uploaded to Cloudinary ✓
+                              {formatFileSize(cloudinaryData.fileSize)} • Uploaded ✓
                             </p>
                           </div>
                           <button
@@ -809,13 +804,12 @@ export default function AdminRegulasiPage() {
                           </button>
                         </div>
                         <p className="text-xs text-blue-600 text-center">
-                          Klik "Upload Regulasi" untuk upload ke Cloudinary
+                          Klik &quot;Upload Regulasi&quot; untuk upload ke Cloudinary
                         </p>
                       </div>
                     )}
                   </div>
 
-                  {/* Current file info when editing */}
                   {editingRegulasi && !cloudinaryData && !selectedFile && (
                     <div className="mt-2 flex items-center gap-2 text-xs text-gray-500 bg-gray-50 p-2 rounded">
                       <FileDown className="w-4 h-4" />
