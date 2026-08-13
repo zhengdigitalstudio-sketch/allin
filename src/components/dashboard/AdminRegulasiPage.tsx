@@ -178,7 +178,138 @@ export default function AdminRegulasiPage() {
     toast.success(`File dipilih: ${file.name} (${formatFileSize(file.size)})`);
   };
 
-  // ✅ SERVER PROXY UPLOAD (File → Server → Cloudinary) - YANG DIPAKAI!
+  // ============================================
+  // 🚀 CLIENT-SIDE DIRECT UPLOAD (for large files >4.5MB)
+  // Bypasses Vercel's 4.5MB limit!
+  // ============================================
+  const uploadDirectToCloudinary = async (): Promise<{
+    url: string;
+    publicId: string;
+    fileName: string;
+    fileSize: number;
+  } | null> => {
+    if (!selectedFile) return null;
+
+    try {
+      setUploading(true);
+      setUploadProgress(5);
+      setDebugInfo('🔑 Mendapatkan signature...');
+
+      // Step 1: Get signature from our API
+      const signResponse = await fetch('/api/regulasi/sign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: selectedFile.name,
+          folder: 'regulasi',
+        }),
+      });
+
+      if (!signResponse.ok) {
+        const errText = await signResponse.text();
+        throw new Error(`Gagal dapat signature: ${errText}`);
+      }
+
+      const signData = await signResponse.json();
+      
+      setUploadProgress(15);
+      setDebugInfo('☁️ Upload langsung ke Cloudinary...');
+
+      console.log('📤 Starting DIRECT upload to Cloudinary:', signData.uploadUrl);
+
+      // Step 2: Upload DIRECTLY to Cloudinary (bypasses Vercel!)
+      const cloudinaryFormData = new FormData();
+      cloudinaryFormData.append('file', selectedFile);
+      cloudinaryFormData.append('api_key', signData.signatureData.apiKey);
+      cloudinaryFormData.append('timestamp', signData.signatureData.timestamp.toString());
+      cloudinaryFormData.append('signature', signData.signatureData.signature);
+      cloudinaryFormData.append('folder', signData.signatureData.params.folder);
+      cloudinaryFormData.append('public_id', signData.signatureData.params.public_id);
+      cloudinaryFormData.append('resource_type', signData.signatureData.params.resource_type);
+
+      // Progress simulation for direct upload
+      let progress = 15;
+      const progressInterval = setInterval(() => {
+        if (progress < 85) {
+          progress += Math.random() * 8; // Slightly slower for big files
+          setUploadProgress(Math.min(progress, 85));
+        }
+      }, 2000);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000); // 10 min for large files
+
+      const startTime = Date.now();
+      
+      const uploadResponse = await fetch(signData.uploadUrl, {
+        method: 'POST',
+        body: cloudinaryFormData,
+        signal: controller.signal,
+      });
+
+      clearInterval(progressInterval);
+      clearTimeout(timeoutId);
+
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`⏱️ Direct upload completed in ${elapsed}s`);
+
+      setUploadProgress(90);
+      setDebugInfo(`📥 Menerima respons (${elapsed}s)...`);
+
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        let errorMsg = `HTTP ${uploadResponse.status}`;
+        
+        try {
+          const errJson = JSON.parse(errorText);
+          errorMsg = errJson.error?.message || errorMsg;
+        } catch {}
+
+        setDebugInfo(`❌ Direct upload gagal:\n${errorMsg}`);
+        throw new Error(`Cloudinary direct upload failed: ${errorMsg}`);
+      }
+
+      // Parse success response
+      let result;
+      try {
+        result = await uploadResponse.json();
+      } catch {
+        throw new Error('Invalid response from Cloudinary');
+      }
+
+      if (!result.secure_url) {
+        throw new Error('No URL in Cloudinary response');
+      }
+
+      setUploadProgress(100);
+      setDebugInfo(`✅ Direct upload berhasil! (${elapsed}s)`);
+
+      console.log('✅ Direct upload result:', result);
+
+      return {
+        url: result.secure_url,
+        publicId: result.public_id || '',
+        fileName: selectedFile.name,
+        fileSize: selectedFile.size,
+      };
+
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('❌ Direct upload error:', err);
+      
+      if (err.name === 'AbortError') {
+        setDebugInfo('⏰ Direct upload timeout (>10 menit)');
+        throw new Error('Upload terlalu lama. File mungkin terlalu besar.');
+      }
+      
+      setDebugInfo(prev => prev || `❌ ${err.message}`);
+      throw err;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // ✅ SERVER PROXY UPLOAD (File → Server → Cloudinary) - untuk file kecil (<4.5MB)
   const uploadViaProxy = async (): Promise<{
     url: string;
     publicId: string;
@@ -500,10 +631,28 @@ export default function AdminRegulasiPage() {
 
     // Need to upload file if not already uploaded
     if ((!editingRegulasi || selectedFile) && !finalCloudinaryData && selectedFile) {
-      toast.info('⏳ Sedang upload file...');
+      const fileSizeMB = selectedFile.size / 1024 / 1024;
+      const VERCEL_LIMIT_MB = 4.5; // Vercel serverless function limit
+      
+      // Choose upload method based on file size
+      const useDirectUpload = fileSizeMB >= VERCEL_LIMIT_MB;
+      
+      if (useDirectUpload) {
+        toast.info(`📤 File besar (${fileSizeMB.toFixed(1)}MB) - upload langsung ke Cloudinary...`);
+      } else {
+        toast.info('⏳ Sedang upload file...');
+      }
       
       try {
-        finalCloudinaryData = await uploadViaProxy(); // ✅ Pakai SERVER PROXY
+        if (useDirectUpload) {
+          // 🚀 Direct to Cloudinary (bypasses Vercel 4.5MB limit)
+          setDebugInfo(`🚀 Mode: Direct Upload (${fileSizeMB.toFixed(1)}MB > ${VERCEL_LIMIT_MB}MB limit)`);
+          finalCloudinaryData = await uploadDirectToCloudinary();
+        } else {
+          // ☁️ Via Server Proxy (for smaller files)
+          setDebugInfo(`☁️ Mode: Server Proxy (${fileSizeMB.toFixed(1)}MB < ${VERCEL_LIMIT_MB}MB)`);
+          finalCloudinaryData = await uploadViaProxy();
+        }
       } catch (uploadError: unknown) {
         const err = uploadError as Error;
         console.error('❌ Upload failed:', err);

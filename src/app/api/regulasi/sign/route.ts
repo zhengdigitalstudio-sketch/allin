@@ -3,42 +3,31 @@ import { getSession } from '@/lib/auth';
 import crypto from 'crypto';
 
 // ============================================
-// 🔐 CLOUDINARY SIGNATURE GENERATOR
+// 🔑 CLOUDINARY SIGNATURE ENDPOINT (for client-side upload)
 // ============================================
-// Manual signature generation (tanpa SDK dependency)
+// This gives the browser permission to upload directly to Cloudinary
+// Bypassing Vercel's 4.5MB limit!
 
-// Config dengan fallback
 const CLOUD_CONFIG = {
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'czpvpb9j',
   api_key: process.env.CLOUDINARY_API_KEY || '256494922449866',
   api_secret: process.env.CLOUDINARY_API_SECRET || 'H8NX41ph3VSJSl5GkakrPU4DH7Q',
 };
 
-// Parse CLOUDINARY_URL jika ada (format: cloudinary://api_key:api_secret@cloud_name)
-function parseCloudinaryUrl(): Partial<typeof CLOUD_CONFIG> | null {
+// Parse CLOUDINARY_URL if exists
+function parseCloudinaryUrl() {
   const url = process.env.CLOUDINARY_URL;
   if (!url) return null;
   
   try {
-    // Format: cloudinary://api_key:api_secret@cloud_name
     const match = url.match(/cloudinary:\/\/([^:]+):([^@]+)@(.+)/);
-    if (match) {
-      return {
-        api_key: match[1],
-        api_secret: match[2],
-        cloud_name: match[3],
-      };
-    }
-  } catch (e) {
-    console.error('Failed to parse CLOUDINARY_URL:', e);
-  }
+    if (match) return { api_key: match[1], api_secret: match[2], cloud_name: match[3] };
+  } catch {}
   return null;
 }
 
-// Get final config (env vars > CLOUDINARY_URL > fallback)
 function getConfig() {
   const urlConfig = parseCloudinaryUrl();
-  
   return {
     cloud_name: urlConfig?.cloud_name || CLOUD_CONFIG.cloud_name,
     api_key: urlConfig?.api_key || CLOUD_CONFIG.api_key,
@@ -46,102 +35,89 @@ function getConfig() {
   };
 }
 
-// Generate signature manually (SHA-1)
-function generateSignature(paramsToSign: Record<string, any>, apiSecret: string): string {
-  // Sort keys alphabetically
-  const sortedKeys = Object.keys(paramsToSign).sort();
-  
-  // Build signature string: key=value&key=value...
-  const sigString = sortedKeys.map(key => `${key}=${paramsToSign[key]}`).join('&');
-  
-  console.log('📝 String to sign:', sigString);
-  
-  // SHA-1 hash with api_secret
-  const signature = crypto.createHash('sha1').update(sigString + apiSecret).digest('hex');
-  
-  return signature;
+function generateSignature(params: Record<string, string>, secret: string): string {
+  const sorted = Object.keys(params).sort();
+  const sigStr = sorted.map(k => `${k}=${params[k]}`).join('&');
+  return crypto.createHash('sha1').update(sigStr + secret).digest('hex');
 }
 
-// POST - Generate Cloudinary signature
+// POST - Generate signature for DIRECT client-side upload
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
+    // Auth check
     const user = await getSession(request);
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Silakan login' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get config
     const config = getConfig();
     
-    console.log('☁️ Sign Route Config:', {
-      cloudName: config.cloud_name,
-      apiKey: config.api_key.substring(0, 6) + '...',
-      apiKeyLength: config.api_key.length,
-      hasApiSecret: !!config.api_secret && config.api_secret.length > 10,
-      source: process.env.CLOUDINARY_URL ? 'CLOUDINARY_URL' : 
-               process.env.CLOUDINARY_CLOUD_NAME ? 'Env Vars' : 'Fallback'
-    });
-
     // Parse request body
     let body;
     try {
       body = await request.json();
-    } catch (e) {
-      body = { folder: 'regulasi', fileName: 'file.pdf' };
+    } catch {
+      body = { fileName: 'file.pdf' };
     }
     
-    const { folder = 'regulasi', fileName } = body;
+    const { fileName, folder = 'regulasi' } = body;
 
-    // Generate timestamp in SECONDS (Cloudinary requirement!)
-    const timestamp = Math.round(new Date().getTime() / 1000);
-    
-    // Generate unique public_id
-    const safeFileName = (fileName || 'file').replace(/[^a-zA-Z0-9.-]/g, '_');
+    console.log('📝 Generating signature for CLIENT-SIDE direct upload');
+
+    // Generate timestamp & signature
+    const timestamp = Math.round(Date.now() / 1000).toString();
+    const safeFileName = (fileName || 'file.pdf').replace(/[^a-zA-Z0-9.-]/g, '_');
     const publicId = `${folder}/${Date.now()}-${safeFileName}`;
 
-    // Parameters to sign
     const paramsToSign = {
-      timestamp: timestamp.toString(),
-      folder: folder,
+      timestamp,
+      folder,
       public_id: publicId,
-      resource_type: 'raw', // For PDF files
+      resource_type: 'raw',
     };
 
-    console.log('📝 Params to sign:', paramsToSign);
-
-    // Generate signature
     const signature = generateSignature(paramsToSign, config.api_secret);
 
-    console.log('✅ Signature generated:', signature.substring(0, 10) + '...');
+    console.log(`✅ Signature generated for direct upload`);
 
-    // Return signature data
+    // Return signature data for client-side upload
     return NextResponse.json({
       success: true,
-      signature: signature,
-      timestamp: timestamp,
-      cloudName: config.cloud_name,
-      apiKey: config.api_key,
-      params: {
-        folder: folder,
-        public_id: publicId,
-        resource_type: 'raw',
+      // For signed upload to Cloudinary
+      signatureData: {
+        signature,
+        timestamp,
+        apiKey: config.api_key,
+        cloudName: config.cloud_name,
+        params: {
+          folder,
+          public_id: publicId,
+          resource_type: 'raw',
+        },
+      },
+      // Upload URL where browser should POST the file
+      uploadUrl: `https://api.cloudinary.com/v1_1/${config.cloud_name}/raw/upload`,
+      
+      instructions: {
+        method: 'POST',
+        fields: [
+          { name: 'file', type: 'file' },
+          { name: 'api_key', value: config.api_key },
+          { name: 'timestamp', value: timestamp },
+          { name: 'signature', value: signature },
+          { name: 'folder', value: folder },
+          { name: 'public_id', value: publicId },
+          { name: 'resource_type', value: 'raw' },
+        ],
       },
     });
 
   } catch (error: any) {
-    console.error('❌ Error generating signature:', error);
+    console.error('❌ Sign error:', error);
     
-    return NextResponse.json(
-      { 
-        error: 'Gagal mendapatkan signature',
-        details: error?.message || 'Unknown error',
-        stack: error?.stack
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      error: 'Gagal generate signature',
+      details: error?.message
+    }, { status: 500 });
   }
 }
