@@ -480,8 +480,22 @@ export default function AdminRegulasiPage() {
 
     // Need to upload file if not already uploaded
     if ((!editingRegulasi || selectedFile) && !finalCloudinaryData && selectedFile) {
-      toast.info('Sedang upload file...');
-      finalCloudinaryData = await uploadViaProxy(); // ✅ Pakai SERVER PROXY
+      toast.info('⏳ Sedang upload file...');
+      
+      try {
+        finalCloudinaryData = await uploadViaProxy(); // ✅ Pakai SERVER PROXY
+      } catch (uploadError: unknown) {
+        const err = uploadError as Error;
+        console.error('❌ Upload failed:', err);
+        
+        // Show detailed error toast
+        toast.error(`❌ Upload Gagal: ${err.message}`, {
+          duration: 5000,
+        });
+        
+        // Debug info sudah otomatis set oleh uploadViaProxy
+        return; // Stop, don't continue to save
+      }
       
       if (!finalCloudinaryData) {
         toast.error('Upload file gagal. Silakan coba lagi.');
@@ -489,6 +503,7 @@ export default function AdminRegulasiPage() {
       }
       
       setCloudinaryData(finalCloudinaryData);
+      toast.success('✅ File berhasil diupload!');
     }
 
     // For edit without new file, keep existing data
@@ -939,18 +954,60 @@ export default function AdminRegulasiPage() {
                     />
                     
                     {uploading ? (
-                      <div className="text-center py-4">
-                        <Loader2 className="w-8 h-8 text-green-600 mx-auto mb-2 animate-spin" />
-                        <p className="text-sm font-medium text-green-700">
-                          Uploading to Cloudinary...
-                        </p>
-                        <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${uploadProgress}%` }}
-                          ></div>
+                      <div className="text-center py-6 space-y-3">
+                        {/* Spinner */}
+                        <Loader2 className="w-10 h-10 text-blue-600 mx-auto animate-spin" />
+                        
+                        {/* Status Message */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <p className="text-sm font-medium text-blue-800" id="upload-status">
+                            {debugInfo || 'Mengupload file...'}
+                          </p>
                         </div>
-                        <p className="text-xs text-green-600 mt-1">{uploadProgress}%</p>
+                        
+                        {/* Progress Bar */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs text-gray-600">
+                            <span>Progress</span>
+                            <span className="font-semibold text-blue-600">{uploadProgress}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                            <div 
+                              className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
+                              style={{ width: `${uploadProgress}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                        
+                        {/* Cancel hint */}
+                        <p className="text-xs text-gray-400">
+                          Mohon tunggu, proses upload...
+                        </p>
+                      </div>
+                    ) : debugInfo && debugInfo.startsWith('❌') ? (
+                      /* ERROR DISPLAY */
+                      <div className="text-center py-4 space-y-3">
+                        <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
+                        
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                          <p className="text-sm font-medium text-red-800">
+                            Upload Gagal
+                          </p>
+                          <p className="text-xs text-red-600 mt-1 whitespace-pre-wrap">
+                            {debugInfo}
+                          </p>
+                        </div>
+                        
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDebugInfo('');
+                            setUploadProgress(0);
+                          }}
+                          className="text-sm text-blue-600 hover:text-blue-700 underline"
+                        >
+                          Coba Lagi
+                        </button>
                       </div>
                     ) : cloudinaryData && cloudinaryData.url ? (
                       <div className="space-y-3">
