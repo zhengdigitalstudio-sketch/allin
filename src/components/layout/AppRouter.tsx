@@ -48,6 +48,9 @@ const AdminUsersPage = dyn(
 const AdminArticlesPage = dyn(
   () => import('@/components/dashboard/AdminArticlesPage').then((m) => ({ default: m.AdminArticlesPage })),
 )
+const AdminRegulasiPage = dyn(
+  () => import('@/components/dashboard/AdminRegulasiPage').then((m) => ({ default: m.AdminRegulasiPage })),
+)
 const AdminMembersPage = dyn(
   () => import('@/components/dashboard/AdminMembersPage').then((m) => ({ default: m.AdminMembersPage })),
 )
@@ -110,6 +113,7 @@ const pageComponents: Record<PageKey, React.ComponentType> = {
   'admin-dashboard': AdminDashboardPage,
   'admin-members': AdminMembersPage,
   'admin-articles': AdminArticlesPage,
+  'admin-regulasi': AdminRegulasiPage,
   'admin-agenda': AdminAgendaPage,
   'admin-gallery': AdminGalleryPage,
   'admin-contacts': AdminContactsPage,
