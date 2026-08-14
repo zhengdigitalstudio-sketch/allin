@@ -69,6 +69,49 @@ export async function GET(request: NextRequest, context: RouteParams) {
   }
 }
 
+// POST - Increment download count
+export async function POST(request: NextRequest, context: RouteParams) {
+  try {
+    const { id } = await context.params;
+
+    // Check if regulasi exists
+    const regulasi = await prisma.regulasi.findUnique({ where: { id } });
+    if (!regulasi) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Regulasi tidak ditemukan' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Increment download count
+    const updated = await prisma.regulasi.update({
+      where: { id },
+      data: { downloadCount: { increment: 1 } },
+    });
+
+    return new NextResponse(
+      JSON.stringify({
+        message: 'Download count incremented',
+        downloadCount: updated.downloadCount,
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (error: any) {
+    console.error('Error incrementing download count:', error);
+    
+    return new NextResponse(
+      JSON.stringify({ 
+        error: 'Gagal mengupdate hitungan unduhan',
+        details: error?.message
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+  }
+}
+
 // PUT - Update regulasi (JSON body with optional new file URL)
 export async function PUT(request: NextRequest, context: RouteParams) {
   try {

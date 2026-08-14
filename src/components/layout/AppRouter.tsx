@@ -26,6 +26,7 @@ import TentangPage from '@/components/pages/TentangPage'
 import VisiMisiPage from '@/components/pages/VisiMisiPage'
 import StrukturPengurusPage from '@/components/pages/StrukturPengurusPage'
 import ArtikelPage from '@/components/pages/ArtikelPage'
+import RegulasiPage from '@/components/pages/RegulasiPage'
 import ArtikelDetailPage from '@/components/pages/ArtikelDetailPage'
 import AgendaPage from '@/components/pages/AgendaPage'
 import GaleriPage from '@/components/pages/GaleriPage'
@@ -101,6 +102,7 @@ const pageComponents: Record<PageKey, React.ComponentType> = {
   'visi-misi': VisiMisiPage,
   'struktur-pengurus': StrukturPengurusPage,
   artikel: ArtikelPage,
+  regulasi: RegulasiPage,
   'artikel-detail': ArtikelDetailPage,
   agenda: AgendaPage,
   galeri: GaleriPage,

@@ -44,6 +44,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Visi & Misi', page: 'visi-misi' },
   { label: 'Struktur', page: 'struktur-pengurus' },
   { label: 'Artikel', page: 'artikel' },
+  { label: 'Regulasi', page: 'regulasi' },
   { label: 'Agenda', page: 'agenda' },
   { label: 'Galeri', page: 'galeri' },
   { label: 'Pendaftaran', page: 'pendaftaran' },

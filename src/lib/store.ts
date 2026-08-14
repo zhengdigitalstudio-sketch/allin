@@ -7,6 +7,7 @@ export type PageKey =
   | 'struktur-pengurus'
   | 'artikel'
   | 'artikel-detail'
+  | 'regulasi'
   | 'agenda'
   | 'galeri'
   | 'pendaftaran'
@@ -42,6 +43,7 @@ const PAGE_URLS: Record<PageKey, string> = {
   'struktur-pengurus': '/struktur-pengurus',
   'artikel': '/artikel',
   'artikel-detail': '/artikel/__slug__',
+  'regulasi': '/regulasi',
   'agenda': '/agenda',
   'galeri': '/galeri',
   'pendaftaran': '/pendaftaran',
