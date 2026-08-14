@@ -57,12 +57,15 @@ function formatDate(dateString: string): string {
 }
 
 export default function AdminRegulasiPage() {
-  // 🔥🔥🔥 VERSION v6-FIXED (2026-08-14 07:45) - UNSIGNED PRESET ONLY 🔥🔥🔥
-  // Jika kamu lihat error "Invalid Signature", berarti ini kode LAMA!
-  console.log('✅ [v6-FIXED] AdminRegulasiPage LOADED - USING UNSIGNED PRESET MODE');
+  // 🚨🚨🚨 VERSION v8-CACHE-BUST (2026-08-14 08:02) 🚨🚨🚨
+  // CACHE BUSTER: Jika ini tidak muncul, browser masih cache!
+  const CACHE_BUST = 'v8-' + Date.now();
+  console.log('%c✅ [v8-CACHE-BUST] NEW CODE LOADED!', 'background: #00ff00; color: black; font-size: 20px; padding: 10px;');
+  console.log('%c⏰ Timestamp:', 'font-weight: bold;', new Date().toISOString());
+  console.log('%c🔑 Cache Buster:', 'font-weight: bold;', CACHE_BUST);
   
   // Visible version state for UI
-  const [codeVersion, setCodeVersion] = useState<string>('v6-FIXED-UNSIGNED');
+  const [codeVersion, setCodeVersion] = useState<string>(`v8-${new Date().toLocaleTimeString('id-ID')}`);
   
   // State
   const [regulasiList, setRegulasiList] = useState<Regulasi[]>([]);
@@ -203,8 +206,26 @@ export default function AdminRegulasiPage() {
       setUploadProgress(5);
       setDebugInfo('☁️ Memulai upload ke Cloudinary...');
 
-      // 🚨🚨🚨 ALERT UNTUK PASTIKAN KODE BARU YANG JALAN! 🚨🚨🚨
-      alert('✅ [v6-FIXED] Kode UNSIGNED PRESET yang jalan!\n\nJika kamu lihat ini, berarti kode baru sudah terload.\n\nYang akan dikirim:\n- file: ' + selectedFile.name + '\n- upload_preset: regulasi_pdf_upload\n\nTIDAK ADA signature/timestamp/folder!');
+      // 🚨🚨🚨 ALERT v8 - PASTIKAN KODE BARU! 🚨🚨🚨
+      const alertMsg = `
+╔════════════════════════════════════════╗
+║  ✅ v8-CACHE-BUST CODE RUNNING! ✅      ║
+╠════════════════════════════════════════╣
+║  Time: ${new Date().toLocaleTimeString('id-ID')}          ║
+║  File: ${selectedFile.name.slice(0, 20)}...           ║
+║                                        ║
+║  SENDING TO CLOUDINARY:                ║
+║  • file (PDF)                          ║
+║  • upload_preset: regulasi_pdf_upload  ║
+║                                        ║
+║  NOT SENDING:                          ║
+║  ❌ NO signature                       ║
+║  ❌ NO timestamp                       ║
+║  ❌ NO folder                          ║
+║  ❌ NO public_id                       ║
+╚════════════════════════════════════════╝
+      `;
+      alert(alertMsg);
 
       // ===========================================
       // 🆕 v6-FIXED: Minimal Unsigned Upload ONLY
@@ -919,10 +940,14 @@ export default function AdminRegulasiPage() {
             <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg mx-auto overflow-hidden max-h-[90vh] overflow-y-auto">
               {/* Header */}
               <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 sticky top-0 z-10">
-                {/* 🚨 VERSION MARKER - HARUS TERLIHAT! */}
-                <div className="bg-white/20 rounded-lg px-3 py-1 mb-2 text-center">
-                  <span className="text-xs font-bold text-yellow-200">
-                    ☁️ v6-FIXED: UNSIGNED PRESET MODE (no signature) ☁️
+                {/* 🚨🚨🚨 VERSION MARKER v8 - HARUS TERLIHAT! 🚨🚨🚨 */}
+                <div className="bg-yellow-400 text-black rounded-lg px-3 py-2 mb-2 text-center border-2 border-yellow-600 animate-pulse">
+                  <span className="text-sm font-black">
+                    ⚡ v8-CACHE-BUST ({codeVersion}) ⚡
+                  </span>
+                  <br/>
+                  <span className="text-xs font-bold">
+                    ✅ UNSIGNED MODE | NO SIGNATURE!
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
