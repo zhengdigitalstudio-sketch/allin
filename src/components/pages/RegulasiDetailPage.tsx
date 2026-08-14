@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
-import { Document, Page, pdfjs } from 'react-pdf'
+import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -10,10 +9,6 @@ import { Badge } from '@/components/ui/badge'
 import {
   ChevronRight,
   ChevronLeft,
-  ZoomIn,
-  ZoomOut,
-  RotateCw,
-  Expand,
   Calendar,
   HardDrive,
   Eye,
@@ -22,14 +17,23 @@ import {
   Loader2,
   Maximize2,
   Minimize2,
-  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 
-// Set worker source for react-pdf
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+// Dynamic import for PDF viewer - SSR disabled!
+const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-20">
+      <div className="text-center space-y-4">
+        <Loader2 className="w-12 h-12 animate-spin mx-auto text-allin-green" />
+        <p className="text-muted-foreground">Memuat PDF viewer...</p>
+      </div>
+    </div>
+  )
+})
 
 // Types
 interface Regulasi {
@@ -81,13 +85,8 @@ export default function RegulasiDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
-  // PDF Viewer state
-  const [numPages, setNumPages] = useState<number | null>(null)
-  const [pageNumber, setPageNumber] = useState(1)
-  const [scale, setScale] = useState(1.0)
-  const [rotation, setRotation] = useState(0)
+  // Fullscreen state
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [pdfLoading, setPdfLoading] = useState(true)
   
   // Get ID from URL params
   useEffect(() => {
@@ -117,27 +116,6 @@ export default function RegulasiDetailPage() {
       setLoading(false)
     }
   }
-
-  // PDF load handlers
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
-    setNumPages(numPages)
-    setPdfLoading(false)
-    setPageNumber(1)
-  }
-
-  function onDocumentLoadError(error: Error) {
-    console.error('PDF load error:', error)
-    setPdfLoading(false)
-    setError('Gagal memuat PDF. Silakan coba lagi nanti.')
-  }
-
-  // Navigation functions
-  const goToPrevPage = () => setPageNumber(prev => Math.max(prev - 1, 1))
-  const goToNextPage = () => setPageNumber(prev => Math.min(prev + 1, (numPages || 1)))
-  
-  const zoomIn = () => setScale(prev => Math.min(prev + 0.25, 3.0))
-  const zoomOut = () => setScale(prev => Math.max(prev - 0.25, 0.5))
-  const rotatePDF = () => setRotation(prev => (prev + 90) % 360)
   
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen)
@@ -147,8 +125,6 @@ export default function RegulasiDetailPage() {
       document.exitFullscreen?.()
     }
   }
-
-
 
   // Loading state
   if (loading) {
@@ -256,7 +232,21 @@ export default function RegulasiDetailPage() {
                 </div>
               </div>
 
-
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleFullscreen}
+                  className="gap-2"
+                >
+                  {isFullscreen ? (
+                    <Minimize2 className="w-4 h-4" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4" />
+                  )}
+                  {isFullscreen ? 'Exit' : 'Fullscreen'}
+                </Button>
+              </div>
             </div>
           </div>
         </header>
@@ -271,149 +261,7 @@ export default function RegulasiDetailPage() {
           "container mx-auto",
           isFullscreen ? "h-full p-4" : "px-4 py-6"
         )}>
-          {/* PDF Toolbar */}
-          <div className={cn(
-            "bg-white rounded-t-xl border border-b-0 px-4 py-3 flex items-center justify-between gap-4",
-            isFullscreen && "rounded-xl border-b"
-          )}>
-            {/* Page Navigation */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={goToPrevPage}
-                disabled={pageNumber <= 1}
-                className="h-8 w-8"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              
-              <span className="text-sm font-medium min-w-[80px] text-center">
-                Halaman {pageNumber} dari {numPages || '-'}
-              </span>
-              
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={goToNextPage}
-                disabled={pageNumber >= (numPages || 1)}
-                className="h-8 w-8"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Zoom & Controls */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={zoomOut}
-                disabled={scale <= 0.5}
-                className="h-8 w-8"
-                title="Zoom Out"
-              >
-                <ZoomOut className="w-4 h-4" />
-              </Button>
-              
-              <span className="text-sm font-medium min-w-[50px] text-center">
-                {Math.round(scale * 100)}%
-              </span>
-              
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={zoomIn}
-                disabled={scale >= 3.0}
-                className="h-8 w-8"
-                title="Zoom In"
-              >
-                <ZoomIn className="w-4 h-4" />
-              </Button>
-
-              <div className="w-px h-6 bg-border mx-1" />
-
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={rotatePDF}
-                className="h-8 w-8"
-                title="Rotate"
-              >
-                <RotateCw className="w-4 h-4" />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={toggleFullscreen}
-                className="h-8 w-8"
-                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-              >
-                {isFullscreen ? (
-                  <Minimize2 className="w-4 h-4" />
-                ) : (
-                  <Maximize2 className="w-4 h-4" />
-                )}
-              </Button>
-
-              {isFullscreen && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsFullscreen(false)}
-                  className="h-8 w-8"
-                  title="Close Fullscreen"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* PDF Content */}
-          <div className={cn(
-            "bg-white rounded-b-xl border overflow-auto",
-            isFullscreen ? "mt-2 rounded-xl h-[calc(100%-60px)]" : ""
-          )}>
-            {pdfLoading && (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center space-y-4">
-                  <Loader2 className="w-12 h-12 animate-spin mx-auto text-allin-green" />
-                  <p className="text-muted-foreground">Memuat PDF...</p>
-                </div>
-              </div>
-            )}
-
-            <Document
-              file={regulasi.fileUrl}
-              onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={onDocumentLoadError}
-              loading={
-                <div className="flex items-center justify-center py-20">
-                  <Loader2 className="w-12 h-12 animate-spin text-allin-green" />
-                </div>
-              }
-              options={{
-                cMapUrl: '//unpkg.com/pdfjs-dist@' + pdfjs.version + '/cmaps/',
-                cMapPacked: true,
-              }}
-            >
-              <Page
-                pageNumber={pageNumber}
-                scale={scale}
-                rotation={rotation}
-                className="mx-auto"
-                renderTextLayer={false}
-                renderAnnotationLayer={false}
-                loading={
-                  <div className="flex items-center justify-center py-10">
-                    <Loader2 className="w-8 h-8 animate-spin text-allin-green" />
-                  </div>
-                }
-              />
-            </Document>
-          </div>
+          <PdfViewer fileUrl={regulasi.fileUrl} />
 
           {/* Footer Info */}
           {!isFullscreen && (
