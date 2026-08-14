@@ -502,47 +502,6 @@ export default function AdminRegulasiPage() {
     }
   };
 
-  // ============================================
-  // 🧪 PURE TEST: Unsigned Upload (NO signature at all!)
-  // ============================================
-  const handleTestUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      // Minimal FormData - ONLY file + upload_preset
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', 'regulasi_pdf_upload');
-
-      console.log('🧪 [TEST] Sending:');
-      for (const [key, val] of formData.entries()) {
-        console.log(`  - ${key}: ${val instanceof File ? `[${val.name}]` : val}`);
-      }
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/czpvpb9j/raw/upload`,
-        { method: 'POST', body: formData }
-      );
-
-      const result = await response.json();
-
-      if (response.ok) {
-        alert(`✅ TEST SUCCESS!\n\nFile: ${file.name}\nURL: ${result.secure_url}\nPublic ID: ${result.public_id}`);
-        console.log('✅ [TEST] Result:', result);
-      } else {
-        alert(`❌ TEST FAILED!\n\nError: ${result.error?.message || JSON.stringify(result)}`);
-        console.error('❌ [TEST] Error:', result);
-      }
-    } catch (err: any) {
-      alert(`❌ EXCEPTION!\n\n${err.message}`);
-      console.error('❌ [TEST] Exception:', err);
-    }
-    
-    // Reset input
-    e.target.value = '';
-  };
-
   // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -758,17 +717,6 @@ export default function AdminRegulasiPage() {
           <Plus className="w-5 h-5" />
           Tambah Regulasi
         </button>
-        
-        {/* 🧪 TEST BUTTON - Pure Unsigned Upload Test */}
-        <label className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer">
-          🧪 Test Upload
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={handleTestUpload}
-            className="hidden"
-          />
-        </label>
       </div>
 
       {/* Info Banner */}
