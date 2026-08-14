@@ -153,13 +153,13 @@ export default function RegulasiPage() {
     setSearch(searchInput)
   }
 
-  // Handle download using API Proxy (bypasses Cloudinary 401 error)
+  // Handle download using LOCAL file server (bypasses Cloudinary 401 error)
   const handleDownload = async (regulasi: Regulasi) => {
     try {
-      console.log(`📥 Starting download: ${regulasi.title}`)
+      console.log(`📥 Starting LOCAL download: ${regulasi.title}`)
       
-      // Show loading state or use direct link
-      const downloadUrl = `/api/regulasi/${regulasi.id}/download-file`
+      // Use LOCAL download endpoint (serves from /home/z/my-project/upload/)
+      const downloadUrl = `/api/regulasi/${regulasi.id}/download-local`
       
       // Create a temporary link and click it to trigger download
       const link = document.createElement('a')
@@ -173,13 +173,10 @@ export default function RegulasiPage() {
       document.body.removeChild(link)
       
     } catch (error) {
-      console.error('❌ Download failed:', error)
+      console.error('❌ Local download failed:', error)
       
-      // Fallback: Try direct Cloudinary URL with fl_attachment flag
-      const fallbackUrl = regulasi.fileUrl.includes('?') 
-        ? `${regulasi.fileUrl}&fl_attachment=${encodeURIComponent(regulasi.fileName)}`
-        : `${regulasi.fileUrl}?fl_attachment=${encodeURIComponent(regulasi.fileName)}`
-      
+      // Fallback: Try Cloudinary proxy
+      const fallbackUrl = `/api/regulasi/${regulasi.id}/download-file`
       window.open(fallbackUrl, '_blank')
     }
   }
