@@ -57,8 +57,12 @@ function formatDate(dateString: string): string {
 }
 
 export default function AdminRegulasiPage() {
-  // 🔥 VERSION MARKER - FRESH CODE v5 (2026-08-14)
-  console.log('🚀 [v5-FRESH] AdminRegulasiPage loaded - UNSIGNED MODE ONLY');
+  // 🔥🔥🔥 VERSION v6-FIXED (2026-08-14 07:45) - UNSIGNED PRESET ONLY 🔥🔥🔥
+  // Jika kamu lihat error "Invalid Signature", berarti ini kode LAMA!
+  console.log('✅ [v6-FIXED] AdminRegulasiPage LOADED - USING UNSIGNED PRESET MODE');
+  
+  // Visible version state for UI
+  const [codeVersion, setCodeVersion] = useState<string>('v6-FIXED-UNSIGNED');
   
   // State
   const [regulasiList, setRegulasiList] = useState<Regulasi[]>([]);
@@ -199,24 +203,28 @@ export default function AdminRegulasiPage() {
       setUploadProgress(5);
       setDebugInfo('☁️ Memulai upload ke Cloudinary...');
 
+      // 🚨🚨🚨 ALERT UNTUK PASTIKAN KODE BARU YANG JALAN! 🚨🚨🚨
+      alert('✅ [v6-FIXED] Kode UNSIGNED PRESET yang jalan!\n\nJika kamu lihat ini, berarti kode baru sudah terload.\n\nYang akan dikirim:\n- file: ' + selectedFile.name + '\n- upload_preset: regulasi_pdf_upload\n\nTIDAK ADA signature/timestamp/folder!');
+
       // ===========================================
-      // 🆕 FRESH APPROACH: Minimal Unsigned Upload
+      // 🆕 v6-FIXED: Minimal Unsigned Upload ONLY
       // ===========================================
       const CLOUD_NAME = 'czpvpb9j';
       const UPLOAD_PRESET = 'regulasi_pdf_upload';
       
       setUploadProgress(10);
       
-      // Create FormData - ONLY these fields!
+      // Create FormData - ONLY these 2 fields!
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('upload_preset', UPLOAD_PRESET);
       
-      // Log what we're sending
-      console.log('📤 [FRESH] Uploading with:');
-      console.log('   - file:', selectedFile.name, `(${selectedFile.size} bytes)`);
-      console.log('   - upload_preset:', UPLOAD_PRESET);
-      console.log('   - (nothing else!)');
+      // 🔍 DEBUG: Log ALL FormData entries to prove we only send unsigned params
+      console.log('📤 [v6-FIXED] FormData contents:');
+      for (const [key, value] of formData.entries()) {
+        console.log(`   - ${key}:`, value instanceof File ? `${value.name} (${value.size} bytes)` : value);
+      }
+      console.log('   ✅ Total fields:', [...formData.entries()].length, '(should be exactly 2!)');
       
       setDebugInfo(`📤 Mengupload ${selectedFile.name}...`);
 
@@ -911,6 +919,12 @@ export default function AdminRegulasiPage() {
             <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg mx-auto overflow-hidden max-h-[90vh] overflow-y-auto">
               {/* Header */}
               <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 sticky top-0 z-10">
+                {/* 🚨 VERSION MARKER - HARUS TERLIHAT! */}
+                <div className="bg-white/20 rounded-lg px-3 py-1 mb-2 text-center">
+                  <span className="text-xs font-bold text-yellow-200">
+                    ☁️ v6-FIXED: UNSIGNED PRESET MODE (no signature) ☁️
+                  </span>
+                </div>
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-white">
                     {editingRegulasi ? 'Edit Regulasi' : 'Tambah Regulasi Baru'}
