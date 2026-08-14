@@ -20,6 +20,8 @@ import {
   X,
   Lock,
   Globe,
+  BookOpen,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -84,13 +86,14 @@ function getCategoryColor(category: string): string {
 }
 
 export default function RegulasiPage() {
-  const { navigate } = useAppStore()
+  const { navigate, navigateRegulasi } = useAppStore()
   const [regulasiList, setRegulasiList] = useState<Regulasi[]>([])
   const [categoryCounts, setCategoryCounts] = useState<CategoryCount[]>([])
   const [activeCategory, setActiveCategory] = useState('Semua')
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [loading, setLoading] = useState(true)
+  const [navigatingId, setNavigatingId] = useState<string | null>(null)
 
   // Fetch regulasi data
   const fetchRegulasi = useCallback(async () => {
@@ -151,6 +154,20 @@ export default function RegulasiPage() {
   // Handle search
   const handleSearch = () => {
     setSearch(searchInput)
+  }
+
+  // Handle read online (navigate to PDF viewer page) - with loading state
+  const handleReadOnline = (regulasi: Regulasi) => {
+    if (navigatingId) return // Prevent double clicks
+    
+    console.log(`📖 Opening PDF viewer for: ${regulasi.title}`)
+    setNavigatingId(regulasi.id)
+    
+    // Small delay for visual feedback, then navigate
+    setTimeout(() => {
+      navigateRegulasi(regulasi.id)
+      setNavigatingId(null)
+    }, 150)
   }
 
   // Handle download - Try Cloudinary direct (now PUBLIC!), fallback to proxy
@@ -360,15 +377,47 @@ export default function RegulasiPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: i * 0.05 }}
                     >
-                      <Card className="hover:shadow-md transition-all duration-200 overflow-hidden group border-0 shadow-sm">
-                        <CardContent className="p-0">
+                      <Card 
+                        className={cn(
+                          "transition-all duration-200 overflow-hidden group border-2 shadow-sm cursor-pointer",
+                          navigatingId === regulasi.id
+                            ? "border-allin-green bg-allin-green/5 scale-[0.98] shadow-lg"
+                            : "border-transparent hover:border-allin-green/30 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                        )}
+                        onClick={() => handleReadOnline(regulasi)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && handleReadOnline(regulasi)}
+                      >
+                        <CardContent className="p-0 relative">
+                          {/* Loading Overlay when navigating */}
+                          {navigatingId === regulasi.id && (
+                            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+                              <Loader2 className="w-8 h-8 animate-spin text-allin-green" />
+                            </div>
+                          )}
+                          
                           <div className="flex flex-col sm:flex-row">
-                            {/* Icon/Preview */}
-                            <div className="sm:w-40 h-32 sm:h-auto flex-shrink-0 relative overflow-hidden bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
-                              <FileText className="w-12 h-12 text-white/50" />
+                            {/* Icon/Preview - Clickable Area */}
+                            <div 
+                              className="sm:w-40 h-32 sm:h-auto flex-shrink-0 relative overflow-hidden bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center cursor-pointer group-hover:from-allin-green group-hover:to-allin-green-dark transition-colors duration-300"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleReadOnline(regulasi)
+                              }}
+                            >
+                              <FileText className="w-12 h-12 text-white/50 group-hover:text-white/80 transition-colors duration-300" />
                               <Badge className="absolute top-2 left-2 bg-white/20 text-white border-0 text-[10px] font-semibold backdrop-blur-sm">
                                 PDF
                               </Badge>
+                              
+                              {/* Click indicator */}
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/20 backdrop-blur-sm rounded-full p-2">
+                                  <BookOpen className="w-6 h-6 text-white" />
+                                </div>
+                              </div>
+                              
                               {regulasi.isForMemberOnly && (
                                 <div className="absolute top-2 right-2">
                                   <Lock className="w-4 h-4 text-white/80" />
@@ -416,17 +465,34 @@ export default function RegulasiPage() {
                               </div>
 
                               {/* Actions */}
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 flex-wrap" onClick={(e) => e.stopPropagation()}>
                                 <Button
                                   size="sm"
-                                  className="bg-allin-green hover:bg-allin-green-dark text-white font-medium shadow-sm hover:shadow-md transition-all"
-                                  onClick={() => handleDownload(regulasi)}
+                                  className="bg-allin-green hover:bg-allin-green-dark text-white font-medium shadow-sm hover:shadow-md transition-all transform hover:scale-105 active:scale-95 min-w-[130px]"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleReadOnline(regulasi)
+                                  }}
                                 >
-                                  <Download className="w-4 h-4 mr-1.5" />
-                                  Unduh PDF
+                                  <BookOpen className="w-4 h-4 mr-1.5" />
+                                  Baca Online
                                 </Button>
                                 
-                                <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDownload(regulasi)
+                                  }}
+                                  className="gap-1.5 text-xs transform hover:scale-105 active:scale-95"
+                                  title={`Download ${regulasi.fileName}`}
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                  <span className="hidden sm:inline">Download</span>
+                                </Button>
+                                
+                                <span className="text-xs text-muted-foreground truncate max-w-[150px]">
                                   {regulasi.fileName}
                                 </span>
 
