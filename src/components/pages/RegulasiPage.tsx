@@ -20,6 +20,7 @@ import {
   X,
   Lock,
   Globe,
+  BookOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -84,7 +85,7 @@ function getCategoryColor(category: string): string {
 }
 
 export default function RegulasiPage() {
-  const { navigate } = useAppStore()
+  const { navigate, navigateRegulasi } = useAppStore()
   const [regulasiList, setRegulasiList] = useState<Regulasi[]>([])
   const [categoryCounts, setCategoryCounts] = useState<CategoryCount[]>([])
   const [activeCategory, setActiveCategory] = useState('Semua')
@@ -151,6 +152,12 @@ export default function RegulasiPage() {
   // Handle search
   const handleSearch = () => {
     setSearch(searchInput)
+  }
+
+  // Handle read online (navigate to PDF viewer page)
+  const handleReadOnline = (regulasi: Regulasi) => {
+    console.log(`📖 Opening PDF viewer for: ${regulasi.title}`)
+    navigateRegulasi(regulasi.id)
   }
 
   // Handle download - Try Cloudinary direct (now PUBLIC!), fallback to proxy
@@ -360,7 +367,10 @@ export default function RegulasiPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: i * 0.05 }}
                     >
-                      <Card className="hover:shadow-md transition-all duration-200 overflow-hidden group border-0 shadow-sm">
+                      <Card 
+                        className="hover:shadow-md transition-all duration-200 overflow-hidden group border-0 shadow-sm cursor-pointer"
+                        onClick={() => handleReadOnline(regulasi)}
+                      >
                         <CardContent className="p-0">
                           <div className="flex flex-col sm:flex-row">
                             {/* Icon/Preview */}
@@ -420,13 +430,24 @@ export default function RegulasiPage() {
                                 <Button
                                   size="sm"
                                   className="bg-allin-green hover:bg-allin-green-dark text-white font-medium shadow-sm hover:shadow-md transition-all"
-                                  onClick={() => handleDownload(regulasi)}
+                                  onClick={() => handleReadOnline(regulasi)}
                                 >
-                                  <Download className="w-4 h-4 mr-1.5" />
-                                  Unduh PDF
+                                  <BookOpen className="w-4 h-4 mr-1.5" />
+                                  Baca Online
                                 </Button>
                                 
-                                <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDownload(regulasi)}
+                                  className="gap-1.5 text-xs"
+                                  title={`Download ${regulasi.fileName}`}
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                  <span className="hidden sm:inline">Download</span>
+                                </Button>
+                                
+                                <span className="text-xs text-muted-foreground truncate max-w-[150px]">
                                   {regulasi.fileName}
                                 </span>
 

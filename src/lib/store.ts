@@ -8,6 +8,7 @@ export type PageKey =
   | 'artikel'
   | 'artikel-detail'
   | 'regulasi'
+  | 'regulasi-detail'
   | 'agenda'
   | 'galeri'
   | 'pendaftaran'
@@ -44,6 +45,7 @@ const PAGE_URLS: Record<PageKey, string> = {
   'artikel': '/artikel',
   'artikel-detail': '/artikel/__slug__',
   'regulasi': '/regulasi',
+  'regulasi-detail': '/regulasi/__id__',
   'agenda': '/agenda',
   'galeri': '/galeri',
   'pendaftaran': '/pendaftaran',
@@ -89,30 +91,39 @@ function syncUrl(page: PageKey, articleSlug?: string | null) {
   document.title = page === 'home' ? 'ALLIN' : `ALLIN - ${page.replace(/-/g, ' ')}`
 }
 
-export function initFromUrl(): { page: PageKey; articleSlug: string | null } {
+export function initFromUrl(): { page: PageKey; articleSlug: string | null; regulasiId: string | null } {
   const pathname = window.location.pathname
 
   // /artikel/some-slug → article detail
   if (pathname.startsWith('/artikel/') && pathname !== '/artikel') {
     const slug = pathname.slice('/artikel/'.length)
     if (slug) {
-      return { page: 'artikel-detail', articleSlug: slug }
+      return { page: 'artikel-detail', articleSlug: slug, regulasiId: null }
+    }
+  }
+
+  // /regulasi/some-id → regulasi detail
+  if (pathname.startsWith('/regulasi/') && pathname !== '/regulasi') {
+    const id = pathname.slice('/regulasi/'.length)
+    if (id) {
+      return { page: 'regulasi-detail', articleSlug: null, regulasiId: id }
     }
   }
 
   // Regular page
   const page = URL_TO_PAGE[pathname]
   if (page) {
-    return { page, articleSlug: null }
+    return { page, articleSlug: null, regulasiId: null }
   }
 
-  return { page: 'home', articleSlug: null }
+  return { page: 'home', articleSlug: null, regulasiId: null }
 }
 
 // ── Store ────────────────────────────────────────────────────
 interface AppState {
   currentPage: PageKey
   selectedArticleSlug: string | null
+  selectedRegulasiId: string | null
   user: {
     id: string
     name: string
@@ -124,6 +135,7 @@ interface AppState {
   sidebarOpen: boolean
   navigate: (page: PageKey) => void
   navigateArticle: (slug: string) => void
+  navigateRegulasi: (id: string) => void
   setSelectedArticle: (id: string | null) => void
   setUser: (user: AppState['user']) => void
   setAuthLoaded: (loaded: boolean) => void
@@ -132,10 +144,18 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set, get) => {
   // Initialize from URL on server/default
-  let initialState = { currentPage: 'home' as PageKey, selectedArticleSlug: null as string | null }
+  let initialState = { 
+    currentPage: 'home' as PageKey, 
+    selectedArticleSlug: null as string | null,
+    selectedRegulasiId: null as string | null
+  }
   if (typeof window !== 'undefined') {
     const parsed = initFromUrl()
-    initialState = { currentPage: parsed.page, selectedArticleSlug: parsed.articleSlug }
+    initialState = { 
+      currentPage: parsed.page, 
+      selectedArticleSlug: parsed.articleSlug,
+      selectedRegulasiId: parsed.regulasiId
+    }
   }
 
   return {
@@ -145,11 +165,16 @@ export const useAppStore = create<AppState>((set, get) => {
     sidebarOpen: false,
     navigate: (page) => {
       syncUrl(page)
-      set({ currentPage: page, selectedArticleSlug: null, sidebarOpen: false })
+      set({ currentPage: page, selectedArticleSlug: null, selectedRegulasiId: null, sidebarOpen: false })
     },
     navigateArticle: (slug) => {
       syncUrl('artikel-detail', slug)
       set({ currentPage: 'artikel-detail', selectedArticleSlug: slug })
+    },
+    navigateRegulasi: (id) => {
+      window.history.pushState({}, '', `/regulasi/${id}`)
+      document.title = `ALLIN - Regulasi Detail`
+      set({ currentPage: 'regulasi-detail', selectedRegulasiId: id, sidebarOpen: false })
     },
     setSelectedArticle: (id) => {
       // Keep for backward compat — just store the slug if article data available
