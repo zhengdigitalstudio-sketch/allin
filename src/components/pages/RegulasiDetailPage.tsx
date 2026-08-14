@@ -1,14 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   ChevronRight,
-  ChevronLeft,
   Calendar,
   HardDrive,
   Eye,
@@ -16,24 +14,11 @@ import {
   FileText,
   Loader2,
   Maximize2,
-  Minimize2,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
-
-// Dynamic import for PDF viewer - SSR disabled!
-const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center py-20">
-      <div className="text-center space-y-4">
-        <Loader2 className="w-12 h-12 animate-spin mx-auto text-allin-green" />
-        <p className="text-muted-foreground">Memuat PDF viewer...</p>
-      </div>
-    </div>
-  )
-})
 
 // Types
 interface Regulasi {
@@ -80,12 +65,9 @@ function formatFileSize(bytes: number): string {
 export default function RegulasiDetailPage() {
   const { navigate } = useAppStore()
   
-  // Get regulasi ID from URL or store
   const [regulasi, setRegulasi] = useState<Regulasi | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
-  // Fullscreen state
   const [isFullscreen, setIsFullscreen] = useState(false)
   
   // Get ID from URL params
@@ -114,15 +96,6 @@ export default function RegulasiDetailPage() {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan')
     } finally {
       setLoading(false)
-    }
-  }
-  
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen)
-    if (!isFullscreen) {
-      document.documentElement.requestFullscreen?.()
-    } else {
-      document.exitFullscreen?.()
     }
   }
 
@@ -236,15 +209,11 @@ export default function RegulasiDetailPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={toggleFullscreen}
+                  onClick={() => setIsFullscreen(true)}
                   className="gap-2"
                 >
-                  {isFullscreen ? (
-                    <Minimize2 className="w-4 h-4" />
-                  ) : (
-                    <Maximize2 className="w-4 h-4" />
-                  )}
-                  {isFullscreen ? 'Exit' : 'Fullscreen'}
+                  <Maximize2 className="w-4 h-4" />
+                  Fullscreen
                 </Button>
               </div>
             </div>
@@ -252,16 +221,43 @@ export default function RegulasiDetailPage() {
         </header>
       )}
 
-      {/* PDF Viewer */}
+      {/* PDF Viewer - SIMPLE IFRAME */}
       <main className={cn(
         "bg-gray-100",
         isFullscreen ? "h-screen" : "min-h-[calc(100vh-280px)]"
       )}>
         <div className={cn(
           "container mx-auto",
-          isFullscreen ? "h-full p-4" : "px-4 py-6"
+          isFullscreen ? "h-full p-2" : "px-4 py-6"
         )}>
-          <PdfViewer fileUrl={regulasi.fileUrl} />
+          {/* Toolbar for fullscreen mode */}
+          {isFullscreen && (
+            <div className="bg-white rounded-t-xl border border-b-0 px-4 py-2 flex items-center justify-between">
+              <h2 className="font-semibold truncate">{regulasi.title}</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsFullscreen(false)}
+                className="gap-2"
+              >
+                <X className="w-4 h-4" />
+                Tutup
+              </Button>
+            </div>
+          )}
+
+          {/* PDF Iframe - Browser's built-in PDF viewer! */}
+          <div className={cn(
+            "bg-white rounded-xl border overflow-hidden",
+            isFullscreen ? "h-[calc(100vh-50px)]" : "h-[75vh]"
+          )}>
+            <iframe
+              src={regulasi.fileUrl}
+              className="w-full h-full"
+              title={`PDF: ${regulasi.title}`}
+              style={{ border: 'none' }}
+            />
+          </div>
 
           {/* Footer Info */}
           {!isFullscreen && (
