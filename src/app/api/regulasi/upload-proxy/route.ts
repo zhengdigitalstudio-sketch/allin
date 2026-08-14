@@ -80,11 +80,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Hanya file PDF' }, { status: 400 });
     }
 
-    // Size validation
-    const MAX_SIZE = 20 * 1024 * 1024; // 20MB
+    // Size validation - Vercel limit 4.5MB, Cloudinary free 10MB, use 5MB safe
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
     if (file.size > MAX_SIZE) {
       return NextResponse.json({ 
-        error: `File terlalu besar: ${(file.size/1024/1024).toFixed(1)}MB > 20MB limit` 
+        error: `File terlalu besar: ${(file.size/1024/1024).toFixed(1)}MB > 5MB limit`,
+        suggestion: 'Kompres PDF atau gunakan file lebih kecil (maks 5MB)'
       }, { status: 400 });
     }
 
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
       // resource_type: 'raw', // ← DON'T include in signature!
     };
     
-    const config = getConfig();
+    // Use existing config from line 61 - DON'T redeclare!
     const signature = generateSignature(paramsToSign, config.api_secret);
     
     console.log(`🔐 [v9-FIXED-SIGN] Using SIGNED upload with PUBLIC access (FIXED signature!)`);

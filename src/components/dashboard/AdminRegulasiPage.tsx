@@ -178,15 +178,26 @@ export default function AdminRegulasiPage() {
       return;
     }
 
-    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    // Vercel limit: 4.5MB, Cloudinary free: 10MB - kita pakai 5MB aman
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB (aman untuk Vercel + Cloudinary)
     if (file.size > MAX_FILE_SIZE) {
-      toast.error(`Ukuran file terlalu besar. Maksimal 20MB`);
+      toast.error(`❌ File terlalu besar! ${(file.size / 1024 / 1024).toFixed(1)}MB > 5MB limit`, {
+        duration: 5000,
+        description: 'Kompres PDF atau gunakan file lebih kecil'
+      });
       return;
+    }
+
+    // Warning jika file > 3MB (dekat limit)
+    if (file.size > 3 * 1024 * 1024) {
+      toast.warning(`⚠️ File cukup besar: ${(file.size / 1024 / 1024).toFixed(1)}MB`, {
+        duration: 3000,
+      });
     }
 
     setSelectedFile(file);
     setCloudinaryData(null);
-    toast.success(`File dipilih: ${file.name} (${formatFileSize(file.size)})`);
+    toast.success(`✅ File dipilih: ${file.name} (${formatFileSize(file.size)})`);
   };
 
   // ============================================
