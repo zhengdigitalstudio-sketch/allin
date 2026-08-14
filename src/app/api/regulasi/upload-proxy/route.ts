@@ -97,25 +97,24 @@ export async function POST(request: NextRequest) {
     console.log(`⏱️ [PROXY] Buffer ready in ${Date.now() - startTime}ms`);
 
     // ============================================
-    // 🆕 METHOD: UNSIGNED UPLOAD (no signature needed!)
+    // 🆕🆕🆕 v7-FIXED: MINIMAL UNSIGNED UPLOAD
+    // HANYA file + upload_preset! Tidak ada parameter lain!
+    // Kalau ada folder/public_id, Cloudinary akan minta signature!
     // ============================================
     const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     
-    // Build multipart body for UNSIGNED upload
+    // Build multipart body for UNSIGNED upload - MINIMAL!
     const boundary = '----Blob' + Math.random().toString(36).substring(2);
     
     const parts = [
-      // Upload Preset (unsigned - no signature required!)
+      // ✅ HANYA 2 fields untuk Unsigned Preset:
+      // 1. Upload Preset (wajib!)
       `--${boundary}\r\nContent-Disposition: form-data; name="upload_preset"\r\n\r\nregulasi_pdf_upload\r\n`,
-      // Folder
-      `--${boundary}\r\nContent-Disposition: form-data; name="folder"\r\n\r\nregulasi\r\n`,
-      // Resource type for PDFs
-      `--${boundary}\r\nContent-Disposition: form-data; name="resource_type"\r\n\r\nraw\r\n`,
-      // Public ID (optional but good for organization)
-      `--${boundary}\r\nContent-Disposition: form-data; name="public_id"\r\n\r\nregulasi/${Date.now()}-${safeFileName}\r\n`,
-      // File header
+      // 2. File (wajib!)
       `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${safeFileName}"\r\nContent-Type: application/pdf\r\n\r\n`
     ];
+    
+    console.log(`⚠️ [v7-FIXED] PROXY: Only sending file + upload_preset (NO folder/public_id/timestamp!)`);
 
     const headerBuffer = Buffer.from(parts.join(''));
     const footerBuffer = Buffer.from(`\r\n--${boundary}--\r\n`);
