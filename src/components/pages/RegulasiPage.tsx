@@ -153,17 +153,35 @@ export default function RegulasiPage() {
     setSearch(searchInput)
   }
 
-  // Handle download with count increment
+  // Handle download using API Proxy (bypasses Cloudinary 401 error)
   const handleDownload = async (regulasi: Regulasi) => {
     try {
-      // Increment download count
-      await fetch(`/api/regulasi/${regulasi.id}/download`, { method: 'POST' })
+      console.log(`📥 Starting download: ${regulasi.title}`)
+      
+      // Show loading state or use direct link
+      const downloadUrl = `/api/regulasi/${regulasi.id}/download-file`
+      
+      // Create a temporary link and click it to trigger download
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = regulasi.fileName || 'document.pdf'
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
     } catch (error) {
-      console.error('Failed to increment download count:', error)
+      console.error('❌ Download failed:', error)
+      
+      // Fallback: Try direct Cloudinary URL with fl_attachment flag
+      const fallbackUrl = regulasi.fileUrl.includes('?') 
+        ? `${regulasi.fileUrl}&fl_attachment=${encodeURIComponent(regulasi.fileName)}`
+        : `${regulasi.fileUrl}?fl_attachment=${encodeURIComponent(regulasi.fileName)}`
+      
+      window.open(fallbackUrl, '_blank')
     }
-    
-    // Open file in new tab for download
-    window.open(regulasi.fileUrl, '_blank')
   }
 
   return (
