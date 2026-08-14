@@ -14,7 +14,6 @@ import {
   ZoomOut,
   RotateCw,
   Expand,
-  Download,
   Calendar,
   HardDrive,
   Eye,
@@ -149,18 +148,7 @@ export default function RegulasiDetailPage() {
     }
   }
 
-  // Handle download with count increment
-  const handleDownload = async () => {
-    if (!regulasi) return
-    
-    try {
-      await fetch(`/api/regulasi/${regulasi.id}/download`, { method: 'POST' })
-      window.open(regulasi.fileUrl, '_blank')
-    } catch (err) {
-      console.error('Download error:', err)
-      window.open(regulasi.fileUrl, '_blank')
-    }
-  }
+
 
   // Loading state
   if (loading) {
@@ -268,17 +256,7 @@ export default function RegulasiDetailPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownload}
-                  className="gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download PDF
-                </Button>
-              </div>
+
             </div>
           </div>
         </header>
@@ -441,15 +419,7 @@ export default function RegulasiDetailPage() {
           {!isFullscreen && (
             <div className="mt-6 text-center text-sm text-muted-foreground">
               <p>
-                Dokumen ini disediakan oleh ALLIN. Jika mengalami masalah saat membaca, 
-                silakan{' '}
-                <button 
-                  onClick={handleDownload}
-                  className="text-allin-green hover:underline font-medium"
-                >
-                  download PDF
-                </button>{' '}
-                untuk dibaca offline.
+                Dokumen ini disediakan oleh ALLIN untuk dibaca langsung di browser.
               </p>
             </div>
           )}
