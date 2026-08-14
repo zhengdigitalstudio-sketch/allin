@@ -728,6 +728,15 @@ export default function AdminRegulasiPage() {
 
   return (
     <div className="space-y-6">
+      {/* 🚨 HIDDEN VERSION STAMP - Check Elements tab to verify! */}
+      <div 
+        data-version="v8-CACHE-BUST" 
+        data-timestamp={new Date().toISOString()}
+        data-mode="UNSIGNED-PRESET-ONLY"
+        style={{ display: 'none' }}
+        id="regulasi-version-stamp"
+      />
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -737,6 +746,11 @@ export default function AdminRegulasiPage() {
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             Upload dan kelola dokumen reguasi (PDF via Cloudinary)
+          </p>
+          
+          {/* Visible version indicator for debugging */}
+          <p className="text-xs font-mono bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded mt-2 inline-block">
+            ⚡ v8-CACHE-BUST | {codeVersion} | Mode: UNSIGNED
           </p>
         </div>
         <button
