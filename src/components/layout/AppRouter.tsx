@@ -21,24 +21,30 @@ const PageLoading = () => (
   </div>
 )
 
-import HomePage from '@/components/pages/HomePage'
-import TentangPage from '@/components/pages/TentangPage'
-import VisiMisiPage from '@/components/pages/VisiMisiPage'
-import StrukturPengurusPage from '@/components/pages/StrukturPengurusPage'
-import ArtikelPage from '@/components/pages/ArtikelPage'
-import RegulasiPage from '@/components/pages/RegulasiPage'
-import ArtikelDetailPage from '@/components/pages/ArtikelDetailPage'
-import AgendaPage from '@/components/pages/AgendaPage'
-import GaleriPage from '@/components/pages/GaleriPage'
-import PendaftaranPage from '@/components/pages/PendaftaranPage'
-import KontakPage from '@/components/pages/KontakPage'
-import FAQPage from '@/components/pages/FAQPage'
-import PrivacyPolicyPage from '@/components/pages/PrivacyPolicyPage'
-import SitemapPage from '@/components/pages/SitemapPage'
-import LoginPage from '@/components/pages/LoginPage'
-
+// Dynamic import helper with SSR disabled
 const dyn = (importFn: () => Promise<{ [key: string]: React.ComponentType }>) =>
   dynamic(importFn, { ssr: false, loading: () => <PageLoading /> })
+
+// All pages must be dynamic (ssr: false) to avoid build errors
+const HomePage = dyn(() => import('@/components/pages/HomePage'))
+const TentangPage = dyn(() => import('@/components/pages/TentangPage'))
+const VisiMisiPage = dyn(() => import('@/components/pages/VisiMisiPage'))
+const StrukturPengurusPage = dyn(() => import('@/components/pages/StrukturPengurusPage'))
+const ArtikelPage = dyn(() => import('@/components/pages/ArtikelPage'))
+const RegulasiPage = dyn(() => import('@/components/pages/RegulasiPage'))
+// RegulasiDetailPage uses react-pdf - must be dynamic!
+const RegulasiDetailPage = dyn(
+  () => import('@/components/pages/RegulasiDetailPage'),
+)
+const ArtikelDetailPage = dyn(() => import('@/components/pages/ArtikelDetailPage'))
+const AgendaPage = dyn(() => import('@/components/pages/AgendaPage'))
+const GaleriPage = dyn(() => import('@/components/pages/GaleriPage'))
+const PendaftaranPage = dyn(() => import('@/components/pages/PendaftaranPage'))
+const KontakPage = dyn(() => import('@/components/pages/KontakPage'))
+const FAQPage = dyn(() => import('@/components/pages/FAQPage'))
+const PrivacyPolicyPage = dyn(() => import('@/components/pages/PrivacyPolicyPage'))
+const SitemapPage = dyn(() => import('@/components/pages/SitemapPage'))
+const LoginPage = dyn(() => import('@/components/pages/LoginPage'))
 
 const AdminDashboardPage = dyn(
   () => import('@/components/dashboard/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })),
@@ -103,6 +109,7 @@ const pageComponents: Record<PageKey, React.ComponentType> = {
   'struktur-pengurus': StrukturPengurusPage,
   artikel: ArtikelPage,
   regulasi: RegulasiPage,
+  'regulasi-detail': RegulasiDetailPage,
   'artikel-detail': ArtikelDetailPage,
   agenda: AgendaPage,
   galeri: GaleriPage,

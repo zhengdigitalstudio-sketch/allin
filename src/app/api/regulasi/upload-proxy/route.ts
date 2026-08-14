@@ -80,12 +80,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Hanya file PDF' }, { status: 400 });
     }
 
-    // Size validation - Vercel limit 4.5MB, Cloudinary free 10MB, use 5MB safe
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    // Size validation
+    const MAX_SIZE = 20 * 1024 * 1024; // 20MB
     if (file.size > MAX_SIZE) {
       return NextResponse.json({ 
-        error: `File terlalu besar: ${(file.size/1024/1024).toFixed(1)}MB > 5MB limit`,
-        suggestion: 'Kompres PDF atau gunakan file lebih kecil (maks 5MB)'
+        error: `File terlalu besar: ${(file.size/1024/1024).toFixed(1)}MB > 20MB limit` 
       }, { status: 400 });
     }
 
@@ -112,7 +111,7 @@ export async function POST(request: NextRequest) {
       // resource_type: 'raw', // ← DON'T include in signature!
     };
     
-    // Use existing config from line 61 - DON'T redeclare!
+    // Use existing config from line 61 - don't redeclare!
     const signature = generateSignature(paramsToSign, config.api_secret);
     
     console.log(`🔐 [v9-FIXED-SIGN] Using SIGNED upload with PUBLIC access (FIXED signature!)`);
@@ -184,32 +183,43 @@ export async function POST(request: NextRequest) {
       let suggestion = '';
       let errorDetails = responseText.substring(0, 500);
       
+      // Try to parse as JSON first
       try {
         const errJson = JSON.parse(responseText);
-        errorMsg = errJson.error?.message || errorMsg;
-        
-        // Add specific suggestions based on status
-        if (errorMsg.includes('upload_preset') || errorMsg.includes('Upload preset')) {
-          suggestion = '🔧 Upload preset "regulasi_pdf_upload" belum dibuat! Buat di: Cloudinary Dashboard → Settings → Upload → Add upload preset → Name: regulasi_pdf_upload → Signing mode: Unsigned';
-        } else if (response.status === 401 || errorMsg.includes('api key') || errorMsg.includes('API key')) {
-          suggestion = '❌ API Key Cloudinary tidak valid! Periksa: dashboard.cloudinary.com → Settings → API Keys';
-        } else if (response.status === 400) {
-          suggestion = '⚠️ File mungkin corrupt atau format tidak didukung';
-        } else if (response.status === 403) {
-          suggestion = '🚫 Akses ditolak - cek CORS atau permission settings';
-        } else if (response.status === 413) {
-          suggestion = '📦 File terlalu besar untuk Cloudinary (max 20MB)';
-        } else if (response.status >= 500) {
-          suggestion = '☁️ Server Cloudinary sedang bermasalah. Coba beberapa saat lagi.';
+        errorMsg = errJson.error?.message || errJson.error || errorMsg;
+      } catch {
+        // If not JSON, use raw text (might be HTML error page)
+        if (responseText.includes('<!DOCTYPE') || responseText.includes('<html')) {
+          errorMsg = `Cloudinary returned HTML error (status ${response.status})`;
+          errorDetails = 'Server returned HTML instead of JSON. This usually means server error or wrong endpoint.';
+        } else {
+          errorMsg = responseText.substring(0, 200) || `HTTP ${response.status}`;
         }
-      } catch {}
+      }
+      
+      // Add specific suggestions based on status or error message
+      if (errorMsg.includes('upload_preset') || errorMsg.includes('Upload preset')) {
+        suggestion = '🔧 Upload preset belum dibuat!';
+      } else if (response.status === 401 || errorMsg.includes('api key') || errorMsg.includes('API key')) {
+        suggestion = '❌ API Key tidak valid!';
+      } else if (response.status === 400 || errorMsg.includes('Entity too large')) {
+        suggestion = '⚠️ File terlalu besar! Maksimal 20MB.';
+      } else if (response.status === 403) {
+        suggestion = '🚫 Akses ditolak';
+      } else if (response.status === 413) {
+        suggestion = '📦 File terlalu besar (max 20MB)';
+      } else if (response.status >= 500) {
+        suggestion = '☁️ Server Cloudinary bermasalah. Coba lagi nanti.';
+      } else {
+        suggestion = 'Cek koneksi dan coba lagi.';
+      }
 
       console.error(`❌ [PROXY] Error ${response.status}: ${errorMsg}`);
 
       return NextResponse.json({
-        error: `Upload Gagal (${response.status})`,
+        error: `Upload Gagal`,
         details: errorMsg,
-        suggestion: suggestion || 'Cek koneksi internet dan coba lagi',
+        suggestion: suggestion,
         httpStatus: response.status,
         debug: {
           cloudName: config.cloud_name,
@@ -224,8 +234,18 @@ export async function POST(request: NextRequest) {
     let result;
     try {
       result = JSON.parse(responseText);
-    } catch {
-      throw new Error('Invalid JSON from Cloudinary');
+    } catch (parseError) {
+      // If response is OK but not JSON, log and return error
+      console.error('❌ [PROXY] Invalid JSON from Cloudinary:', responseText.substring(0, 200));
+      return NextResponse.json({
+        error: 'Upload Gagal - Response tidak valid',
+        details: 'Cloudinary mengembalikan response yang tidak valid',
+        suggestion: 'Coba upload ulang atau hubungi admin',
+        debug: { 
+          responsePreview: responseText.substring(0, 100),
+          elapsedMs: elapsed 
+        }
+      }, { status: 500 });
     }
 
     console.log(`✅ [PROXY] SUCCESS! URL: ${result.secure_url?.substring(0, 60)}... (${elapsed}ms total)`);

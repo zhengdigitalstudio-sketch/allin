@@ -241,7 +241,27 @@ export default function AdminRegulasiPage() {
 
       clearTimeout(timeout);
       
-      const result = await response.json();
+      // Safely parse response - handle non-JSON errors
+      let result: any;
+      let responseText = '';
+      try {
+        responseText = await response.text();
+        console.log('📥 [v12-SIGNED-PROXY] Raw response:', responseText.substring(0, 300));
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('❌ [v12-SIGNED-PROXY] Failed to parse response:', parseError);
+        console.error('❌ Response text:', responseText.substring(0, 500));
+        
+        // Return a more helpful error based on the actual response
+        if (responseText.includes('Entity too large') || responseText.includes('too large')) {
+          throw new Error(`File terlalu besar! Maksimal 20MB. Ukuran file Anda: ${(selectedFile.size / 1024 / 1024).toFixed(1)}MB`);
+        } else if (responseText.includes('Request Error') || responseText.includes('<!DOCTYPE') || responseText.includes('<html')) {
+          throw new Error(`Cloudinary server error (HTTP ${response.status}). Coba lagi nanti atau hubungi admin.`);
+        } else {
+          throw new Error(`Response tidak valid dari server (HTTP ${response.status}). Detail: ${responseText.substring(0, 100)}`);
+        }
+      }
+      
       console.log('📥 [v12-SIGNED-PROXY] Response:', response.status, result);
 
       setUploadProgress(90);
