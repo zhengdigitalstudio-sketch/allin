@@ -69,11 +69,12 @@ export async function POST(request: NextRequest) {
     const safeFileName = (fileName || 'file.pdf').replace(/[^a-zA-Z0-9.-]/g, '_');
     const publicId = `${folder}/${Date.now()}-${safeFileName}`;
 
+    // ⚠️ IMPORTANT: resource_type NOT included in signature!
+    // Cloudinary only signs: folder, public_id, timestamp (alphabetically sorted)
     const paramsToSign = {
       timestamp,
       folder,
       public_id: publicId,
-      resource_type: 'raw',
     };
 
     const signature = generateSignature(paramsToSign, config.api_secret);

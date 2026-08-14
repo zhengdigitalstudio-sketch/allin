@@ -37,7 +37,14 @@ function getConfig() {
 function generateSignature(params: Record<string, string>, secret: string): string {
   const sorted = Object.keys(params).sort();
   const sigStr = sorted.map(k => `${k}=${params[k]}`).join('&');
-  return crypto.createHash('sha1').update(sigStr + secret).digest('hex');
+  const signature = crypto.createHash('sha1').update(sigStr + secret).digest('hex');
+  
+  // 🔍 DEBUG: Log exact signature details
+  console.log('🔐 [SIGN] String to sign:', sigStr);
+  console.log('🔐 [SIGN] Secret (first 4):', secret.substring(0, 4) + '...');
+  console.log('🔐 [SIGN] Generated signature:', signature);
+  
+  return signature;
 }
 
 // POST - Upload with timeout & better error handling
@@ -89,26 +96,23 @@ export async function POST(request: NextRequest) {
     
     console.log(`⏱️ [PROXY] Buffer ready in ${Date.now() - startTime}ms`);
 
-    // Generate signature
-    const timestamp = Math.round(Date.now() / 1000).toString();
+    // ============================================
+    // 🆕 METHOD: UNSIGNED UPLOAD (no signature needed!)
+    // ============================================
     const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const publicId = `regulasi/${Date.now()}-${safeFileName}`;
-
-    const paramsToSign = { timestamp, folder: 'regulasi', public_id: publicId, resource_type: 'raw' };
-    const signature = generateSignature(paramsToSign, config.api_secret);
-
-    // Build multipart body
+    
+    // Build multipart body for UNSIGNED upload
     const boundary = '----Blob' + Math.random().toString(36).substring(2);
     
     const parts = [
-      // Params
-      ...Object.entries(paramsToSign).map(([k, v]) => 
-        `--${boundary}\r\nContent-Disposition: form-data; name="${k}"\r\n\r\n${v}\r\n`
-      ),
-      // API Key
-      `--${boundary}\r\nContent-Disposition: form-data; name="api_key"\r\n\r\n${config.api_key}\r\n`,
-      // Signature
-      `--${boundary}\r\nContent-Disposition: form-data; name="signature"\r\n\r\n${signature}\r\n`,
+      // Upload Preset (unsigned - no signature required!)
+      `--${boundary}\r\nContent-Disposition: form-data; name="upload_preset"\r\n\r\nregulasi_pdf_upload\r\n`,
+      // Folder
+      `--${boundary}\r\nContent-Disposition: form-data; name="folder"\r\n\r\nregulasi\r\n`,
+      // Resource type for PDFs
+      `--${boundary}\r\nContent-Disposition: form-data; name="resource_type"\r\n\r\nraw\r\n`,
+      // Public ID (optional but good for organization)
+      `--${boundary}\r\nContent-Disposition: form-data; name="public_id"\r\n\r\nregulasi/${Date.now()}-${safeFileName}\r\n`,
       // File header
       `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${safeFileName}"\r\nContent-Type: application/pdf\r\n\r\n`
     ];
@@ -117,7 +121,7 @@ export async function POST(request: NextRequest) {
     const footerBuffer = Buffer.from(`\r\n--${boundary}--\r\n`);
     const bodyBuffer = Buffer.concat([headerBuffer, buffer, footerBuffer]);
 
-    console.log(`📤 [PROXY] Uploading to Cloudinary... (${bodyBuffer.length} bytes total)`);
+    console.log(`📤 [PROXY] Uploading via UNSIGNED preset... (${bodyBuffer.length} bytes total)`);
 
     // UPLOAD TO CLOUDINARY with TIMEOUT (30 seconds)
     const controller = new AbortController();
@@ -170,7 +174,9 @@ export async function POST(request: NextRequest) {
         errorMsg = errJson.error?.message || errorMsg;
         
         // Add specific suggestions based on status
-        if (response.status === 401 || errorMsg.includes('api key') || errorMsg.includes('API key')) {
+        if (errorMsg.includes('upload_preset') || errorMsg.includes('Upload preset')) {
+          suggestion = '🔧 Upload preset "regulasi_pdf_upload" belum dibuat! Buat di: Cloudinary Dashboard → Settings → Upload → Add upload preset → Name: regulasi_pdf_upload → Signing mode: Unsigned';
+        } else if (response.status === 401 || errorMsg.includes('api key') || errorMsg.includes('API key')) {
           suggestion = '❌ API Key Cloudinary tidak valid! Periksa: dashboard.cloudinary.com → Settings → API Keys';
         } else if (response.status === 400) {
           suggestion = '⚠️ File mungkin corrupt atau format tidak didukung';

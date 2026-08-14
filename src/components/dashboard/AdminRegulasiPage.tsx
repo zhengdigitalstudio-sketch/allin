@@ -57,6 +57,9 @@ function formatDate(dateString: string): string {
 }
 
 export default function AdminRegulasiPage() {
+  // 🔥 VERSION MARKER - FRESH CODE v5 (2026-08-14)
+  console.log('🚀 [v5-FRESH] AdminRegulasiPage loaded - UNSIGNED MODE ONLY');
+  
   // State
   const [regulasiList, setRegulasiList] = useState<Regulasi[]>([]);
   const [loading, setLoading] = useState(true);
@@ -180,6 +183,7 @@ export default function AdminRegulasiPage() {
 
   // ============================================
   // 🚀 CLIENT-SIDE DIRECT UPLOAD (for large files >4.5MB)
+  // Uses UNSIGNED UPLOAD PRESET - no signature needed!
   // Bypasses Vercel's 4.5MB limit!
   // ============================================
   const uploadDirectToCloudinary = async (): Promise<{
@@ -193,98 +197,53 @@ export default function AdminRegulasiPage() {
     try {
       setUploading(true);
       setUploadProgress(5);
-      setDebugInfo('🔑 Mendapatkan signature...');
+      setDebugInfo('☁️ Memulai upload ke Cloudinary...');
 
-      // Step 1: Get signature from our API
-      const signResponse = await fetch('/api/regulasi/sign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: selectedFile.name,
-          folder: 'regulasi',
-        }),
-      });
-
-      if (!signResponse.ok) {
-        const errText = await signResponse.text();
-        throw new Error(`Gagal dapat signature: ${errText}`);
-      }
-
-      const signData = await signResponse.json();
+      // ===========================================
+      // 🆕 FRESH APPROACH: Minimal Unsigned Upload
+      // ===========================================
+      const CLOUD_NAME = 'czpvpb9j';
+      const UPLOAD_PRESET = 'regulasi_pdf_upload';
       
-      setUploadProgress(15);
-      setDebugInfo('☁️ Upload langsung ke Cloudinary...');
+      setUploadProgress(10);
+      
+      // Create FormData - ONLY these fields!
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('upload_preset', UPLOAD_PRESET);
+      
+      // Log what we're sending
+      console.log('📤 [FRESH] Uploading with:');
+      console.log('   - file:', selectedFile.name, `(${selectedFile.size} bytes)`);
+      console.log('   - upload_preset:', UPLOAD_PRESET);
+      console.log('   - (nothing else!)');
+      
+      setDebugInfo(`📤 Mengupload ${selectedFile.name}...`);
 
-      console.log('📤 Starting DIRECT upload to Cloudinary:', signData.uploadUrl);
-
-      // Step 2: Upload DIRECTLY to Cloudinary (bypasses Vercel!)
-      const cloudinaryFormData = new FormData();
-      cloudinaryFormData.append('file', selectedFile);
-      cloudinaryFormData.append('api_key', signData.signatureData.apiKey);
-      cloudinaryFormData.append('timestamp', signData.signatureData.timestamp.toString());
-      cloudinaryFormData.append('signature', signData.signatureData.signature);
-      cloudinaryFormData.append('folder', signData.signatureData.params.folder);
-      cloudinaryFormData.append('public_id', signData.signatureData.params.public_id);
-      cloudinaryFormData.append('resource_type', signData.signatureData.params.resource_type);
-
-      // Progress simulation for direct upload
-      let progress = 15;
-      const progressInterval = setInterval(() => {
-        if (progress < 85) {
-          progress += Math.random() * 8; // Slightly slower for big files
-          setUploadProgress(Math.min(progress, 85));
-        }
-      }, 2000);
-
+      // Upload with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000); // 10 min for large files
+      const timeout = setTimeout(() => controller.abort(), 5 * 60 * 1000); // 5 min
 
-      const startTime = Date.now();
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`,
+        {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+        }
+      );
+
+      clearTimeout(timeout);
       
-      const uploadResponse = await fetch(signData.uploadUrl, {
-        method: 'POST',
-        body: cloudinaryFormData,
-        signal: controller.signal,
-      });
+      const result = await response.json();
+      console.log('📥 [FRESH] Response:', response.status, result);
 
-      clearInterval(progressInterval);
-      clearTimeout(timeoutId);
-
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log(`⏱️ Direct upload completed in ${elapsed}s`);
-
-      setUploadProgress(90);
-      setDebugInfo(`📥 Menerima respons (${elapsed}s)...`);
-
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        let errorMsg = `HTTP ${uploadResponse.status}`;
-        
-        try {
-          const errJson = JSON.parse(errorText);
-          errorMsg = errJson.error?.message || errorMsg;
-        } catch {}
-
-        setDebugInfo(`❌ Direct upload gagal:\n${errorMsg}`);
-        throw new Error(`Cloudinary direct upload failed: ${errorMsg}`);
-      }
-
-      // Parse success response
-      let result;
-      try {
-        result = await uploadResponse.json();
-      } catch {
-        throw new Error('Invalid response from Cloudinary');
-      }
-
-      if (!result.secure_url) {
-        throw new Error('No URL in Cloudinary response');
+      if (!response.ok) {
+        throw new Error(result.error?.message || `HTTP ${response.status}`);
       }
 
       setUploadProgress(100);
-      setDebugInfo(`✅ Direct upload berhasil! (${elapsed}s)`);
-
-      console.log('✅ Direct upload result:', result);
+      setDebugInfo('✅ Upload berhasil!');
 
       return {
         url: result.secure_url,
@@ -293,17 +252,10 @@ export default function AdminRegulasiPage() {
         fileSize: selectedFile.size,
       };
 
-    } catch (error: unknown) {
-      const err = error as Error;
-      console.error('❌ Direct upload error:', err);
-      
-      if (err.name === 'AbortError') {
-        setDebugInfo('⏰ Direct upload timeout (>10 menit)');
-        throw new Error('Upload terlalu lama. File mungkin terlalu besar.');
-      }
-      
-      setDebugInfo(prev => prev || `❌ ${err.message}`);
-      throw err;
+    } catch (error: any) {
+      console.error('❌ [FRESH] Error:', error);
+      setDebugInfo(`❌ ${error.message}`);
+      throw error;
     } finally {
       setUploading(false);
     }
@@ -443,8 +395,10 @@ export default function AdminRegulasiPage() {
     }
   };
 
-  // Upload file directly to Cloudinary (OLD - NOT USED)
-  const uploadToCloudinaryDirectly = async (): Promise<{
+  // ============================================
+  // ✅ SERVER PROXY UPLOAD (File → Server → Cloudinary) - untuk file kecil (<4.5MB)
+  // ============================================
+  const uploadViaProxy = async (): Promise<{
     url: string;
     publicId: string;
     fileName: string;
@@ -455,166 +409,138 @@ export default function AdminRegulasiPage() {
     try {
       setUploading(true);
       setUploadProgress(10);
-      
-      console.log('🚀 Starting direct upload for:', selectedFile.name, `(${formatFileSize(selectedFile.size)})`);
+      setDebugInfo('📤 Mengirim file ke server...');
 
-      // Step 1: Get signature from our API
-      console.log('📡 Requesting signature from /api/regulasi/sign...');
-      let signResponse: Response;
-      try {
-        signResponse = await fetch('/api/regulasi/sign', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            folder: 'regulasi',
-            fileName: selectedFile.name 
-          }),
-        });
-      } catch (fetchError) {
-        console.error('❌ Network error calling sign API:', fetchError);
-        throw new Error('Tidak dapat terhubung ke server. Cek koneksi internet.');
-      }
+      const proxyFormData = new FormData();
+      proxyFormData.append('file', selectedFile);
 
-      console.log('📡 Sign response status:', signResponse.status);
-      
-      if (!signResponse.ok) {
-        const errorText = await signResponse.text();
-        console.error('❌ Sign API error:', signResponse.status, errorText);
-        
-        // Parse error for better message
-        try {
-          const errorJson = JSON.parse(errorText);
-          throw new Error(errorJson.error || errorJson.details || `Server error (${signResponse.status})`);
-        } catch {
-          throw new Error(`Gagal mendapatkan signature (HTTP ${signResponse.status})`);
+      // Progress simulation
+      let progress = 10;
+      const progressInterval = setInterval(() => {
+        if (progress < 80) {
+          progress += 5;
+          setUploadProgress(progress);
         }
-      }
+      }, 500);
 
-      let signData: any;
-      try {
-        signData = await signResponse.json();
-      } catch (parseError) {
-        console.error('❌ Failed to parse sign response:', parseError);
-        throw new Error('Respons server tidak valid');
-      }
-      
-      console.log('✅ Sign data received:', { 
-        hasApiKey: !!signData.apiKey, 
-        hasSignature: !!signData.signature,
-        cloudName: signData.cloudName,
-        timestamp: signData.timestamp 
-      });
-      
-      setUploadProgress(30);
-
-      // Validate required fields
-      if (!signData.apiKey || !signData.signature || !signData.cloudName) {
-        console.error('❌ Missing required sign data:', signData);
-        throw new Error('Konfigurasi Cloudinary tidak lengkap di server');
-      }
-
-      // Step 2: Create FormData for Cloudinary
-      const cloudinaryFormData = new FormData();
-      cloudinaryFormData.append('file', selectedFile);
-      cloudinaryFormData.append('api_key', signData.apiKey);
-      cloudinaryFormData.append('timestamp', String(signData.timestamp));
-      cloudinaryFormData.append('signature', signData.signature);
-      cloudinaryFormData.append('folder', signData.params?.folder || 'regulasi');
-      cloudinaryFormData.append('public_id', signData.params?.public_id || '');
-      cloudinaryFormData.append('resource_type', 'raw');
-
-      // Update progress to show uploading started
-      setUploadProgress(55);
-
-      // Step 3: Upload DIRECTLY to Cloudinary - use /raw/upload for PDF files
-      const cloudName = signData.cloudName;
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`;
-      console.log('📤 Uploading to Cloudinary:', uploadUrl, `File size: ${formatFileSize(selectedFile.size)}`);
-
-      // Create AbortController with timeout (5 minutes for large files)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000); // 5 minute timeout
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
-      let uploadResponse: Response;
-      try {
-        // Simulate progress during upload (since we can't track actual progress with fetch)
-        const progressInterval = setInterval(() => {
-          setUploadProgress(prev => {
-            if (prev >= 75) return prev; // Max out at 75% until actual response
-            return prev + 2; // Increment slowly
-          });
-        }, 1000);
+      const startTime = Date.now();
+      
+      console.log('📤 Starting SERVER PROXY upload to /api/regulasi/upload-proxy');
+      
+      const uploadResponse = await fetch('/api/regulasi/upload-proxy', {
+        method: 'POST',
+        body: proxyFormData,
+        signal: controller.signal,
+      });
 
-        uploadResponse = await fetch(uploadUrl, {
-          method: 'POST',
-          body: cloudinaryFormData,
-          signal: controller.signal,
-        });
+      clearInterval(progressInterval);
+      clearTimeout(timeoutId);
 
-        clearInterval(progressInterval);
-        clearTimeout(timeoutId);
-      } catch (fetchError: any) {
-        clearTimeout(timeoutId);
-        console.error('❌ Network error uploading to Cloudinary:', fetchError);
-        
-        if (fetchError.name === 'AbortError') {
-          throw new Error('Upload timeout - file terlalu besar atau koneksi lambat. Coba lagi.');
-        }
-        throw new Error('Gagal terhubung ke Cloudinary. Cek koneksi internet.');
-      }
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`⏱️ Proxy upload completed in ${elapsed}s`);
 
-      console.log('📤 Upload response status:', uploadResponse.status);
-      setUploadProgress(80);
+      setUploadProgress(85);
+      setDebugInfo(`📥 Menerima respons server (${elapsed}s)...`);
 
       if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        console.error('❌ Cloudinary upload error:', uploadResponse.status, errorText);
+        let errorMsg = `HTTP ${uploadResponse.status}`;
+        let suggestion = '';
         
-        // Try to parse Cloudinary error for better message
         try {
-          const errorJson = JSON.parse(errorText);
-          const cloudErrorMsg = errorJson.error?.message || errorJson.error || errorText;
-          throw new Error(`Cloudinary: ${cloudErrorMsg}`);
+          const errResult = await uploadResponse.json();
+          errorMsg = errResult.error || errorMsg;
+          suggestion = errResult.suggestion || '';
+          
+          setDebugInfo(`❌ Upload gagal:\n${errorMsg}\n\n${suggestion}`);
         } catch {
-          throw new Error(`Gagal upload ke Cloudinary (HTTP ${uploadResponse.status})`);
+          setDebugInfo(`❌ Upload gagal: HTTP ${uploadResponse.status}`);
         }
+
+        throw new Error(errorMsg);
       }
 
-      let uploadResult: any;
+      // Parse success response
+      let result;
       try {
-        uploadResult = await uploadResponse.json();
-      } catch (parseError) {
-        console.error('❌ Failed to parse upload result:', parseError);
-        throw new Error('Respons Cloudinary tidak valid');
+        result = await uploadResponse.json();
+      } catch {
+        throw new Error('Invalid response from server');
       }
-      
-      console.log('✅ Upload successful:', { 
-        secure_url: uploadResult.secure_url,
-        public_id: uploadResult.public_id 
-      });
-      
-      setUploadProgress(100);
 
-      if (!uploadResult.secure_url) {
-        console.error('❌ No secure_url in response:', uploadResult);
-        throw new Error('URL tidak diterima dari Cloudinary');
+      if (!result.success || !result.url) {
+        throw new Error(result.error || 'No URL in response');
       }
+
+      setUploadProgress(100);
+      setDebugInfo(`✅ Upload berhasil! (${elapsed}s)`);
+
+      console.log('✅ Proxy upload result:', result);
 
       return {
-        url: uploadResult.secure_url,
-        publicId: uploadResult.public_id || '',
-        fileName: selectedFile.name,
-        fileSize: selectedFile.size,
+        url: result.url,
+        publicId: result.publicId || '',
+        fileName: result.fileName || selectedFile.name,
+        fileSize: result.fileSize || selectedFile.size,
       };
+
     } catch (error: unknown) {
       const err = error as Error;
-      console.error('❌ Direct upload error:', err);
-      toast.error(err.message || 'Gagal upload ke Cloudinary');
-      return null;
+      console.error('❌ Proxy upload error:', err);
+      
+      if (err.name === 'AbortError') {
+        setDebugInfo('⏰ Upload timeout (>60 detik)');
+        throw new Error('Upload terlalu lama. Coba lagi.');
+      }
+      
+      setDebugInfo(prev => prev || `❌ ${err.message}`);
+      throw err;
     } finally {
       setUploading(false);
-      setTimeout(() => setUploadProgress(0), 1000);
     }
+  };
+
+  // ============================================
+  // 🧪 PURE TEST: Unsigned Upload (NO signature at all!)
+  // ============================================
+  const handleTestUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Minimal FormData - ONLY file + upload_preset
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'regulasi_pdf_upload');
+
+      console.log('🧪 [TEST] Sending:');
+      for (const [key, val] of formData.entries()) {
+        console.log(`  - ${key}: ${val instanceof File ? `[${val.name}]` : val}`);
+      }
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/czpvpb9j/raw/upload`,
+        { method: 'POST', body: formData }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert(`✅ TEST SUCCESS!\n\nFile: ${file.name}\nURL: ${result.secure_url}\nPublic ID: ${result.public_id}`);
+        console.log('✅ [TEST] Result:', result);
+      } else {
+        alert(`❌ TEST FAILED!\n\nError: ${result.error?.message || JSON.stringify(result)}`);
+        console.error('❌ [TEST] Error:', result);
+      }
+    } catch (err: any) {
+      alert(`❌ EXCEPTION!\n\n${err.message}`);
+      console.error('❌ [TEST] Exception:', err);
+    }
+    
+    // Reset input
+    e.target.value = '';
   };
 
   // Handle submit
@@ -832,6 +758,17 @@ export default function AdminRegulasiPage() {
           <Plus className="w-5 h-5" />
           Tambah Regulasi
         </button>
+        
+        {/* 🧪 TEST BUTTON - Pure Unsigned Upload Test */}
+        <label className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer">
+          🧪 Test Upload
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={handleTestUpload}
+            className="hidden"
+          />
+        </label>
       </div>
 
       {/* Info Banner */}
