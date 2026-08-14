@@ -97,30 +97,44 @@ export async function POST(request: NextRequest) {
     console.log(`⏱️ [PROXY] Buffer ready in ${Date.now() - startTime}ms`);
 
     // ============================================
-    // 🆕🆕🆕 v7-FIXED: MINIMAL UNSIGNED UPLOAD
-    // HANYA file + upload_preset! Tidak ada parameter lain!
-    // Kalau ada folder/public_id, Cloudinary akan minta signature!
+    // 🆕 v8-SIGNED-PUBLIC: Use SIGNED upload with PUBLIC access
+    // This ensures files are publicly accessible!
     // ============================================
     const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const timestamp = Math.round(new Date().getTime() / 1000).toString();
     
-    // Build multipart body for UNSIGNED upload - MINIMAL!
+    // Generate signature for SIGNED upload
+    const paramsToSign: Record<string, string> = {
+      timestamp,
+      type: 'upload',  // Make it PUBLIC!
+      resource_type: 'raw',  // For PDF files
+    };
+    
+    const config = getConfig();
+    const signature = generateSignature(paramsToSign, config.api_secret);
+    
+    console.log(`🔐 [v8-SIGNED] Using SIGNED upload with PUBLIC access mode`);
+    console.log(`🔐 [v8-SIGNED] Timestamp: ${timestamp}, Signature: ${signature.substring(0, 10)}...`);
+
+    // Build multipart body for SIGNED upload
     const boundary = '----Blob' + Math.random().toString(36).substring(2);
     
     const parts = [
-      // ✅ HANYA 2 fields untuk Unsigned Preset:
-      // 1. Upload Preset (wajib!)
-      `--${boundary}\r\nContent-Disposition: form-data; name="upload_preset"\r\n\r\nregulasi_pdf_upload\r\n`,
-      // 2. File (wajib!)
+      // Signed upload parameters
+      `--${boundary}\r\nContent-Disposition: form-data; name="timestamp"\r\n\r\n${timestamp}\r\n`,
+      `--${boundary}\r\nContent-Disposition: form-data; name="signature"\r\n\r\n${signature}\r\n`,
+      `--${boundary}\r\nContent-Disposition: form-data; name="api_key"\r\n\r\n${config.api_key}\r\n`,
+      `--${boundary}\r\nContent-Disposition: form-data; name="type"\r\n\r\nupload\r\n`,
+      `--${boundary}\r\nContent-Disposition: form-data; name="resource_type"\r\n\r\nraw\r\n`,
+      // File
       `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${safeFileName}"\r\nContent-Type: application/pdf\r\n\r\n`
     ];
-    
-    console.log(`⚠️ [v7-FIXED] PROXY: Only sending file + upload_preset (NO folder/public_id/timestamp!)`);
 
     const headerBuffer = Buffer.from(parts.join(''));
     const footerBuffer = Buffer.from(`\r\n--${boundary}--\r\n`);
     const bodyBuffer = Buffer.concat([headerBuffer, buffer, footerBuffer]);
 
-    console.log(`📤 [PROXY] Uploading via UNSIGNED preset... (${bodyBuffer.length} bytes total)`);
+    console.log(`📤 [v8-SIGNED-PUBLIC] Uploading via SIGNED upload (PUBLIC access)... (${bodyBuffer.length} bytes total)`);
 
     // UPLOAD TO CLOUDINARY with TIMEOUT (30 seconds)
     const controller = new AbortController();

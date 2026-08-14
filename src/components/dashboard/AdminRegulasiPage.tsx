@@ -190,7 +190,7 @@ export default function AdminRegulasiPage() {
   };
 
   // ============================================
-  // 🚀 UPLOAD TO CLOUDINARY - UNSIGNED PRESET ONLY
+  // 🚀 UPLOAD TO CLOUDINARY - SIGNED PROXY (PUBLIC ACCESS)
   // ============================================
   const uploadToCloudinary = async (): Promise<{
     url: string;
@@ -203,27 +203,26 @@ export default function AdminRegulasiPage() {
     try {
       setUploading(true);
       setUploadProgress(10);
-      setDebugInfo('📤 Starting upload to Cloudinary...');
+      setDebugInfo('📤 Starting upload to Cloudinary (Signed + Public)...');
 
-      // Create FormData with ONLY file and upload_preset
+      // Use API Proxy for SIGNED upload with PUBLIC access
+      // This bypasses the 401 error from authenticated unsigned presets
       const formData = new FormData();
       formData.append('file', selectedFile);
-      formData.append('upload_preset', CLOUDINARY.uploadPreset);
 
-      console.log('📤 [v11-CLEAN] Uploading:');
-      console.log('   - URL:', CLOUDINARY.uploadUrl);
+      console.log('📤 [v12-SIGNED-PROXY] Uploading via proxy:');
+      console.log('   - URL: /api/regulasi/upload-proxy');
       console.log('   - File:', selectedFile.name);
-      console.log('   - Preset:', CLOUDINARY.uploadPreset);
-      console.log('   - Total fields:', [...formData.entries()].length);
+      console.log('   - Method: Signed Upload (PUBLIC access)');
 
       setUploadProgress(30);
-      setDebugInfo(`📤 Uploading ${selectedFile.name}...`);
+      setDebugInfo(`📤 Uploading ${selectedFile.name} via proxy...`);
 
-      // Upload with timeout
+      // Upload to our proxy (which does signed upload to Cloudinary)
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5 * 60 * 1000); // 5 min
 
-      const response = await fetch(CLOUDINARY.uploadUrl, {
+      const response = await fetch('/api/regulasi/upload-proxy', {
         method: 'POST',
         body: formData,
         signal: controller.signal,
@@ -232,26 +231,26 @@ export default function AdminRegulasiPage() {
       clearTimeout(timeout);
       
       const result = await response.json();
-      console.log('📥 [v11-CLEAN] Response:', response.status, result);
+      console.log('📥 [v12-SIGNED-PROXY] Response:', response.status, result);
 
       setUploadProgress(90);
 
-      if (!response.ok) {
-        throw new Error(result.error?.message || `HTTP ${response.status}`);
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.details || result.error || `HTTP ${response.status}`);
       }
 
       setUploadProgress(100);
-      setDebugInfo('✅ Upload successful!');
+      setDebugInfo('✅ Upload successful! File is PUBLIC.');
 
       return {
-        url: result.secure_url,
-        publicId: result.public_id || '',
-        fileName: selectedFile.name,
-        fileSize: selectedFile.size,
+        url: result.url,
+        publicId: result.publicId || '',
+        fileName: result.fileName || selectedFile.name,
+        fileSize: result.fileSize || selectedFile.size,
       };
 
     } catch (error: any) {
-      console.error('❌ [v11-CLEAN] Upload error:', error);
+      console.error('❌ [v12-SIGNED-PROXY] Upload error:', error);
       setDebugInfo(`❌ ${error.message}`);
       throw error;
     } finally {
