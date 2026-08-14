@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db as prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { PENGURUS_ROLES } from '@/lib/auth';
-import { deleteFromCloudinary, uploadPDFToCloudinary } from '@/lib/cloudinary';
+import { deleteFromCloudinary } from '@/lib/cloudinary';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
