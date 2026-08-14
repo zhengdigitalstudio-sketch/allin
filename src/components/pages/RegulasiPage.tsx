@@ -12,7 +12,6 @@ import {
   ChevronRight,
   Search,
   FileText,
-  Download,
   Calendar,
   HardDrive,
   Eye,
@@ -170,62 +169,6 @@ export default function RegulasiPage() {
     }, 150)
   }
 
-  // Handle download - Try Cloudinary direct (now PUBLIC!), fallback to proxy
-  const handleDownload = async (regulasi: Regulasi) => {
-    try {
-      console.log(`📥 Starting download: ${regulasi.title}`)
-      
-      // Strategy 1: Direct Cloudinary URL (should work now with public access!)
-      // Strategy 2: Local server fallback
-      // Strategy 3: Cloudinary proxy fallback
-      
-      const strategies = [
-        { url: regulasi.fileUrl, name: 'Cloudinary Direct' },
-        { url: `/api/regulasi/${regulasi.id}/download-local`, name: 'Local Server' },
-        { url: `/api/regulasi/${regulasi.id}/download-file`, name: 'Cloudinary Proxy' },
-      ]
-      
-      let downloaded = false;
-      
-      for (const strategy of strategies) {
-        try {
-          console.log(`📤 Trying ${strategy.name}: ${strategy.url}`)
-          
-          // Test if URL is accessible
-          const testResponse = await fetch(strategy.url, { method: 'HEAD', mode: 'no-cors' })
-          
-          // If we get here, try to download
-          const link = document.createElement('a')
-          link.href = strategy.url
-          link.download = regulasi.fileName || 'document.pdf'
-          link.target = '_blank'
-          link.rel = 'noopener noreferrer'
-          
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-          
-          downloaded = true
-          console.log(`✅ Download initiated via ${strategy.name}`)
-          break
-        } catch (err) {
-          console.log(`⚠️ ${strategy.name} failed, trying next...`)
-          continue
-        }
-      }
-      
-      if (!downloaded) {
-        throw new Error('All download strategies failed')
-      }
-      
-    } catch (error) {
-      console.error('❌ All downloads failed:', error)
-      
-      // Last resort: Open in new tab
-      window.open(regulasi.fileUrl, '_blank')
-    }
-  }
-
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -256,7 +199,7 @@ export default function RegulasiPage() {
             
             <p className="text-white/80 text-lg max-w-2xl mb-8">
               Kumpulan dokumen regulasi, kebijakan, dan standar yang berlaku untuk industri ketenagalistrikan.
-              Unduh dokumen yang Anda butuhkan.
+              Klik dokumen untuk membaca langsung di browser.
             </p>
           </motion.div>
 
@@ -464,32 +407,18 @@ export default function RegulasiPage() {
                                 )}
                               </div>
 
-                              {/* Actions */}
+                              {/* Actions - Only Baca PDF Button */}
                               <div className="flex items-center gap-3 flex-wrap" onClick={(e) => e.stopPropagation()}>
                                 <Button
                                   size="sm"
-                                  className="bg-allin-green hover:bg-allin-green-dark text-white font-medium shadow-sm hover:shadow-md transition-all transform hover:scale-105 active:scale-95 min-w-[130px]"
+                                  className="bg-allin-green hover:bg-allin-green-dark text-white font-medium shadow-sm hover:shadow-md transition-all transform hover:scale-105 active:scale-95 min-w-[140px]"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleReadOnline(regulasi)
                                   }}
                                 >
                                   <BookOpen className="w-4 h-4 mr-1.5" />
-                                  Baca Online
-                                </Button>
-                                
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleDownload(regulasi)
-                                  }}
-                                  className="gap-1.5 text-xs transform hover:scale-105 active:scale-95"
-                                  title={`Download ${regulasi.fileName}`}
-                                >
-                                  <Download className="w-3.5 h-3.5" />
-                                  <span className="hidden sm:inline">Download</span>
+                                  Baca PDF
                                 </Button>
                                 
                                 <span className="text-xs text-muted-foreground truncate max-w-[150px]">
@@ -560,8 +489,8 @@ export default function RegulasiPage() {
                 </h3>
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <p>
-                    Dokumen regulasi ini disediakan untuk keperluan informasi publik. 
-                    Beberapa dokumen mungkin hanya dapat diakses oleh anggota terdaftar.
+                    Dokumen regulasi ini dapat dibaca langsung di browser. 
+                    Klik pada dokumen untuk membuka dan membaca PDF.
                   </p>
                   <div className="pt-2 border-t border-allin-green/10">
                     <p className="text-xs font-medium text-allin-green">
