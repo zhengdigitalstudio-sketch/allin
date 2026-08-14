@@ -57,15 +57,18 @@ function formatDate(dateString: string): string {
 }
 
 export default function AdminRegulasiPage() {
-  // 🚨🚨🚨 VERSION v8-CACHE-BUST (2026-08-14 08:02) 🚨🚨🚨
-  // CACHE BUSTER: Jika ini tidak muncul, browser masih cache!
-  const CACHE_BUST = 'v8-' + Date.now();
-  console.log('%c✅ [v8-CACHE-BUST] NEW CODE LOADED!', 'background: #00ff00; color: black; font-size: 20px; padding: 10px;');
-  console.log('%c⏰ Timestamp:', 'font-weight: bold;', new Date().toISOString());
-  console.log('%c🔑 Cache Buster:', 'font-weight: bold;', CACHE_BUST);
+  // ✅ VERSION v10-FIXED (2026-08-14) - No dynamic content on render!
+  // Using STATIC string to avoid React Hydration Error #418
+  const [codeVersion, setCodeVersion] = useState<string>('v10-FIXED-UNSIGNED');
+  const [isMounted, setIsMounted] = useState(false);
   
-  // Visible version state for UI
-  const [codeVersion, setCodeVersion] = useState<string>(`v8-${new Date().toLocaleTimeString('id-ID')}`);
+  // Set mounted state after first render (client-only)
+  useEffect(() => {
+    setIsMounted(true);
+    setCodeVersion(`v10-${new Date().toLocaleTimeString('id-ID')}`);
+    console.log('%c✅ [v10-FIXED] Regulasi Page MOUNTED', 'background: #00ff00; color: black; font-size: 16px; padding: 5px;');
+    console.log('%c⏰ Time:', 'font-weight: bold;', new Date().toISOString());
+  }, []);
   
   // State
   const [regulasiList, setRegulasiList] = useState<Regulasi[]>([]);
@@ -206,10 +209,10 @@ export default function AdminRegulasiPage() {
       setUploadProgress(5);
       setDebugInfo('☁️ Memulai upload ke Cloudinary...');
 
-      // 🚨🚨🚨 ALERT v8 - PASTIKAN KODE BARU! 🚨🚨🚨
+      // ✅ ALERT v10 - Confirm new code is running!
       const alertMsg = `
 ╔════════════════════════════════════════╗
-║  ✅ v8-CACHE-BUST CODE RUNNING! ✅      ║
+║  ✅ v10-FIXED CODE RUNNING! ✅          ║
 ╠════════════════════════════════════════╣
 ║  Time: ${new Date().toLocaleTimeString('id-ID')}          ║
 ║  File: ${selectedFile.name.slice(0, 20)}...           ║
@@ -730,8 +733,7 @@ export default function AdminRegulasiPage() {
     <div className="space-y-6">
       {/* 🚨 HIDDEN VERSION STAMP - Check Elements tab to verify! */}
       <div 
-        data-version="v8-CACHE-BUST" 
-        data-timestamp={new Date().toISOString()}
+        data-version="v10-FIXED" 
         data-mode="UNSIGNED-PRESET-ONLY"
         style={{ display: 'none' }}
         id="regulasi-version-stamp"
@@ -748,10 +750,12 @@ export default function AdminRegulasiPage() {
             Upload dan kelola dokumen reguasi (PDF via Cloudinary)
           </p>
           
-          {/* Visible version indicator for debugging */}
-          <p className="text-xs font-mono bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded mt-2 inline-block">
-            ⚡ v8-CACHE-BUST | {codeVersion} | Mode: UNSIGNED
-          </p>
+          {/* Visible version indicator for debugging - only show after mount */}
+          {isMounted && (
+            <p className="text-xs font-mono bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded mt-2 inline-block animate-pulse">
+              ⚡ {codeVersion} | Mode: UNSIGNED
+            </p>
+          )}
         </div>
         <button
           onClick={() => handleOpenDialog()}
@@ -954,16 +958,18 @@ export default function AdminRegulasiPage() {
             <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg mx-auto overflow-hidden max-h-[90vh] overflow-y-auto">
               {/* Header */}
               <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 sticky top-0 z-10">
-                {/* 🚨🚨🚨 VERSION MARKER v8 - HARUS TERLIHAT! 🚨🚨🚨 */}
-                <div className="bg-yellow-400 text-black rounded-lg px-3 py-2 mb-2 text-center border-2 border-yellow-600 animate-pulse">
-                  <span className="text-sm font-black">
-                    ⚡ v8-CACHE-BUST ({codeVersion}) ⚡
-                  </span>
-                  <br/>
-                  <span className="text-xs font-bold">
-                    ✅ UNSIGNED MODE | NO SIGNATURE!
-                  </span>
-                </div>
+                {/* ✅ Version marker - only show after mount to avoid hydration error */}
+                {isMounted && (
+                  <div className="bg-yellow-400 text-black rounded-lg px-3 py-2 mb-2 text-center border-2 border-yellow-600">
+                    <span className="text-sm font-bold">
+                      ⚡ {codeVersion} ⚡
+                    </span>
+                    <br/>
+                    <span className="text-xs">
+                      ✅ UNSIGNED MODE | NO SIGNATURE!
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-white">
                     {editingRegulasi ? 'Edit Regulasi' : 'Tambah Regulasi Baru'}
