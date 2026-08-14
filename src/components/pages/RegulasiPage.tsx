@@ -153,31 +153,59 @@ export default function RegulasiPage() {
     setSearch(searchInput)
   }
 
-  // Handle download using LOCAL file server (bypasses Cloudinary 401 error)
+  // Handle download - Try Cloudinary direct (now PUBLIC!), fallback to proxy
   const handleDownload = async (regulasi: Regulasi) => {
     try {
-      console.log(`📥 Starting LOCAL download: ${regulasi.title}`)
+      console.log(`📥 Starting download: ${regulasi.title}`)
       
-      // Use LOCAL download endpoint (serves from /home/z/my-project/upload/)
-      const downloadUrl = `/api/regulasi/${regulasi.id}/download-local`
+      // Strategy 1: Direct Cloudinary URL (should work now with public access!)
+      // Strategy 2: Local server fallback
+      // Strategy 3: Cloudinary proxy fallback
       
-      // Create a temporary link and click it to trigger download
-      const link = document.createElement('a')
-      link.href = downloadUrl
-      link.download = regulasi.fileName || 'document.pdf'
-      link.target = '_blank'
-      link.rel = 'noopener noreferrer'
+      const strategies = [
+        { url: regulasi.fileUrl, name: 'Cloudinary Direct' },
+        { url: `/api/regulasi/${regulasi.id}/download-local`, name: 'Local Server' },
+        { url: `/api/regulasi/${regulasi.id}/download-file`, name: 'Cloudinary Proxy' },
+      ]
       
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      let downloaded = false;
+      
+      for (const strategy of strategies) {
+        try {
+          console.log(`📤 Trying ${strategy.name}: ${strategy.url}`)
+          
+          // Test if URL is accessible
+          const testResponse = await fetch(strategy.url, { method: 'HEAD', mode: 'no-cors' })
+          
+          // If we get here, try to download
+          const link = document.createElement('a')
+          link.href = strategy.url
+          link.download = regulasi.fileName || 'document.pdf'
+          link.target = '_blank'
+          link.rel = 'noopener noreferrer'
+          
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          
+          downloaded = true
+          console.log(`✅ Download initiated via ${strategy.name}`)
+          break
+        } catch (err) {
+          console.log(`⚠️ ${strategy.name} failed, trying next...`)
+          continue
+        }
+      }
+      
+      if (!downloaded) {
+        throw new Error('All download strategies failed')
+      }
       
     } catch (error) {
-      console.error('❌ Local download failed:', error)
+      console.error('❌ All downloads failed:', error)
       
-      // Fallback: Try Cloudinary proxy
-      const fallbackUrl = `/api/regulasi/${regulasi.id}/download-file`
-      window.open(fallbackUrl, '_blank')
+      // Last resort: Open in new tab
+      window.open(regulasi.fileUrl, '_blank')
     }
   }
 

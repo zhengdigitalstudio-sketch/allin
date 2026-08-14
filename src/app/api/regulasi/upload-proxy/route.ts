@@ -104,17 +104,18 @@ export async function POST(request: NextRequest) {
     const timestamp = Math.round(new Date().getTime() / 1000).toString();
     
     // Generate signature for SIGNED upload
+    // ⚠️ IMPORTANT: Do NOT include resource_type in signature! Cloudinary rejects it.
     const paramsToSign: Record<string, string> = {
       timestamp,
       type: 'upload',  // Make it PUBLIC!
-      resource_type: 'raw',  // For PDF files
+      // resource_type: 'raw', // ← DON'T include in signature!
     };
     
     const config = getConfig();
     const signature = generateSignature(paramsToSign, config.api_secret);
     
-    console.log(`🔐 [v8-SIGNED] Using SIGNED upload with PUBLIC access mode`);
-    console.log(`🔐 [v8-SIGNED] Timestamp: ${timestamp}, Signature: ${signature.substring(0, 10)}...`);
+    console.log(`🔐 [v9-FIXED-SIGN] Using SIGNED upload with PUBLIC access (FIXED signature!)`);
+    console.log(`🔐 [v9-FIXED-SIGN] Timestamp: ${timestamp}, Signature: ${signature.substring(0, 10)}...`);
 
     // Build multipart body for SIGNED upload
     const boundary = '----Blob' + Math.random().toString(36).substring(2);
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
     const footerBuffer = Buffer.from(`\r\n--${boundary}--\r\n`);
     const bodyBuffer = Buffer.concat([headerBuffer, buffer, footerBuffer]);
 
-    console.log(`📤 [v8-SIGNED-PUBLIC] Uploading via SIGNED upload (PUBLIC access)... (${bodyBuffer.length} bytes total)`);
+    console.log(`📤 [v9-FIXED-SIGN] Uploading via SIGNED upload (PUBLIC access, FIXED signature!)... (${bodyBuffer.length} bytes total)`);
 
     // UPLOAD TO CLOUDINARY with TIMEOUT (30 seconds)
     const controller = new AbortController();
