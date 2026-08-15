@@ -178,10 +178,21 @@ export default function AdminRegulasiPage() {
       return;
     }
 
-    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    // Cloudinary free tier: 10MB limit - upload langsung tanpa lewat Vercel!
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     if (file.size > MAX_FILE_SIZE) {
-      toast.error(`Ukuran file terlalu besar. Maksimal 20MB`);
+      toast.error(`❌ File terlalu besar! ${(file.size / 1024 / 1024).toFixed(1)}MB > 10MB limit`, {
+        duration: 5000,
+        description: 'Kompres PDF atau gunakan file lebih kecil'
+      });
       return;
+    }
+
+    // Warning jika file > 7MB (dekat limit)
+    if (file.size > 7 * 1024 * 1024) {
+      toast.warning(`⚠️ File cukup besar: ${(file.size / 1024 / 1024).toFixed(1)}MB`, {
+        duration: 3000,
+      });
     }
 
     setSelectedFile(file);
@@ -190,7 +201,9 @@ export default function AdminRegulasiPage() {
   };
 
   // ============================================
-  // 🚀 UPLOAD TO CLOUDINARY - SIGNED PROXY (PUBLIC ACCESS)
+  // 🚀 UPLOAD LANGSUNG KE CLOUDINARY (CLIENT-SIDE)
+  // Tanpa lewat Vercel → tidak kena limit 4.5MB!
+  // Support sampai 10MB (Cloudinary free tier)
   // ============================================
   const uploadToCloudinary = async (): Promise<{
     url: string;
@@ -203,54 +216,56 @@ export default function AdminRegulasiPage() {
     try {
       setUploading(true);
       setUploadProgress(10);
-      setDebugInfo('📤 Starting upload to Cloudinary (Signed + Public)...');
+      setDebugInfo('📤 Upload langsung ke Cloudinary...');
 
-      // Use API Proxy for SIGNED upload with PUBLIC access
-      // This bypasses the 401 error from authenticated unsigned presets
+      // Cloudinary config
+      const CLOUD_NAME = 'czpvpb9j';
+      const UPLOAD_PRESET = 'regulasi_pdf_upload'; // Unsigned preset yang sudah dibuat
+      
+      // Upload langsung ke Cloudinary (tanpa lewat Vercel!)
       const formData = new FormData();
       formData.append('file', selectedFile);
+      formData.append('upload_preset', UPLOAD_PRESET);
+      formData.append('folder', 'regulasi'); // Folder di Cloudinary
 
-      console.log('📤 [v12-SIGNED-PROXY] Uploading via proxy:');
-      console.log('   - URL: /api/regulasi/upload-proxy');
-      console.log('   - File:', selectedFile.name);
-      console.log('   - Method: Signed Upload (PUBLIC access)');
+      console.log('📤 [DIRECT-CLOUDINARY] Uploading directly:');
+      console.log('   - Cloud:', CLOUD_NAME);
+      console.log('   - Preset:', UPLOAD_PRESET);
+      console.log('   - File:', selectedFile.name, `(${(selectedFile.size/1024/1024).toFixed(2)}MB)`);
 
       setUploadProgress(30);
-      setDebugInfo(`📤 Uploading ${selectedFile.name} via proxy...`);
+      setDebugInfo(`📤 Mengupload ${selectedFile.name} ke Cloudinary...`);
 
-      // Upload to our proxy (which does signed upload to Cloudinary)
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5 * 60 * 1000); // 5 min
+      // Langsung ke Cloudinary API - Tidak lewat Vercel!
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
 
-      const response = await fetch('/api/regulasi/upload-proxy', {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeout);
-      
       const result = await response.json();
-      console.log('📥 [v12-SIGNED-PROXY] Response:', response.status, result);
+      console.log('📥 [DIRECT-CLOUDINARY] Response:', response.status, result);
 
       setUploadProgress(90);
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error?.details || result.error || `HTTP ${response.status}`);
+      if (!response.ok || !result.secure_url) {
+        throw new Error(result.error?.message || `HTTP ${response.status}: Gagal upload`);
       }
 
       setUploadProgress(100);
-      setDebugInfo('✅ Upload successful! File is PUBLIC.');
+      setDebugInfo('✅ Upload berhasil! File tersimpan di Cloudinary.');
 
       return {
-        url: result.url,
-        publicId: result.publicId || '',
-        fileName: result.fileName || selectedFile.name,
-        fileSize: result.fileSize || selectedFile.size,
+        url: result.secure_url,
+        publicId: result.public_id || '',
+        fileName: selectedFile.name,
+        fileSize: selectedFile.size,
       };
 
     } catch (error: any) {
-      console.error('❌ [v12-SIGNED-PROXY] Upload error:', error);
+      console.error('❌ [DIRECT-CLOUDINARY] Upload error:', error);
       setDebugInfo(`❌ ${error.message}`);
       throw error;
     } finally {

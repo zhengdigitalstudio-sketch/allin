@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       // resource_type: 'raw', // ← DON'T include in signature!
     };
     
-    const config = getConfig();
+    // Use existing config from line 61 - DON'T redeclare!
     const signature = generateSignature(paramsToSign, config.api_secret);
     
     console.log(`🔐 [v9-FIXED-SIGN] Using SIGNED upload with PUBLIC access (FIXED signature!)`);
