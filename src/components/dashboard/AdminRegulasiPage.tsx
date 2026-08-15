@@ -232,6 +232,7 @@ const uploadToCloudinary = async (): Promise<{
     formData.append('file', selectedFile);
     formData.append('upload_preset', CLOUDINARY.uploadPreset);
     formData.append('resource_type', 'raw'); // PDF as raw file
+    formData.append('type', 'upload'); // ⚠️ PENTING: Buat file PUBLIC (bukan authenticated!)
 
     console.log('📤 [DIRECT-UPLOAD] Uploading directly to Cloudinary:');
     console.log('   - URL:', CLOUDINARY.uploadUrl);
