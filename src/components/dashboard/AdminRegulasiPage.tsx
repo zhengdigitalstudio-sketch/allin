@@ -223,7 +223,8 @@ export default function AdminRegulasiPage() {
     formData.append('file', selectedFile);
     formData.append('upload_preset', CLOUDINARY.uploadPreset);
     formData.append('resource_type', 'raw'); // PDF as raw file
-    formData.append('type', 'upload'); // ⚠️ PENTING: Buat file PUBLIC (bukan authenticated!)
+    // NOTE: type=upload tidak diizinkan untuk unsigned upload!
+    // File akan public jika upload preset di Cloudinary dikonfigurasi sebagai "Unsigned"
 
     console.log('📤 [DIRECT-UPLOAD] Uploading directly to Cloudinary:');
     console.log('   - URL:', CLOUDINARY.uploadUrl);
