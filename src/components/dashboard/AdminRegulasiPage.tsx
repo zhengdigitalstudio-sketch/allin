@@ -200,21 +200,12 @@ export default function AdminRegulasiPage() {
     toast.success(`✅ File dipilih: ${file.name} (${formatFileSize(file.size)})`);
   };
 
-  t timeout = setTimeout(() => controller.abort(), 5 * 60 * 1000); // 5 min
-
-      const response = await fetch('/api/regulasi/upload-proxy', {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeout);
-     // ============================================
-// 🚀 UPLOAD TO CLOUDINARY - DIRECT CLIENT UPLOAD!
-// ============================================
-// File dikirim LANGSUNG: Browser → Cloudinary (TIDAK lewat Vercel!)
-// Jadi tidak kena limit 4.5MB Vercel! Max 10MB (Cloudinary free tier)
-const uploadToCloudinary = async (): Promise<{
+  // ============================================
+  // 🚀 UPLOAD TO CLOUDINARY - DIRECT CLIENT UPLOAD!
+  // ============================================
+  // File dikirim LANGSUNG: Browser → Cloudinary (TIDAK lewat Vercel!)
+  // Jadi tidak kena limit 4.5MB Vercel! Max 10MB (Cloudinary free tier)
+  const uploadToCloudinary = async (): Promise<{
   url: string;
   publicId: string;
   fileName: string;
