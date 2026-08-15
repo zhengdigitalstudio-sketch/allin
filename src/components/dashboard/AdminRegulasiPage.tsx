@@ -224,10 +224,10 @@ export default function AdminRegulasiPage() {
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('upload_preset', CLOUDINARY.uploadPreset);
-    // PENTING: Force public access!
-    formData.append('access_mode', 'public');
-    formData.append('type', 'upload');
-    console.log('📤 [UPLOAD] Forcing PUBLIC access mode');
+    // NOTE: Tidak bisa pakai type/access_mode untuk unsigned upload!
+    // Hanya parameter ini yang diizinkan:
+    // upload_preset, callback, public_id, folder, tags, context, etc.
+    console.log('📤 [UPLOAD] Using UNSIGNED preset (auto-public)');
 
     console.log('📤 [DIRECT-UPLOAD] Uploading directly to Cloudinary:');
     console.log('   - URL:', CLOUDINARY.uploadUrl);
