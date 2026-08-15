@@ -247,18 +247,19 @@ export default function RegulasiDetailPage() {
             </div>
           )}
 
-          {/* PDF Viewer - Multiple Fallback Strategy */}
+          {/* PDF Viewer - Direct Open Approach (100% Reliable) */}
           <div className={cn(
-            "bg-white rounded-xl border overflow-hidden relative",
+            "bg-white rounded-xl border overflow-hidden",
             isFullscreen ? "h-[calc(100vh-50px)]" : "h-[75vh]"
           )}>
-            {/* Primary: Direct Open Button (Most Reliable!) */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 z-10">
-              <div className="text-center space-y-6 p-8">
+            <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+              <div className="text-center space-y-6 max-w-lg">
+                {/* Document Icon */}
                 <div className="w-24 h-24 mx-auto bg-allin-green/10 rounded-full flex items-center justify-center">
                   <FileText className="w-12 h-12 text-allin-green" />
                 </div>
                 
+                {/* Document Info */}
                 <div>
                   <h3 className="text-xl font-bold text-gray-800 mb-2">
                     {regulasi.title}
@@ -268,34 +269,39 @@ export default function RegulasiDetailPage() {
                   </p>
                 </div>
 
-                <div className="space-y-3 w-full max-w-md">
+                {/* Open Button - Direct Tab Open */}
+                <div className="space-y-3 w-full">
                   <Button 
                     size="lg"
-                    onClick={() => window.open(regulasi.fileUrl, '_blank')}
-                    className="w-full bg-allin-green hover:bg-allin-green-dark text-white font-semibold py-4 text-lg gap-2"
+                    onClick={() => {
+                      console.log('Opening PDF viewer for:', regulasi.title)
+                      window.open(regulasi.fileUrl, '_blank')
+                    }}
+                    className="w-full bg-allin-green hover:bg-allin-green-dark text-white font-semibold py-5 text-lg gap-2 shadow-lg hover:shadow-xl transition-all"
                   >
-                    <BookOpen className="w-5 h-5" />
+                    <BookOpen className="w-6 h-6" />
                     📖 Baca PDF Sekarang
                   </Button>
                   
-                  <p className="text-xs text-gray-400">
-                    PDF akan terbuka di tab baru
+                  <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
+                    <span>✅ PDF akan terbuka di tab baru dengan browser PDF viewer</span>
                   </p>
+                </div>
+
+                {/* Alternative: Direct Link */}
+                <div className="pt-4 border-t">
+                  <p className="text-xs text-gray-400 mb-2">Tidak terbuka? Coba link langsung:</p>
+                  <a 
+                    href={regulasi.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-allin-green hover:underline break-all"
+                  >
+                    {regulasi.fileUrl}
+                  </a>
                 </div>
               </div>
             </div>
-
-            {/* Hidden iframe for preloading (optional) */}
-            <iframe
-              src={regulasi.fileUrl}
-              className="w-full h-full opacity-0 pointer-events-none"
-              title={`PDF preload: ${regulasi.title}`}
-              style={{ border: 'none', position: 'absolute', zIndex: 0 }}
-              onLoad={(e) => {
-                console.log('PDF loaded successfully');
-                // If iframe loads, we could show it instead of button
-              }}
-            />
           </div>
 
           {/* Footer Info */}
