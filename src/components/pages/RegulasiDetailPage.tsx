@@ -15,6 +15,7 @@ import {
   Loader2,
   Maximize2,
   X,
+  BookOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -246,39 +247,53 @@ export default function RegulasiDetailPage() {
             </div>
           )}
 
-          {/* PDF Iframe - Browser's built-in PDF viewer! */}
+          {/* PDF Viewer - Multiple Fallback Strategy */}
           <div className={cn(
             "bg-white rounded-xl border overflow-hidden relative",
             isFullscreen ? "h-[calc(100vh-50px)]" : "h-[75vh]"
           )}>
-            {/* Fallback if iframe fails to load */}
-            <div 
-              id="pdf-fallback" 
-              className="absolute inset-0 flex-col items-center justify-center bg-gray-50 hidden"
-            >
-              <FileText className="w-16 h-16 text-gray-300 mb-4" />
-              <p className="text-gray-500 mb-2">PDF tidak dapat dimuat di sini</p>
-              <Button 
-                onClick={() => window.open(regulasi.fileUrl, '_blank')}
-                className="bg-allin-green hover:bg-allin-green-dark"
-              >
-                Buka PDF di Tab Baru
-              </Button>
+            {/* Primary: Direct Open Button (Most Reliable!) */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 z-10">
+              <div className="text-center space-y-6 p-8">
+                <div className="w-24 h-24 mx-auto bg-allin-green/10 rounded-full flex items-center justify-center">
+                  <FileText className="w-12 h-12 text-allin-green" />
+                </div>
+                
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    {regulasi.title}
+                  </h3>
+                  <p className="text-gray-500 text-sm">
+                    {formatFileSize(regulasi.fileSize)} • {regulasi.fileName}
+                  </p>
+                </div>
+
+                <div className="space-y-3 w-full max-w-md">
+                  <Button 
+                    size="lg"
+                    onClick={() => window.open(regulasi.fileUrl, '_blank')}
+                    className="w-full bg-allin-green hover:bg-allin-green-dark text-white font-semibold py-4 text-lg gap-2"
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    📖 Baca PDF Sekarang
+                  </Button>
+                  
+                  <p className="text-xs text-gray-400">
+                    PDF akan terbuka di tab baru
+                  </p>
+                </div>
+              </div>
             </div>
-            
+
+            {/* Hidden iframe for preloading (optional) */}
             <iframe
-              src={`${regulasi.fileUrl}#toolbar=1&navpanes=0`}
-              className="w-full h-full"
-              title={`PDF: ${regulasi.title}`}
-              style={{ border: 'none' }}
-              onError={(e) => {
-                // Show fallback when iframe fails to load
-                console.error('PDF iframe error:', e);
-                const fallback = document.getElementById('pdf-fallback');
-                if (fallback) {
-                  fallback.classList.remove('hidden');
-                  fallback.classList.add('flex');
-                }
+              src={regulasi.fileUrl}
+              className="w-full h-full opacity-0 pointer-events-none"
+              title={`PDF preload: ${regulasi.title}`}
+              style={{ border: 'none', position: 'absolute', zIndex: 0 }}
+              onLoad={(e) => {
+                console.log('PDF loaded successfully');
+                // If iframe loads, we could show it instead of button
               }}
             />
           </div>
