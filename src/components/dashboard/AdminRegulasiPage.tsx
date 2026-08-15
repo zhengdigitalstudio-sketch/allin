@@ -35,9 +35,9 @@ const CATEGORIES = ['Umum', 'Lingkungan', 'K3', 'Teknologi', 'Hukum', 'Keuangan'
 const CLOUDINARY = {
   cloudName: 'czpvpb9j',
   uploadPreset: 'regulasi_pdf_upload',
-  // PAKAI /auto/upload BUKAN /raw/upload!
-  // raw = file mentah (kadang 401), auto = auto-detect PDF & publik!
-  uploadUrl: 'https://api.cloudinary.com/v1_1/czpvpb9j/auto/upload'
+  // FINAL FIX: Pakai /image/upload (PDF sebagai image)
+  // Image SELALU publik di Cloudinary, tidak seperti raw!
+  uploadUrl: 'https://api.cloudinary.com/v1_1/czpvpb9j/image/upload'
 };
 
 // Format file size
@@ -224,9 +224,10 @@ export default function AdminRegulasiPage() {
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('upload_preset', CLOUDINARY.uploadPreset);
-    // TIDAK pakai resource_type='raw' lagi!
-    // Biar Cloudinary auto-detect → PDF akan jadi PUBLIC!
-    // Untuk unsigned upload, file OTOMATIS public jika preset = Unsigned
+    // PENTING: Force public access!
+    formData.append('access_mode', 'public');
+    formData.append('type', 'upload');
+    console.log('📤 [UPLOAD] Forcing PUBLIC access mode');
 
     console.log('📤 [DIRECT-UPLOAD] Uploading directly to Cloudinary:');
     console.log('   - URL:', CLOUDINARY.uploadUrl);
