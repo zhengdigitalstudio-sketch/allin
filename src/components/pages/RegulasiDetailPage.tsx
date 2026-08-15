@@ -248,14 +248,38 @@ export default function RegulasiDetailPage() {
 
           {/* PDF Iframe - Browser's built-in PDF viewer! */}
           <div className={cn(
-            "bg-white rounded-xl border overflow-hidden",
+            "bg-white rounded-xl border overflow-hidden relative",
             isFullscreen ? "h-[calc(100vh-50px)]" : "h-[75vh]"
           )}>
+            {/* Fallback if iframe fails to load */}
+            <div 
+              id="pdf-fallback" 
+              className="absolute inset-0 flex-col items-center justify-center bg-gray-50 hidden"
+            >
+              <FileText className="w-16 h-16 text-gray-300 mb-4" />
+              <p className="text-gray-500 mb-2">PDF tidak dapat dimuat di sini</p>
+              <Button 
+                onClick={() => window.open(regulasi.fileUrl, '_blank')}
+                className="bg-allin-green hover:bg-allin-green-dark"
+              >
+                Buka PDF di Tab Baru
+              </Button>
+            </div>
+            
             <iframe
-              src={regulasi.fileUrl}
+              src={`${regulasi.fileUrl}#toolbar=1&navpanes=0`}
               className="w-full h-full"
               title={`PDF: ${regulasi.title}`}
               style={{ border: 'none' }}
+              onError={(e) => {
+                // Show fallback when iframe fails to load
+                console.error('PDF iframe error:', e);
+                const fallback = document.getElementById('pdf-fallback');
+                if (fallback) {
+                  fallback.classList.remove('hidden');
+                  fallback.classList.add('flex');
+                }
+              }}
             />
           </div>
 
